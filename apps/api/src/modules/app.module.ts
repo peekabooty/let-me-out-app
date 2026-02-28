@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ClockService, RequestIdMiddleware } from '../common';
 import { envValidationSchema } from '../config';
+import { AuthModule } from './auth';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { envValidationSchema } from '../config';
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
+    AuthModule,
     PrismaModule,
   ],
   providers: [ClockService],
