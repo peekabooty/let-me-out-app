@@ -6,6 +6,7 @@ import { buildAuthCookieOptions, Public } from '../../common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -35,7 +36,11 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+  async refresh(
+    @Body() _refreshDto: RefreshDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const refreshToken = request.cookies?.refresh_token;
     if (!refreshToken) {
       throw new UnauthorizedException('Missing refresh token');
