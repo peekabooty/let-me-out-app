@@ -1,4 +1,5 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { Request, Response, NextFunction } from 'express';
 
@@ -9,6 +10,7 @@ const bootstrap = async (): Promise<void> => {
   const app = await NestFactory.create(AppModule, {
     logger: new Logger(),
   });
+  const configService = app.get(ConfigService);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,7 +21,13 @@ const bootstrap = async (): Promise<void> => {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const port = 3000;
+  app.enableCors({
+    origin: configService.getOrThrow<string>('CORS_ORIGIN'),
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  });
+
+  const port = configService.get<number>('APP_PORT') ?? 3000;
   app.useLogger(app.get(Logger));
   app.use((request: Request, _response: Response, next: NextFunction) => {
     const requestId = request.header(REQUEST_ID_HEADER) ?? 'unknown';
