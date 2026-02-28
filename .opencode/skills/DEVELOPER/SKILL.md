@@ -28,7 +28,7 @@ Ademas de `docs/non-negotiable.md`, consulta estos documentos segun la tarea:
 - Ejecuta todos los comandos que necesitas dentro del DevContainer usando `docker exec`.
 - Verifica que tienes acceso a `gh` (dentro del container) y a los servicios necesarios (DB, variables de entorno, etc.).
 
-## 4. Flujo de trabajo (obligatorio)
+## 4. Flujo de trabajo (obligatorio y en orden)
 
 1. **Rama**: crea una rama desde `main` con un nombre acorde a la tarea (ej. `feat/short-description`).
 2. **Implementacion**: realiza cambios pequenos y coherentes.

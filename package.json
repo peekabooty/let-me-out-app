@@ -1,0 +1,19 @@
+{
+  "name": "let-me-out",
+  "private": true,
+  "packageManager": "pnpm@9.15.1",
+  "engines": {
+    "node": "24.x",
+    "pnpm": "9.x"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.2"
+  }
+}
