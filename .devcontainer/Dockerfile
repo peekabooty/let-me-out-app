@@ -13,4 +13,12 @@ RUN apt-get update && \
     apt-get install -y gh && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Instalar pnpm globalmente y preparar el directorio de store bajo el home
+# del usuario node, para que pnpm pueda escribir sin necesitar permisos de root.
+ENV PNPM_HOME=/home/node/.local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN npm install -g pnpm && \
+    mkdir -p /home/node/.local/share/pnpm && \
+    chown -R node:node /home/node/.local
+
 USER node
