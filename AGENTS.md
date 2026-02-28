@@ -80,19 +80,43 @@ Cada unidad de trabajo sigue este proceso:
 
 3. **Desarrollo** — Implementar siguiendo estrictamente los documentos de buenas prácticas y las reglas de `non-negotiable.md`. Los tests son parte del criterio de aceptación, no opcionales.
 
-4. **Commits** — Mensajes en formato **Conventional Commits** obligatorio: `type(scope): description`. Tipos válidos: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`. Nunca usar `--no-verify`.
+4. **Commits** — Mensajes **en inglés**, en formato Conventional Commits. Ver referencia completa en [`docs/commit-conventions.md`](docs/commit-conventions.md). Nunca usar `--no-verify`.
 
 5. **Pull Request** — Abrir un PR asociado a la issue antes de hacer merge. Nunca push directo a `main` o `master`.
 
 ### Convenciones de commits
 
+Los mensajes de commit son **siempre en inglés** y siguen esta estructura:
+
 ```
-feat(absence): add overlap validation in create absence handler
-fix(auth): correct refresh token cookie path
-refactor(user): extract user mapper to dedicated file
-test(absence): add unit tests for annual balance calculator
-docs(api): update absence endpoint documentation
+type(scope): Verb in third person singular + brief description.
+
+Optional body explaining why the change was made. No length limit.
+Focus on motivation and context, not on what the diff already shows.
+
+Refs: #42
+See: https://...
 ```
+
+La primera línea es obligatoria. El cuerpo y las referencias son opcionales. La descripción debe empezar con un verbo en tercera persona del singular: `Adds`, `Fixes`, `Removes`, `Extracts`, `Renames`, `Updates`, etc.
+
+Ejemplos:
+
+```
+feat(absence): Adds overlap validation in the create absence handler
+
+fix(auth): Corrects refresh token cookie path to restrict it to /auth/refresh
+
+refactor(user): Extracts user mapper to a dedicated file
+
+test(absence): Adds unit tests for the annual balance calculator
+
+docs(commit-conventions): Adds commit message format and examples
+
+Refs: #12
+```
+
+Para la referencia completa con todos los tipos válidos, reglas detalladas y ejemplos de mensajes incorrectos, ver [`docs/commit-conventions.md`](docs/commit-conventions.md).
 
 ---
 
