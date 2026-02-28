@@ -84,6 +84,25 @@ Cada unidad de trabajo sigue este proceso:
 
 5. **Pull Request** — Abrir un PR asociado a la issue antes de hacer merge. Nunca push directo a `main` o `master`.
 
+### Labels de GitHub
+
+Todas las issues deben incluir **exactamente una** label de cada categoría:
+
+- **Área:** `area:infra`, `area:backend`, `area:frontend`, `area:shared`, `area:database`, `area:devops`
+- **Tipo:** `type:feature`, `type:bug`, `type:chore`, `type:docs`, `type:test`, `type:refactor`
+- **Prioridad:** `priority:critical`, `priority:high`, `priority:medium`, `priority:low`
+- **Talla:** `size:XS`, `size:S`, `size:M`, `size:L`, `size:XL`
+
+**Colores (paleta pastel):**
+
+- `area:infra` #B3E5FC, `area:backend` #C8E6C9, `area:frontend` #F8BBD0, `area:shared` #D1C4E9, `area:database` #FFE0B2, `area:devops` #FFF9C4
+- `type:feature` #C5CAE9, `type:bug` #FFCDD2, `type:chore` #E0E0E0, `type:docs` #B2DFDB, `type:test` #DCEDC8, `type:refactor` #D7CCC8
+- `priority:critical` #FF8A80, `priority:high` #FFAB91, `priority:medium` #FFE082, `priority:low` #C8E6C9
+- `size:XS` #C8E6C9, `size:S` #DCEDC8, `size:M` #FFF9C4, `size:L` #FFE0B2, `size:XL` #FFCCBC
+- `phase:0-foundation` #FFE8A3, `phase:1-backend-base` #D7F0B6, `phase:2-auth-backend` #C9E6FF, `phase:3-frontend-base` #F7C6DA, `phase:4-admin-users` #E2D3F8
+- `phase:5-admin-absence-types` #FFD6B5, `phase:6-absences-create` #C7F0E2, `phase:7-validation-flow` #FFE3A6, `phase:8-cancellation` #E0F2B6, `phase:9-observations` #F0D1F0
+- `phase:10-attachments` #FFD1C8, `phase:11-notifications` #D6F5D6, `phase:12-calendar-dashboard` #FFF3B0, `phase:13-teams` #FFE7C2, `phase:14-audit-export` #CCE4FF
+
 ### Convenciones de commits
 
 Los mensajes de commit son **siempre en inglés** y siguen esta estructura:
