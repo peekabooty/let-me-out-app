@@ -11,7 +11,7 @@ const baseRules = eslintConfigBase.baseConfigs.rules;
 module.exports = [
   ...baseConfigs,
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', '.turbo/**'],
+    ignores: ['node_modules/**', 'dist/**', 'build/**', '.turbo/**', 'apps/api/dist/**'],
   },
   {
     files: [
