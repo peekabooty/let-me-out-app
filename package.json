@@ -11,10 +11,14 @@
     "dev": "turbo run dev",
     "format": "turbo run format",
     "lint": "turbo run lint",
+    "lint:staged": "lint-staged",
+    "prepare": "husky install",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@darraghor/eslint-plugin-nestjs-typed": "^6.18.0",
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
@@ -23,8 +27,19 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-unicorn": "^59.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "prettier": "^3.6.2",
     "turbo": "^2.5.2",
     "typescript-eslint": "^8.56.1"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "eslint --max-warnings=0 --fix",
+      "prettier --write"
+    ],
+    "**/*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ]
   }
 }
