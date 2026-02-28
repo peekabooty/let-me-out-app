@@ -57,4 +57,28 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
+  async refreshAccessToken(refreshToken: string): Promise<string> {
+    try {
+      const payload = await this.jwtService.verifyAsync<{ userId: string }>(refreshToken, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const user = await this.prismaService.user.findUnique({
+        where: { id: payload.userId },
+      });
+
+      if (!user || !user.is_active) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return await this.jwtService.signAsync({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }
