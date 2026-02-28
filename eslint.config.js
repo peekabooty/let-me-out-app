@@ -19,6 +19,7 @@ module.exports = [
       'packages/config/eslint-base.js',
       'packages/config/prettier.config.js',
       '.prettierrc.js',
+      'packages/types/vitest.config.ts',
     ],
     languageOptions: {
       sourceType: 'commonjs',
@@ -27,6 +28,7 @@ module.exports = [
       '@typescript-eslint/no-require-imports': 'off',
       'unicorn/prefer-module': 'off',
       'no-undef': 'off',
+      'import/no-unresolved': 'off',
     },
   },
   {
