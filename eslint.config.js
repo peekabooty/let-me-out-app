@@ -14,7 +14,12 @@ module.exports = [
     ignores: ['node_modules/**', 'dist/**', 'build/**', '.turbo/**'],
   },
   {
-    files: ['eslint.config.js', 'packages/config/eslint-base.js'],
+    files: [
+      'eslint.config.js',
+      'packages/config/eslint-base.js',
+      'packages/config/prettier.config.js',
+      '.prettierrc.js',
+    ],
     languageOptions: {
       sourceType: 'commonjs',
     },
