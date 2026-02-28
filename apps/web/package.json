@@ -3,11 +3,22 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "build": "node -e \"\"",
-    "dev": "node -e \"\"",
+    "build": "vite build",
+    "dev": "vite",
     "format": "prettier --check .",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 --no-error-on-unmatched-pattern",
     "test": "node -e \"\"",
-    "typecheck": "node -e \"\""
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.14"
   }
 }

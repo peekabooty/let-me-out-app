@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;600&display=swap");
+
+:root {
+  color-scheme: light;
+  --ink: #1d1e22;
+  --ink-soft: #474955;
+  --accent: #0f766e;
+  --accent-strong: #0a4a46;
+  --bg: #f1efe9;
+  --bg-soft: #ffffff;
+  --border: #d6d2c6;
+  --shadow: rgba(15, 20, 35, 0.1);
+  font-family: "Manrope", "Sora", "Avenir Next", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left, #faf7f0 0%, #e8e2d6 55%, #e0dacd 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  padding: 4rem 6vw 5rem;
+}
+
+.hero {
+  background: var(--bg-soft);
+  border-radius: 32px;
+  padding: 3.5rem clamp(2rem, 4vw, 4rem);
+  box-shadow: 0 20px 45px var(--shadow);
+  max-width: 960px;
+}
+
+.hero__eyebrow {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.hero h1 {
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  margin: 1rem 0 0.75rem;
+  line-height: 1.1;
+}
+
+.hero p {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  max-width: 620px;
+}
+
+.hero__actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.85rem 1.8rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
+}
+
+.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  max-width: 960px;
+}
+
+.details div {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid rgba(214, 210, 198, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.details h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.details p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 720px) {
+  .app {
+    padding: 3rem 6vw 4rem;
+  }
+
+  .hero {
+    padding: 2.5rem 1.8rem;
+  }
+}
