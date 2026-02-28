@@ -468,6 +468,68 @@ Tipos de fichero permitidos: `image/jpeg`, `image/png`, `application/pdf`. Tama�
 
 ---
 
+### 6.4 Gestión de Migraciones
+
+Todo cambio en la estructura de la base de datos se gestiona **exclusivamente** mediante Prisma Migrate. Nunca se realizan cambios manuales directamente en la base de datos en ningún entorno (desarrollo, staging ni producción).
+
+#### Prisma como fuente de verdad única
+
+El archivo `prisma/schema.prisma` es la fuente de verdad del modelo de datos. Cualquier modificación en el esquema (añadir una tabla, una columna, un índice o una constraint) se realiza siempre editando este archivo, nunca ejecutando SQL manualmente.
+
+#### Archivos de migración versionados en git
+
+Cada vez que se modifica el schema, Prisma genera un archivo SQL con la migración correspondiente. Estos archivos se versionan en git junto al código de la aplicación, de forma que el historial completo de cambios en la base de datos es rastreable y reproducible.
+
+```
+apps/api/prisma/
+├── schema.prisma
+└── migrations/
+    ├── 20260101120000_init/
+    │   └── migration.sql
+    ├── 20260215093000_add_teams/
+    │   └── migration.sql
+    └── 20260301090000_add_observation_attachments/
+        └── migration.sql
+```
+
+Los archivos SQL generados **no se modifican manualmente** una vez creados, salvo casos excepcionales debidamente documentados en el mensaje del commit.
+
+#### Flujo de trabajo en desarrollo
+
+Cuando se necesita un cambio en el esquema:
+
+1. Modificar `prisma/schema.prisma` con los cambios deseados.
+2. Ejecutar el comando de migración en desarrollo:
+   ```bash
+   pnpm prisma migrate dev --name describe_the_change
+   ```
+3. Prisma genera el archivo SQL en `prisma/migrations/`, aplica la migración sobre la base de datos de desarrollo y regenera el cliente Prisma con los nuevos tipos.
+4. Commitear tanto el `schema.prisma` modificado como el archivo de migración generado.
+
+#### Flujo de trabajo en CI / staging / producción
+
+En entornos que no son de desarrollo se usa el comando de despliegue, que **solo aplica** migraciones pendientes sin generar ningún archivo nuevo:
+
+```bash
+pnpm prisma migrate deploy
+```
+
+Este comando es seguro para producción: es idempotente, consulta la tabla interna `_prisma_migrations` de PostgreSQL para saber qué migraciones ya han sido aplicadas y solo ejecuta las pendientes. Si alguna migración falla, el proceso se detiene y se puede corregir sin dejar la base de datos en un estado inconsistente.
+
+#### Comandos de referencia
+
+| Comando | Entorno | Descripción |
+|---|---|---|
+| `prisma migrate dev --name <nombre>` | Desarrollo | Genera la migración, la aplica y regenera el cliente |
+| `prisma migrate deploy` | CI / Staging / Producción | Solo aplica las migraciones pendientes |
+| `prisma migrate status` | Cualquiera | Muestra qué migraciones están aplicadas y cuáles pendientes |
+| `prisma migrate reset` | Solo desarrollo | Elimina la BD, vuelve a crearla y aplica todas las migraciones desde cero |
+| `prisma generate` | Desarrollo | Regenera el cliente Prisma sin aplicar migraciones |
+
+> `prisma migrate reset` destruye todos los datos. Solo debe usarse en desarrollo local, nunca en staging ni producción.
+
+---
+
 ## 7. Estrategia de Testing
 
 ### 7.1 Backend (`apps/api`) — Jest
