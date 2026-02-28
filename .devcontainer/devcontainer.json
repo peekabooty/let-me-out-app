@@ -25,6 +25,6 @@
       }
     }
   },
-  "postCreateCommand": "npm install -g pnpm && pnpm install",
+  "postStartCommand": "gh --version",
   "remoteUser": "node"
 }
