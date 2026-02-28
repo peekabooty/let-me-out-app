@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import type { Request, Response, NextFunction } from 'express';
 
 import { AppModule } from './modules/app.module';
-import { REQUEST_ID_HEADER } from './common';
+import { HttpExceptionFilter, REQUEST_ID_HEADER } from './common';
 
 const bootstrap = async (): Promise<void> => {
   const app = await NestFactory.create(AppModule, {
@@ -17,6 +17,7 @@ const bootstrap = async (): Promise<void> => {
       transform: true,
     }),
   );
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   const port = 3000;
   app.useLogger(app.get(Logger));
