@@ -117,7 +117,7 @@ Los tokens JWT **nunca** se devuelven en el cuerpo de la respuesta para que el f
 response.cookie('access_token', accessToken, {
   httpOnly: true,    // inaccesible desde JavaScript, inmune a XSS
   secure: true,      // solo se envía por HTTPS
-  sameSite: 'strict', // no se envía en peticiones cross-site, previene CSRF
+  sameSite: 'none', // usar 'none' en despliegue cross-site
   path: '/',
   maxAge: 15 * 60 * 1000, // 15 minutos en ms
 });
@@ -125,11 +125,13 @@ response.cookie('access_token', accessToken, {
 response.cookie('refresh_token', refreshToken, {
   httpOnly: true,
   secure: true,
-  sameSite: 'strict',
+  sameSite: 'none', // usar 'none' en despliegue cross-site
   path: '/auth/refresh', // el refresh token solo se envía al endpoint de refresco
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en ms
 });
 ```
+
+En despliegue cross-site, `SameSite=None` es obligatorio para que el navegador envíe las cookies. En despliegue same-site se usa `SameSite=Strict` manteniendo `Secure=true`.
 
 La estrategia JWT de Passport debe configurarse para extraer el token de la cookie en lugar de la cabecera `Authorization`:
 

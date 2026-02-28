@@ -112,6 +112,7 @@
 - **Replantear**
 - **Descartada** (estado final)
 - **Aceptada** (estado final)
+- **Cancelada** (estado final)
 
 ### 4.2 Transiciones de estado
 

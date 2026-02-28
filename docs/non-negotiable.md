@@ -16,7 +16,7 @@ Estas reglas no son sugerencias ni buenas prácticas opcionales. Son restriccion
 
 **1.5.** Nunca uses `eval()`, `new Function()`, `setTimeout(string)` ni ninguna otra forma de ejecución dinámica de código a partir de strings. Son vectores directos de inyección de código.
 
-**1.6.** Nunca almacenes el access token o el refresh token JWT en `localStorage`, `sessionStorage` ni en ninguna variable accesible desde JavaScript. Los tokens deben vivir exclusivamente en cookies `httpOnly` gestionadas por el servidor, inmunes a ataques XSS.
+**1.6.** Nunca almacenes el access token o el refresh token JWT en `localStorage`, `sessionStorage` ni en ninguna variable accesible desde JavaScript. Los tokens deben vivir exclusivamente en cookies `httpOnly` gestionadas por el servidor, inmunes a ataques XSS. En despliegue cross-site, las cookies deben usar `SameSite=None` y `Secure=true`; en despliegue same-site se puede usar `SameSite=Strict`.
 
 **1.7.** Nunca registres en los logs contraseñas, hashes de contraseñas, tokens JWT ni datos personales sensibles como el contenido de observaciones o nombres de ficheros adjuntos. Los logs son frecuentemente accesibles a más personas que la base de datos.
 

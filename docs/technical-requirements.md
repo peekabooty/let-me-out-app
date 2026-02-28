@@ -112,10 +112,10 @@ Turborepo orquesta las tareas entre paquetes respetando el grafo de dependencias
 
 ### 3.1 Arquitectura modular
 
-El backend sigue el patrón estándar de NestJS con separación en capas:
+El backend sigue arquitectura hexagonal con CQRS (`@nestjs/cqrs`). El flujo base es:
 
 ```
-Controller (HTTP) → Service (lógica de negocio) → Prisma (persistencia)
+Controller (HTTP) → Command/Query → Handler → Dominio → Puerto → Adaptador (Prisma/Nodemailer/FS)
 ```
 
 **Módulos principales:**
@@ -138,11 +138,16 @@ Controller (HTTP) → Service (lógica de negocio) → Prisma (persistencia)
   - **Refresh token** (JWT firmado con `JWT_REFRESH_SECRET`): duración de 7 días. Se usa para obtener un nuevo access token sin requerir login.
 - Estrategias Passport: `local` para el endpoint de login, `jwt` para el resto de endpoints protegidos.
 - Guard `JwtAuthGuard` aplicado globalmente; los endpoints públicos (login, refresh) se marcan con el decorador `@Public()`.
+- En despliegue cross-site, las cookies usan `SameSite=None` y `Secure=true`, con `Path` del refresh token restringido a `/auth/refresh`. CORS debe permitir `credentials`.
 
 **Autorización:**
 - Decorador `@Roles(...roles)` sobre controllers o handlers para declarar los roles con acceso permitido.
 - Guard `RolesGuard` que lee el rol del payload del JWT y lo compara con los roles requeridos.
 - Para casos más complejos (ej. un validador no puede validar sus propias ausencias) la comprobación se realiza en la capa de servicio.
+
+**Endpoint de sesión:**
+- `GET /me` devuelve el perfil mínimo del usuario autenticado (`id`, `email`, `name`, `role`, `is_active`).
+- Requiere cookie de access token válida y se usa por el frontend para inicializar la sesión.
 
 ### 3.3 Validación de entrada
 
@@ -200,7 +205,7 @@ TanStack Router organiza las rutas en dos layouts principales:
 ### 4.2 Gestión del estado
 
 - **Estado del servidor** (TanStack Query): ausencias, tipos de ausencia, usuarios, notificaciones, saldo anual. La caché se invalida automáticamente tras cada mutación relevante.
-- **Estado global UI** (Zustand): datos de la sesión activa del usuario (id, nombre, rol, extraídos del JWT decodificado), estado de lectura de notificaciones in-app.
+- **Estado global UI** (Zustand): datos de la sesión activa del usuario obtenidos desde el endpoint `/me` (id, nombre, rol), estado de lectura de notificaciones in-app.
 - No se usa ningún store global para datos remotos; TanStack Query cubre este rol completamente.
 
 ### 4.3 Formularios y validación
@@ -211,16 +216,16 @@ React Hook Form con `zodResolver` conecta cada formulario con su schema Zod corr
 
 Se configura una instancia única de Axios con:
 - `baseURL` apuntando a la URL de la API.
-- Interceptor de request: adjunta el access token en la cabecera `Authorization: Bearer`.
+- `withCredentials: true` para enviar cookies en peticiones cross-origin.
 - Interceptor de response: cuando recibe un `401`, intenta refrescar el access token llamando al endpoint de refresh. Si el refresco falla (refresh token expirado), redirige al login y limpia la sesión de Zustand.
 
 ### 4.5 Calendario (FullCalendar)
 
 Vista mensual por defecto con foco en el mes actual. Los eventos representan ausencias y se colorean según el tipo de ausencia o el estado (pendiente, aceptada, cancelada, etc.). El calendario es navegable hacia meses y años pasados y futuros. Al hacer clic en un evento se navega al detalle de la ausencia.
 
-### 4.6 Exportación CSV (papaparse)
+### 4.6 Exportación CSV
 
-La exportación se genera en el cliente a partir de los datos ya cargados por TanStack Query, sin necesidad de un endpoint específico en el backend. papaparse serializa el array de ausencias a CSV y se descarga mediante un enlace `<a>` con `href` de tipo `blob:`.
+La exportación se genera en el backend mediante un endpoint dedicado (por ejemplo `/absences/export` y `/audit/export`). El endpoint acepta filtros (equipo, rango de fechas, estado) y devuelve un stream CSV. El frontend descarga el fichero desde la respuesta para evitar cargar todo el dataset en memoria.
 
 ---
 
