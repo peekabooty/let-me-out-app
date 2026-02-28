@@ -16,4 +16,4 @@ export const envValidationSchema = Joi.object({
   APP_PORT: Joi.number().port().optional(),
   COOKIE_SAMESITE: Joi.string().valid('none', 'strict').required(),
   COOKIE_SECURE: Joi.boolean().required(),
-}).unknown(false);
+}).unknown(true);

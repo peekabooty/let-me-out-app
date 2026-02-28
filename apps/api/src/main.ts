@@ -28,16 +28,17 @@ const bootstrap = async (): Promise<void> => {
   });
 
   const port = configService.get<number>('APP_PORT') ?? 3000;
-  app.useLogger(app.get(Logger));
+  const logger = new Logger('HTTP');
+  app.useLogger(logger);
   app.use((request: Request, _response: Response, next: NextFunction) => {
     const requestId = request.header(REQUEST_ID_HEADER) ?? 'unknown';
-    app.get(Logger).log(`Request started (${requestId})`, 'HTTP');
+    logger.log(`Request started (${requestId})`);
     next();
   });
   await app.listen(port);
 
-  const logger = new Logger('Bootstrap');
-  logger.log(`API listening on port ${port}`);
+  const bootstrapLogger = new Logger('Bootstrap');
+  bootstrapLogger.log(`API listening on port ${port}`);
 };
 
 void bootstrap();

@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "module": "CommonJS",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src", "test"]
 }
