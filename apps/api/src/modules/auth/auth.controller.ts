@@ -21,7 +21,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user = request.user as { id: string; email: string; role: string };
+    const user = request.user as { id: string; email: string; role: string; name: string; isActive: boolean };
     void loginDto;
     const { accessToken, refreshToken } = await this.authService.issueTokens(user);
     const cookieOptions = buildAuthCookieOptions(this.configService);
