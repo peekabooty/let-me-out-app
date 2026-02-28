@@ -1,0 +1,12 @@
+{
+  "name": "@repo/api",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node -e \"\"",
+    "dev": "node -e \"\"",
+    "lint": "node -e \"\"",
+    "test": "node -e \"\"",
+    "typecheck": "node -e \"\""
+  }
+}
