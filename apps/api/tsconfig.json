@@ -1,7 +1,9 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
   "include": ["src", "test"]
 }
