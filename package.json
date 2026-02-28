@@ -14,6 +14,15 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "turbo": "^2.5.2"
+    "@darraghor/eslint-plugin-nestjs-typed": "^6.18.0",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-unicorn": "^59.0.1",
+    "turbo": "^2.5.2",
+    "typescript-eslint": "^8.56.1"
   }
 }
