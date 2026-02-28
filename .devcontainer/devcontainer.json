@@ -1,0 +1,30 @@
+{
+  "name": "let-me-out-app",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "prisma.prisma",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker",
+        "streetsidesoftware.code-spell-checker-spanish"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+  "postCreateCommand": "npm install -g pnpm && pnpm install",
+  "remoteUser": "node"
+}
