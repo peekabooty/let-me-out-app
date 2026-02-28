@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, Res, UseGuards, UnauthorizedException } fr
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 
-import { buildAuthCookieOptions } from '../../common';
+import { buildAuthCookieOptions, Public } from '../../common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { LoginDto } from './dto/login.dto';
@@ -14,6 +14,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
@@ -32,6 +33,7 @@ export class AuthController {
     return { success: true };
   }
 
+  @Public()
   @Post('refresh')
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const refreshToken = request.cookies?.refresh_token;

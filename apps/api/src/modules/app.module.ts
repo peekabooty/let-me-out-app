@@ -1,8 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 
 import { PrismaModule } from '../prisma/prisma.module';
-import { ClockService, RequestIdMiddleware } from '../common';
+import { ClockService, RequestIdMiddleware, RolesGuard } from '../common';
+import { JwtAuthGuard } from '../modules/auth/guards/jwt-auth.guard';
 import { envValidationSchema } from '../config';
 import { AuthModule } from './auth';
 
@@ -15,7 +17,17 @@ import { AuthModule } from './auth';
     AuthModule,
     PrismaModule,
   ],
-  providers: [ClockService],
+  providers: [
+    ClockService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
