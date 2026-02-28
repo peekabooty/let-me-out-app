@@ -51,7 +51,7 @@ Estas son las decisiones de diseño más importantes. Están desarrolladas en lo
 ### Autenticación y seguridad
 
 - Los tokens JWT se almacenan **exclusivamente en cookies `httpOnly`**. Nunca en `localStorage`, `sessionStorage` ni en el cuerpo de la respuesta.
-- Cookies con `SameSite=Strict`, `Secure=true`, `Path` restringido para el refresh token.
+- En despliegue cross-site, las cookies usan `SameSite=None` y `Secure=true`. En despliegue same-site se usa `SameSite=Strict`. El refresh token debe tener `Path` restringido.
 - El access token dura 15 minutos; el refresh token, 7 días.
 
 ### Código
@@ -83,6 +83,19 @@ Cada unidad de trabajo sigue este proceso:
 4. **Commits** — Mensajes **en inglés**, en formato Conventional Commits. Ver referencia completa en [`docs/commit-conventions.md`](docs/commit-conventions.md). Nunca usar `--no-verify`.
 
 5. **Pull Request** — Abrir un PR asociado a la issue antes de hacer merge. Nunca push directo a `main` o `master`.
+
+### Flujo de ramas y PRs para agentes
+
+- Cada agente debe crear una rama desde `main` con un nombre acorde a la tarea (ej. `feat/short-description`, `fix/short-description`).
+- Commitear con frecuencia durante la implementación; no esperar a terminar toda la funcionalidad en un solo commit.
+- Al completar la tarea, abrir un PR de la rama a `main`.
+- La PR **nunca** debe ser aprobada por el mismo agente que la crea.
+
+### Cuándo commitear
+
+- Cuando se completa una unidad lógica pequeña (ej. un handler + tests, un componente + tests).
+- Cuando se cierra un subtarea claramente delimitada dentro de la issue.
+- Antes de un refactor significativo o de cambios de mayor riesgo.
 
 ### Labels de GitHub
 
