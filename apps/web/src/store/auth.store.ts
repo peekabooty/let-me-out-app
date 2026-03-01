@@ -7,6 +7,7 @@ export interface SessionUser {
   name: string;
   email: string;
   role: UserRole;
+  isActive: boolean;
 }
 
 interface AuthState {
