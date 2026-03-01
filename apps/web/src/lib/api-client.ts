@@ -43,3 +43,28 @@ export async function listUsers(): Promise<User[]> {
   const response = await apiClient.get<User[]>('/users');
   return response.data;
 }
+
+export interface CreateUserPayload {
+  email: string;
+  name: string;
+  password: string;
+  role: User['role'];
+}
+
+export async function createUser(payload: CreateUserPayload): Promise<{ id: string }> {
+  const response = await apiClient.post<{ id: string }>('/users', payload);
+  return response.data;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  role?: User['role'];
+}
+
+export async function updateUser(id: string, payload: UpdateUserPayload): Promise<void> {
+  await apiClient.patch(`/users/${id}`, payload);
+}
+
+export async function deactivateUser(id: string): Promise<void> {
+  await apiClient.delete(`/users/${id}`);
+}

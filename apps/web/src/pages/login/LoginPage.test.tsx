@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { UserRole } from '@repo/types';
 import { authRoute } from '../../routes/_auth';
 import { dashboardRoute } from '../../routes/_auth.index';
 import { publicRoute } from '../../routes/_public';
@@ -17,7 +18,7 @@ const mockUser = {
   id: '01234567-89ab-7def-0123-456789abcdef',
   name: 'Ana Garcia',
   email: 'ana@example.com',
-  role: 'EMPLOYEE' as const,
+  role: UserRole.STANDARD,
   isActive: true,
 };
 
