@@ -1,6 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
+import { UserRole } from '@repo/types';
 
-import { UserRole } from '../store/auth.store';
 import { requireRole } from '../lib/require-role';
 import { authRoute } from './_auth';
 

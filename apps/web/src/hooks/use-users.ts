@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-
 import type { User } from '@repo/types';
+
 import { listUsers } from '../lib/api-client';
-import { userKeys } from '../lib/query-keys/users.keys';
+import { usersKeys } from '../lib/query-keys/users.keys';
 
 export function useUsers() {
-  return useQuery<User[]>({
-    queryKey: userKeys.list(),
+  const { data, isLoading, isError, error } = useQuery<User[]>({
+    queryKey: usersKeys.list(),
     queryFn: listUsers,
     staleTime: 30 * 1000,
   });
+
+  return { users: data ?? [], isLoading, isError, error };
 }

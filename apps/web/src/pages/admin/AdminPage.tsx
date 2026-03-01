@@ -6,7 +6,7 @@ import type { User } from '@repo/types';
 import { UserRole } from '@repo/types';
 import { Button } from '@/components/ui/button';
 import { deactivateUser } from '../../lib/api-client';
-import { userKeys } from '../../lib/query-keys/users.keys';
+import { usersKeys } from '../../lib/query-keys/users.keys';
 import { useUsers } from '../../hooks/use-users';
 import { UserFormDialog } from '../../components/users/UserFormDialog';
 
@@ -18,7 +18,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export function AdminPage() {
-  const { data: users, isLoading, isError } = useUsers();
+  const { users, isLoading, isError } = useUsers();
   const queryClient = useQueryClient();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -37,7 +37,7 @@ export function AdminPage() {
   };
 
   const handleDialogSuccess = () => {
-    void queryClient.invalidateQueries({ queryKey: userKeys.list() });
+    void queryClient.invalidateQueries({ queryKey: usersKeys.list() });
   };
 
   const handleDeactivate = async (user: User) => {
@@ -45,7 +45,7 @@ export function AdminPage() {
     setDeactivateError(null);
     try {
       await deactivateUser(user.id);
-      void queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: usersKeys.list() });
     } catch (error) {
       const message =
         isAxiosError(error) && error.response?.status === 404
@@ -58,9 +58,12 @@ export function AdminPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Usuarios</h1>
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Usuarios</h1>
+          <p className="text-sm text-muted-foreground">Gestión de usuarios del sistema.</p>
+        </div>
         <Button onClick={handleNewUser}>Nuevo usuario</Button>
       </div>
 
@@ -68,34 +71,41 @@ export function AdminPage() {
         <div
           role="alert"
           aria-live="assertive"
-          className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
         >
           {deactivateError}
         </div>
       )}
 
       {isLoading && (
-        <p role="status" aria-live="polite" className="text-muted-foreground">
+        <p
+          role="status"
+          aria-live="polite"
+          className="py-8 text-center text-sm text-muted-foreground"
+        >
           Cargando usuarios…
         </p>
       )}
 
-      {isError && (
-        <p role="alert" className="text-destructive">
-          Error al cargar los usuarios.
-        </p>
+      {isError && !isLoading && (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          No se pudo cargar la lista de usuarios. Inténtalo de nuevo.
+        </div>
       )}
 
-      {!isLoading && !isError && users !== undefined && (
-        <div className="overflow-hidden rounded-lg border">
+      {!isLoading && !isError && (
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium">Nombre</th>
-                <th className="px-4 py-3 text-left font-medium">Correo</th>
-                <th className="px-4 py-3 text-left font-medium">Rol</th>
-                <th className="px-4 py-3 text-left font-medium">Estado</th>
-                <th className="px-4 py-3 text-right font-medium">Acciones</th>
+            <thead>
+              <tr className="border-b border-border bg-muted text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Nombre</th>
+                <th className="px-4 py-3">Correo</th>
+                <th className="px-4 py-3">Rol</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -107,9 +117,9 @@ export function AdminPage() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="border-t">
-                    <td className="px-4 py-3">{user.name}</td>
-                    <td className="px-4 py-3">{user.email}</td>
+                  <tr key={user.id} className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">{user.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                     <td className="px-4 py-3">{ROLE_LABELS[user.role]}</td>
                     <td className="px-4 py-3">
                       {user.isActive ? (
@@ -117,7 +127,7 @@ export function AdminPage() {
                           Activo
                         </span>
                       ) : (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
                           Inactivo
                         </span>
                       )}
