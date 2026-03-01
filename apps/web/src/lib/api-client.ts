@@ -28,3 +28,12 @@ export async function fetchMe(): Promise<SessionUser> {
   const response = await apiClient.get<SessionUser>('/auth/me');
   return response.data;
 }
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export async function login(credentials: LoginCredentials): Promise<void> {
+  await apiClient.post<{ success: boolean }>('/auth/login', credentials);
+}

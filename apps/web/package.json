@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@repo/types": "workspace:^",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.163.3",
@@ -18,6 +20,8 @@
     "axios": "^1.13.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.71.2",
+    "zod": "^3.25.76",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

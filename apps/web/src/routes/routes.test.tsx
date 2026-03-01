@@ -51,7 +51,7 @@ describe('Guard de navegacion: ruta autenticada', () => {
     render(<RouterProvider router={router} />);
 
     await waitFor(() => {
-      expect(screen.queryByText('Iniciar sesion')).toBeInTheDocument();
+      expect(screen.queryByText('Iniciar sesión')).toBeInTheDocument();
     });
   });
 
@@ -83,7 +83,7 @@ describe('Guard de navegacion: ruta publica', () => {
     render(<RouterProvider router={router} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Iniciar sesion')).toBeInTheDocument();
+      expect(screen.getByText('Iniciar sesión')).toBeInTheDocument();
     });
   });
 
