@@ -78,4 +78,11 @@ module.exports = [
       'import/no-unresolved': 'off',
     },
   },
+  // seed.ts runs via tsx which compiles to CJS — top-level await is not supported
+  {
+    files: ['apps/api/prisma/seed.ts'],
+    rules: {
+      'unicorn/prefer-top-level-await': 'off',
+    },
+  },
 ];
