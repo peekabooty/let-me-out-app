@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import path from 'node:path';
 
 import { PrismaModule } from '../prisma/prisma.module';
 import { ClockService, RequestIdMiddleware, RolesGuard } from '../common';
@@ -12,6 +13,7 @@ import { AuthModule } from './auth';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: path.resolve(__dirname, '../../../..', '.env'),
       validationSchema: envValidationSchema,
     }),
     AuthModule,
