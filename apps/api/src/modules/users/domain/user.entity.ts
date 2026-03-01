@@ -56,6 +56,10 @@ export class User {
     return this.role === UserRole.ADMIN;
   }
 
+  rename(newName: string, now: Date): User {
+    return new User({ ...this.toProps(), name: newName, updatedAt: now });
+  }
+
   deactivate(now: Date): User {
     return new User({ ...this.toProps(), isActive: false, updatedAt: now });
   }
