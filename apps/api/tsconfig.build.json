@@ -1,7 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@repo/types": ["node_modules/@repo/types/dist/index.d.ts"]
+    }
   },
   "include": ["src"],
   "exclude": ["test", "dist", "node_modules", "**/*.spec.ts"]
