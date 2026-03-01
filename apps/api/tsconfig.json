@@ -5,7 +5,11 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@repo/types": ["../../packages/types/src/index.ts"],
+      "@repo/config": ["../../packages/config"]
+    }
   },
   "include": ["src", "test"]
 }

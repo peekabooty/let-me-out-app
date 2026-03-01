@@ -39,6 +39,8 @@ module.exports = [
     rules: {
       ...baseRules,
       ...nestjsTyped.configs.flatRecommended.rules,
+      // @repo/* are workspace aliases resolved by TS paths; ESLint import resolver doesn't support them
+      'import/no-unresolved': ['error', { ignore: ['^@repo/'] }],
     },
   },
   {
