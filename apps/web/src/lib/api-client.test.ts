@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuthStore } from '../store/auth.store';
+import { UserRole, useAuthStore } from '../store/auth.store';
 import { apiClient } from './api-client';
 
 const server = setupServer();
@@ -44,7 +44,7 @@ describe('apiClient: interceptor de 401', () => {
 
     const replaceSpy = vi.spyOn(globalThis.location, 'replace');
     useAuthStore.setState({
-      user: { id: '1', name: 'Ana', email: 'a@b.com', role: 'EMPLOYEE', isActive: true },
+      user: { id: '1', name: 'Ana', email: 'a@b.com', role: UserRole.STANDARD, isActive: true },
       isLoading: false,
     });
 

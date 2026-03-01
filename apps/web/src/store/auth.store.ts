@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import type { UserRole } from '@repo/types';
 
-export type UserRole = 'EMPLOYEE' | 'VALIDATOR' | 'AUDITOR' | 'ADMIN';
+export { UserRole } from '@repo/types';
 
 export interface SessionUser {
   id: string;
