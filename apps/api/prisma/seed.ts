@@ -45,11 +45,11 @@ async function seed(prisma: PrismaClient): Promise<void> {
 
 const prisma = new PrismaClient();
 
-try {
-  await seed(prisma);
-} catch (error: unknown) {
-  console.error('Seed failed:', error);
-  throw error;
-} finally {
-  await prisma.$disconnect();
-}
+seed(prisma)
+  .catch((error: unknown) => {
+    console.error('Seed failed:', error);
+    throw error;
+  })
+  .finally(() => {
+    void prisma.$disconnect();
+  });
