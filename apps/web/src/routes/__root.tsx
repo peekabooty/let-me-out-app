@@ -12,6 +12,8 @@ export const rootRoute = createRootRoute({
       setUser(user);
     } catch {
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   },
   component: () => <Outlet />,
