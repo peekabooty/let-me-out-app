@@ -77,6 +77,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^10.4.8
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
+      '@repo/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -262,6 +265,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
       vite:
         specifier: ^5.4.21
         version: 5.4.21(@types/node@25.3.2)(lightningcss@1.31.1)(terser@5.46.0)
