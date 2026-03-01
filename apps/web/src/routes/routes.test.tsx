@@ -5,10 +5,13 @@ import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { authRoute } from '../routes/_auth';
+import { adminRoute } from '../routes/_auth.admin';
+import { adminIndexRoute } from '../routes/_auth.admin.index';
 import { dashboardRoute } from '../routes/_auth.index';
 import { publicRoute } from '../routes/_public';
 import { loginRoute } from '../routes/_public.login';
 import { rootRoute } from '../routes/__root';
+import { unauthorizedRoute } from '../routes/unauthorized';
 import { useAuthStore } from '../store/auth.store';
 
 const mockUser = {
@@ -30,7 +33,8 @@ afterAll(() => server.close());
 function buildRouter(initialPath: string) {
   const routeTree = rootRoute.addChildren([
     publicRoute.addChildren([loginRoute]),
-    authRoute.addChildren([dashboardRoute]),
+    authRoute.addChildren([dashboardRoute, adminRoute.addChildren([adminIndexRoute])]),
+    unauthorizedRoute,
   ]);
 
   return createRouter({
@@ -99,6 +103,39 @@ describe('Guard de navegacion: ruta publica', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Guard de rol: ruta de administracion', () => {
+  it('muestra la pagina de admin cuando el usuario es ADMIN', async () => {
+    const adminUser = { ...mockUser, role: 'ADMIN' as const };
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(adminUser);
+      })
+    );
+
+    const router = buildRouter('/admin');
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Administración')).toBeInTheDocument();
+    });
+  });
+
+  it('redirige a /unauthorized cuando el usuario no es ADMIN', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockUser);
+      })
+    );
+
+    const router = buildRouter('/admin');
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
     });
   });
 });
