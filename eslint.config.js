@@ -54,6 +54,8 @@ module.exports = [
       ...reactHooksPlugin.configs.recommended.rules,
       ...jsxA11yPlugin.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
+      // @/ is a path alias resolved by Vite/TS; ESLint import resolver doesn't support it
+      'import/no-unresolved': ['error', { ignore: ['^@/'] }],
     },
     settings: {
       react: {
@@ -65,6 +67,13 @@ module.exports = [
     files: ['packages/**/*.{ts,tsx}'],
     rules: {
       ...baseRules,
+    },
+  },
+  // Must come after apps/web/**  so it takes precedence for config files
+  {
+    files: ['apps/web/vite.config.ts', 'apps/web/vitest.config.ts'],
+    rules: {
+      'import/no-unresolved': 'off',
     },
   },
 ];
