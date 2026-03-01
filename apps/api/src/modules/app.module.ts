@@ -13,7 +13,7 @@ import { AuthModule } from './auth';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: path.resolve(__dirname, '../../../..', '.env'),
+      envFilePath: path.resolve(process.cwd(), '../../..', '.env'),
       validationSchema: envValidationSchema,
     }),
     AuthModule,
