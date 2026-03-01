@@ -4,21 +4,31 @@
 @theme {
   --font-sans: 'Manrope', 'Sora', 'Avenir Next', sans-serif;
 
-  --color-background: #f1efe9;
-  --color-foreground: #1d1e22;
-  --color-muted: #f5f3ee;
-  --color-muted-foreground: #474955;
-  --color-border: #d6d2c6;
-  --color-input: #d6d2c6;
-  --color-ring: #0f766e;
-  --color-card: #ffffff;
-  --color-card-foreground: #1d1e22;
-  --color-primary: #0f766e;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #e8e2d6;
-  --color-secondary-foreground: #1d1e22;
+  /* LetMeOut Pastel — Base & interface */
+  --color-background: #fffdf9; /* Cream White — app & card background */
+  --color-foreground: #4a4a4a; /* Soft Slate — main text */
+  --color-muted: #f0f2f5; /* Cloud Gray — sidebar, table backgrounds */
+  --color-muted-foreground: #7a7a7a; /* secondary text on muted surfaces */
+  --color-border: #e0e0e0; /* subtle borders */
+  --color-input: #e0e0e0; /* input borders */
+  --color-ring: #ffdab9; /* focus ring — Soft Peach */
+  --color-card: #fffdf9; /* Cream White */
+  --color-card-foreground: #4a4a4a; /* Soft Slate */
+
+  /* LetMeOut Pastel — Accent & state */
+  --color-primary: #ffdab9; /* Soft Peach — primary interactive */
+  --color-primary-foreground: #4a4a4a;
+  --color-secondary: #e6e6fa; /* Pale Lavender — secondary / nav */
+  --color-secondary-foreground: #4a4a4a;
+  --color-accent: #f4c2c2; /* Dusty Rose — medical leave / alerts */
+  --color-accent-foreground: #4a4a4a;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
+
+  /* Semantic absence-type aliases (used in calendar labels) */
+  --color-vacation: #ffdab9; /* Soft Peach */
+  --color-personal: #e6e6fa; /* Pale Lavender */
+  --color-medical: #f4c2c2; /* Dusty Rose */
 
   --radius: 0.5rem;
 }
@@ -34,7 +44,7 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top left, #faf7f0 0%, #e8e2d6 55%, #e0dacd 100%);
+  background-color: var(--color-background);
   color: var(--color-foreground);
   min-height: 100vh;
 }
