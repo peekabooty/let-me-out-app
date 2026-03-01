@@ -7,18 +7,28 @@
     "dev": "vite",
     "format": "prettier --check .",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 --no-error-on-unmatched-pattern",
-    "test": "node -e \"\"",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-router": "^1.163.3",
+    "@tanstack/router-devtools": "^1.163.3",
+    "axios": "^1.13.6",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^28.1.0",
+    "msw": "^2.12.10",
     "typescript": "^5.9.3",
-    "vite": "^5.4.14"
+    "vite": "^5.4.14",
+    "vitest": "^1.6.1"
   }
 }
