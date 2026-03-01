@@ -1,14 +1,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { useAuthStore } from './auth.store';
+import { UserRole, useAuthStore } from './auth.store';
 import type { SessionUser } from './auth.store';
 
 const mockUser: SessionUser = {
   id: '01900000-0000-7000-8000-000000000001',
   name: 'Ana Garcia',
   email: 'ana@example.com',
-  role: 'EMPLOYEE',
+  role: UserRole.STANDARD,
   isActive: true,
 };
 
@@ -112,7 +112,7 @@ describe('useAuthStore: SessionUser campos minimos', () => {
       id: 'some-uuid',
       name: 'Test User',
       email: 'test@example.com',
-      role: 'VALIDATOR',
+      role: UserRole.VALIDATOR,
       isActive: true,
     };
 
