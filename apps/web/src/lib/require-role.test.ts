@@ -1,7 +1,7 @@
 import { redirect } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuthStore } from '../store/auth.store';
+import { UserRole, useAuthStore } from '../store/auth.store';
 import { requireRole } from './require-role';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -22,13 +22,13 @@ describe('requireRole', () => {
         id: '1',
         name: 'Admin',
         email: 'admin@example.com',
-        role: 'ADMIN',
+        role: UserRole.ADMIN,
         isActive: true,
       },
       isLoading: false,
     });
 
-    expect(() => requireRole(['ADMIN'])).not.toThrow();
+    expect(() => requireRole([UserRole.ADMIN])).not.toThrow();
   });
 
   it('redirige a /unauthorized cuando el usuario no tiene el rol requerido', () => {
@@ -37,20 +37,20 @@ describe('requireRole', () => {
         id: '2',
         name: 'Ana',
         email: 'ana@example.com',
-        role: 'EMPLOYEE',
+        role: UserRole.STANDARD,
         isActive: true,
       },
       isLoading: false,
     });
 
-    expect(() => requireRole(['ADMIN'])).toThrow('redirect:/unauthorized');
+    expect(() => requireRole([UserRole.ADMIN])).toThrow('redirect:/unauthorized');
     expect(redirect).toHaveBeenCalledWith({ to: '/unauthorized' });
   });
 
   it('redirige a /unauthorized cuando no hay sesion activa', () => {
     useAuthStore.setState({ user: null, isLoading: false });
 
-    expect(() => requireRole(['ADMIN'])).toThrow('redirect:/unauthorized');
+    expect(() => requireRole([UserRole.ADMIN])).toThrow('redirect:/unauthorized');
     expect(redirect).toHaveBeenCalledWith({ to: '/unauthorized' });
   });
 
@@ -60,13 +60,13 @@ describe('requireRole', () => {
         id: '3',
         name: 'Val',
         email: 'val@example.com',
-        role: 'VALIDATOR',
+        role: UserRole.VALIDATOR,
         isActive: true,
       },
       isLoading: false,
     });
 
-    expect(() => requireRole(['ADMIN', 'VALIDATOR'])).not.toThrow();
+    expect(() => requireRole([UserRole.ADMIN, UserRole.VALIDATOR])).not.toThrow();
   });
 
   it('redirige cuando el rol del usuario no esta en la lista de varios roles permitidos', () => {
@@ -75,12 +75,14 @@ describe('requireRole', () => {
         id: '4',
         name: 'Emp',
         email: 'emp@example.com',
-        role: 'EMPLOYEE',
+        role: UserRole.STANDARD,
         isActive: true,
       },
       isLoading: false,
     });
 
-    expect(() => requireRole(['ADMIN', 'VALIDATOR'])).toThrow('redirect:/unauthorized');
+    expect(() => requireRole([UserRole.ADMIN, UserRole.VALIDATOR])).toThrow(
+      'redirect:/unauthorized'
+    );
   });
 });
