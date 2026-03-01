@@ -4,7 +4,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
-@Controller()
+@Controller('auth')
 export class MeController {
   constructor(private readonly authService: AuthService) {}
 
