@@ -8,6 +8,7 @@ import { ClockService, RequestIdMiddleware, RolesGuard } from '../common';
 import { JwtAuthGuard } from '../modules/auth/guards/jwt-auth.guard';
 import { envValidationSchema } from '../config';
 import { AuthModule } from './auth';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './auth';
     }),
     AuthModule,
     PrismaModule,
+    UsersModule,
   ],
   providers: [
     ClockService,
