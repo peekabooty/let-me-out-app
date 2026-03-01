@@ -2,6 +2,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from './modules/app.module';
 import { HttpExceptionFilter, REQUEST_ID_HEADER } from './common';
@@ -12,12 +13,9 @@ const bootstrap = async (): Promise<void> => {
   });
   const configService = app.get(ConfigService);
 
+  app.use(cookieParser());
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
