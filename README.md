@@ -70,13 +70,40 @@ Usa `.env.example` como base.
 
 - `pnpm --filter @repo/types test`: tests de schemas Zod
 
+## Seed: usuario administrador inicial
+
+El seed crea el primer usuario administrador en la base de datos. Es idempotente: si el usuario ya existe, no hace nada.
+
+**Variables de entorno necesarias** (en `.env`, raíz del proyecto):
+
+```
+SEED_ADMIN_EMAIL=admin@tuempresa.com
+SEED_ADMIN_PASSWORD=contraseña_segura
+SEED_ADMIN_NAME=Administrador
+```
+
+**Cuándo ejecutarlo:**
+
+- La primera vez que levantes el entorno (local, staging o producción), después de aplicar las migraciones.
+- En CI/CD, como paso posterior a `prisma migrate deploy`.
+- Si necesitas recrear la base de datos desde cero.
+
+**Cómo ejecutarlo:**
+
+```bash
+pnpm --filter @repo/api exec prisma db seed
+```
+
+El comando carga el `.env` de la raíz automáticamente.
+
 ## Desarrollo local rapido
 
 1. Crea `.env` a partir de `.env.example`.
 2. Arranca Postgres y define `DATABASE_URL`.
 3. Instala dependencias: `pnpm install`.
 4. Ejecuta migraciones: `pnpm --filter @repo/api prisma:migrate`.
-5. Arranca backend: `pnpm --filter @repo/api dev`.
+5. Ejecuta el seed para crear el admin inicial: `pnpm --filter @repo/api exec prisma db seed`.
+6. Arranca backend: `pnpm --filter @repo/api dev`.
 
 ## Convenciones
 
