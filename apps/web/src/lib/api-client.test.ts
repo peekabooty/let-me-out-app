@@ -35,8 +35,9 @@ describe('apiClient: interceptor de 401', () => {
   });
 
   it('redirige a /login y limpia la sesion cuando una peticion devuelve 401', async () => {
+    const baseURL = apiClient.defaults.baseURL ?? 'http://localhost:3010';
     server.use(
-      http.get('http://localhost:3000/absences', () => {
+      http.get(`${baseURL}/absences`, () => {
         return new HttpResponse(null, { status: 401 });
       })
     );
@@ -54,8 +55,9 @@ describe('apiClient: interceptor de 401', () => {
   });
 
   it('no redirige a /login cuando /auth/me devuelve 401', async () => {
+    const baseURL = apiClient.defaults.baseURL ?? 'http://localhost:3010';
     server.use(
-      http.get('http://localhost:3000/auth/me', () => {
+      http.get(`${baseURL}/auth/me`, () => {
         return new HttpResponse(null, { status: 401 });
       })
     );
@@ -68,8 +70,9 @@ describe('apiClient: interceptor de 401', () => {
   });
 
   it('no redirige cuando la peticion es exitosa', async () => {
+    const baseURL = apiClient.defaults.baseURL ?? 'http://localhost:3010';
     server.use(
-      http.get('http://localhost:3000/absences', () => {
+      http.get(`${baseURL}/absences`, () => {
         return HttpResponse.json([]);
       })
     );
@@ -82,8 +85,9 @@ describe('apiClient: interceptor de 401', () => {
   });
 
   it('no redirige cuando la peticion devuelve 403', async () => {
+    const baseURL = apiClient.defaults.baseURL ?? 'http://localhost:3010';
     server.use(
-      http.get('http://localhost:3000/absences', () => {
+      http.get(`${baseURL}/absences`, () => {
         return new HttpResponse(null, { status: 403 });
       })
     );
