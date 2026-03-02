@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AbsenceStatus, AbsenceUnit } from '@repo/types';
+import { AbsenceStatus, AbsenceUnit, ValidationDecision } from '@repo/types';
 import { startOfYear, endOfYear } from 'date-fns';
 
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -139,5 +139,61 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
     });
 
     return count > 0;
+  }
+
+  async createValidationHistory(
+    absenceId: string,
+    validatorId: string,
+    decision: ValidationDecision,
+    decidedAt: Date
+  ): Promise<void> {
+    await this.prisma.absence_validation_history.create({
+      data: {
+        id: generateId(),
+        absence_id: absenceId,
+        validator_id: validatorId,
+        decision,
+        decided_at: decidedAt,
+      },
+    });
+  }
+
+  async getValidationHistory(
+    absenceId: string
+  ): Promise<Array<{ validatorId: string; decision: ValidationDecision; decidedAt: Date }>> {
+    const records = await this.prisma.absence_validation_history.findMany({
+      where: { absence_id: absenceId },
+      orderBy: { decided_at: 'desc' },
+    });
+
+    return records.map((record) => ({
+      validatorId: record.validator_id,
+      decision: record.decision as ValidationDecision,
+      decidedAt: record.decided_at,
+    }));
+  }
+
+  async getAssignedValidators(absenceId: string): Promise<string[]> {
+    // The validators are stored in the absence_validator junction table
+    const validators = await this.prisma.absence_validator.findMany({
+      where: { absence_id: absenceId },
+      select: { validator_id: true },
+    });
+
+    return validators.map((v: { validator_id: string }) => v.validator_id);
+  }
+
+  async assignValidators(
+    absenceId: string,
+    validatorIds: string[],
+    assignedAt: Date
+  ): Promise<void> {
+    await this.prisma.absence_validator.createMany({
+      data: validatorIds.map((validatorId) => ({
+        absence_id: absenceId,
+        validator_id: validatorId,
+        assigned_at: assignedAt,
+      })),
+    });
   }
 }

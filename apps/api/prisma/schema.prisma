@@ -17,6 +17,7 @@ model user {
   created_at          DateTime                    @default(now()) @db.Timestamptz(6)
   updated_at          DateTime                    @db.Timestamptz(6)
   absences            absence[]
+  assigned_validations absence_validator[]        @relation("validator_assignments")
   validations         absence_validation_history[] @relation("validator_absence_history")
   status_changes      absence_status_history[]     @relation("status_changed_by")
   observations        observation[]
@@ -52,6 +53,7 @@ model absence {
   updated_at      DateTime                    @db.Timestamptz(6)
   user            user                        @relation(fields: [user_id], references: [id])
   absence_type    absence_type                @relation(fields: [absence_type_id], references: [id])
+  assigned_validators absence_validator[]
   validation_history absence_validation_history[]
   status_history     absence_status_history[]
   observations       observation[]
@@ -148,4 +150,15 @@ model observation_attachment {
   observation     observation @relation(fields: [observation_id], references: [id])
 
   @@index([observation_id])
+}
+
+model absence_validator {
+  absence_id    String   @db.Uuid
+  validator_id  String   @db.Uuid
+  assigned_at   DateTime @default(now()) @db.Timestamptz(6)
+  absence       absence  @relation(fields: [absence_id], references: [id])
+  validator     user     @relation("validator_assignments", fields: [validator_id], references: [id])
+
+  @@id([absence_id, validator_id])
+  @@index([validator_id])
 }

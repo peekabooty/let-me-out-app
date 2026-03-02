@@ -10,9 +10,11 @@ import { AbsenceMapper } from './infrastructure/absence.mapper';
 import { DurationCalculatorService } from './domain/services/duration-calculator.service';
 import { AnnualLimitValidatorService } from './domain/services/annual-limit-validator.service';
 import { OverlapValidatorService } from './domain/services/overlap-validator.service';
+import { AbsenceStateMachineService } from './domain/services/absence-state-machine.service';
 import { CreateAbsenceHandler } from './application/commands/create-absence.handler';
+import { ValidateAbsenceHandler } from './application/commands/validate-absence.handler';
 
-const commandHandlers = [CreateAbsenceHandler];
+const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],
@@ -29,6 +31,7 @@ const commandHandlers = [CreateAbsenceHandler];
     DurationCalculatorService,
     AnnualLimitValidatorService,
     OverlapValidatorService,
+    AbsenceStateMachineService,
     // Command handlers
     ...commandHandlers,
   ],
