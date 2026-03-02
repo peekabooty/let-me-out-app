@@ -10,6 +10,7 @@ import { envValidationSchema } from '../config';
 import { AuthModule } from './auth';
 import { UsersModule } from './users/users.module';
 import { AbsenceTypesModule } from './absence-types/absence-types.module';
+import { ObservationsModule } from './observations/observations.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AbsenceTypesModule } from './absence-types/absence-types.module';
     PrismaModule,
     UsersModule,
     AbsenceTypesModule,
+    ObservationsModule,
   ],
   providers: [
     ClockService,
