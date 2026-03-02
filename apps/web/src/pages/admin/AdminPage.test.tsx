@@ -39,7 +39,10 @@ const mockUsers: User[] = [
   },
 ];
 
-const server = setupServer(http.get('*/users', () => HttpResponse.json(mockUsers)));
+const server = setupServer(
+  http.get('*/users', () => HttpResponse.json(mockUsers)),
+  http.get('*/absence-types', () => HttpResponse.json([]))
+);
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());

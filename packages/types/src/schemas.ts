@@ -32,6 +32,29 @@ export const CreateAbsenceTypeSchema = z
     path: ['maxDuration'],
   });
 
+export const UpdateAbsenceTypeSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    maxPerYear: z.number().positive().optional(),
+    minDuration: z.number().positive().optional(),
+    maxDuration: z.number().positive().optional(),
+    requiresValidation: z.boolean().optional(),
+    allowPastDates: z.boolean().optional(),
+    minDaysInAdvance: z.number().int().nonnegative().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.maxDuration !== undefined && data.minDuration !== undefined) {
+        return data.maxDuration >= data.minDuration;
+      }
+      return true;
+    },
+    {
+      message: 'maxDuration must be greater than or equal to minDuration',
+      path: ['maxDuration'],
+    }
+  );
+
 export const CreateAbsenceSchema = z
   .object({
     absenceTypeId: z.string().uuid(),

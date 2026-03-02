@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios';
-import type { User } from '@repo/types';
+import type { User, AbsenceType } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
 import type { SessionUser } from '../store/auth.store';
@@ -67,4 +67,50 @@ export async function updateUser(id: string, payload: UpdateUserPayload): Promis
 
 export async function deactivateUser(id: string): Promise<void> {
   await apiClient.delete(`/users/${id}`);
+}
+
+export async function listAbsenceTypes(onlyActive = false): Promise<AbsenceType[]> {
+  const response = await apiClient.get<AbsenceType[]>('/absence-types', {
+    params: onlyActive ? { onlyActive: 'true' } : undefined,
+  });
+  return response.data;
+}
+
+export interface CreateAbsenceTypePayload {
+  name: string;
+  unit: AbsenceType['unit'];
+  maxPerYear: number;
+  minDuration: number;
+  maxDuration: number;
+  requiresValidation: boolean;
+  allowPastDates: boolean;
+  minDaysInAdvance: number | null;
+}
+
+export async function createAbsenceType(
+  payload: CreateAbsenceTypePayload
+): Promise<{ id: string }> {
+  const response = await apiClient.post<{ id: string }>('/absence-types', payload);
+  return response.data;
+}
+
+export interface UpdateAbsenceTypePayload {
+  name?: string;
+  maxPerYear?: number;
+  minDuration?: number;
+  maxDuration?: number;
+  requiresValidation?: boolean;
+  allowPastDates?: boolean;
+  minDaysInAdvance?: number | null;
+}
+
+export async function updateAbsenceType(
+  id: string,
+  payload: UpdateAbsenceTypePayload
+): Promise<void> {
+  await apiClient.patch(`/absence-types/${id}`, payload);
+}
+
+export async function deactivateAbsenceType(id: string): Promise<void> {
+  await apiClient.delete(`/absence-types/${id}`);
 }
