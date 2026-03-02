@@ -9,8 +9,8 @@ describe('AbsenceStateMachineService', () => {
   });
 
   describe('isFinalState', () => {
-    it('should return true for ACCEPTED', () => {
-      expect(service.isFinalState(AbsenceStatus.ACCEPTED)).toBe(true);
+    it('should return false for ACCEPTED (can transition to CANCELLED per RF-51)', () => {
+      expect(service.isFinalState(AbsenceStatus.ACCEPTED)).toBe(false);
     });
 
     it('should return true for DISCARDED', () => {
@@ -102,7 +102,7 @@ describe('AbsenceStateMachineService', () => {
   });
 
   describe('isTransitionValid - RF-32: Final states', () => {
-    it('should not allow any transition from ACCEPTED', () => {
+    it('should only allow transition to CANCELLED from ACCEPTED (RF-51)', () => {
       expect(
         service.isTransitionValid(AbsenceStatus.ACCEPTED, AbsenceStatus.WAITING_VALIDATION)
       ).toBe(false);
@@ -112,9 +112,8 @@ describe('AbsenceStateMachineService', () => {
       expect(service.isTransitionValid(AbsenceStatus.ACCEPTED, AbsenceStatus.DISCARDED)).toBe(
         false
       );
-      expect(service.isTransitionValid(AbsenceStatus.ACCEPTED, AbsenceStatus.CANCELLED)).toBe(
-        false
-      );
+      // RF-51: Creator can cancel ACCEPTED absence before start date
+      expect(service.isTransitionValid(AbsenceStatus.ACCEPTED, AbsenceStatus.CANCELLED)).toBe(true);
     });
 
     it('should not allow any transition from DISCARDED', () => {
