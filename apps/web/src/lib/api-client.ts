@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios';
-import type { User, AbsenceType } from '@repo/types';
+import type { User, AbsenceType, Absence } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
 import type { SessionUser } from '../store/auth.store';
@@ -113,4 +113,16 @@ export async function updateAbsenceType(
 
 export async function deactivateAbsenceType(id: string): Promise<void> {
   await apiClient.delete(`/absence-types/${id}`);
+}
+
+export interface CreateAbsencePayload {
+  absenceTypeId: string;
+  startAt: string;
+  endAt: string;
+  validatorIds?: string[];
+}
+
+export async function createAbsence(payload: CreateAbsencePayload): Promise<Absence> {
+  const response = await apiClient.post<Absence>('/absences', payload);
+  return response.data;
 }
