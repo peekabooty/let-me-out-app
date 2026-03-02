@@ -13,8 +13,9 @@ import { OverlapValidatorService } from './domain/services/overlap-validator.ser
 import { AbsenceStateMachineService } from './domain/services/absence-state-machine.service';
 import { CreateAbsenceHandler } from './application/commands/create-absence.handler';
 import { ValidateAbsenceHandler } from './application/commands/validate-absence.handler';
+import { CancelAbsenceHandler } from './application/commands/cancel-absence.handler';
 
-const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler];
+const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbsenceHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],
