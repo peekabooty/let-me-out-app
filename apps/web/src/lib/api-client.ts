@@ -1,5 +1,6 @@
 import axios, { isAxiosError } from 'axios';
 import type { User, AbsenceType, Absence } from '@repo/types';
+import { ValidationDecision } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
 import type { SessionUser } from '../store/auth.store';
@@ -125,4 +126,23 @@ export interface CreateAbsencePayload {
 export async function createAbsence(payload: CreateAbsencePayload): Promise<Absence> {
   const response = await apiClient.post<Absence>('/absences', payload);
   return response.data;
+}
+
+export interface ValidateAbsencePayload {
+  decision: ValidationDecision;
+}
+
+export async function validateAbsence(
+  absenceId: string,
+  decision: ValidationDecision
+): Promise<void> {
+  await apiClient.post(`/absences/${absenceId}/validate`, { decision });
+}
+
+export async function reconsiderAbsence(absenceId: string): Promise<void> {
+  await apiClient.post(`/absences/${absenceId}/reconsider`);
+}
+
+export async function discardAbsence(absenceId: string): Promise<void> {
+  await apiClient.post(`/absences/${absenceId}/discard`);
 }
