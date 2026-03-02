@@ -15,6 +15,10 @@ describe('OverlapValidatorService', () => {
       createStatusHistory: jest.fn(),
       calculateConsumedByUserAndTypeInYear: jest.fn(),
       hasOverlap: jest.fn(),
+      createValidationHistory: jest.fn(),
+      getValidationHistory: jest.fn(),
+      getAssignedValidators: jest.fn(),
+      assignValidators: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
