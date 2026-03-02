@@ -30,7 +30,10 @@ const mockAdminUser = {
   role: UserRole.ADMIN,
 };
 
-const server = setupServer(http.get('*/users', () => HttpResponse.json([])));
+const server = setupServer(
+  http.get('*/users', () => HttpResponse.json([])),
+  http.get('*/absence-types', () => HttpResponse.json([]))
+);
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
@@ -135,7 +138,7 @@ describe('Guard de rol: ruta de administracion', () => {
     render(<RouterProvider router={router} />, { wrapper: Wrapper });
 
     await waitFor(() => {
-      expect(screen.getByText('Usuarios')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Usuarios', level: 2 })).toBeInTheDocument();
     });
   });
 
