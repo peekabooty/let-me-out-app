@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { AbsenceStatus } from '@repo/types';
 
 /**
- * Domain service that manages absence status transitions according to RF-29 to RF-32.
+ * Domain service that manages absence status transitions according to RF-29 to RF-32, RF-51, RF-52.
  *
  * RF-29: Possible states for absences with validation workflow:
  *   - WAITING_VALIDATION (initial state)
  *   - RECONSIDER
  *   - DISCARDED (final state)
- *   - ACCEPTED (final state)
+ *   - ACCEPTED (can transition to CANCELLED per RF-51)
  *   - CANCELLED (final state)
  *
  * RF-30: From WAITING_VALIDATION:
@@ -19,7 +19,12 @@ import { AbsenceStatus } from '@repo/types';
  *   - User can resend for validation → WAITING_VALIDATION
  *   - User can decide not to continue → DISCARDED
  *
- * RF-32: ACCEPTED and DISCARDED are final states; no further transitions allowed.
+ * RF-32: DISCARDED is a final state; no further transitions allowed.
+ *
+ * RF-51: From ACCEPTED:
+ *   - Creator can cancel before start date → CANCELLED
+ *
+ * RF-52: CANCELLED is a final state; no further transitions allowed.
  */
 @Injectable()
 export class AbsenceStateMachineService {
@@ -32,8 +37,8 @@ export class AbsenceStateMachineService {
       return toStatus === AbsenceStatus.WAITING_VALIDATION;
     }
 
-    // RF-32: No transitions from final states
-    if (this.isFinalState(fromStatus)) {
+    // RF-32, RF-52: No transitions from DISCARDED or CANCELLED
+    if (fromStatus === AbsenceStatus.DISCARDED || fromStatus === AbsenceStatus.CANCELLED) {
       return false;
     }
 
@@ -55,18 +60,22 @@ export class AbsenceStateMachineService {
       );
     }
 
+    // RF-51: From ACCEPTED, can transition to CANCELLED before start date
+    if (fromStatus === AbsenceStatus.ACCEPTED) {
+      return toStatus === AbsenceStatus.CANCELLED;
+    }
+
     return false;
   }
 
   /**
-   * Checks if a status is a final state (RF-32).
+   * Checks if a status is a final state (RF-32, RF-52).
+   * CANCELLED and DISCARDED are truly final.
+   * ACCEPTED can transition to CANCELLED per RF-51.
    */
   isFinalState(status: AbsenceStatus | null): boolean {
     return (
-      status === AbsenceStatus.ACCEPTED ||
-      status === AbsenceStatus.DISCARDED ||
-      status === AbsenceStatus.CANCELLED ||
-      status === null
+      status === AbsenceStatus.DISCARDED || status === AbsenceStatus.CANCELLED || status === null
     );
   }
 
