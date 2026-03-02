@@ -7,6 +7,7 @@ import {
   validateAbsence,
   reconsiderAbsence,
   discardAbsence,
+  cancelAbsence,
   type CreateAbsencePayload,
 } from '../lib/api-client';
 import { absencesKeys } from '../lib/query-keys/absences.keys';
@@ -58,6 +59,18 @@ export function useDiscardAbsence() {
 
   return useMutation({
     mutationFn: (absenceId: string) => discardAbsence(absenceId),
+    onSuccess: (_data, absenceId) => {
+      queryClient.invalidateQueries({ queryKey: absencesKeys.list() });
+      queryClient.invalidateQueries({ queryKey: absencesKeys.detail(absenceId) });
+    },
+  });
+}
+
+export function useCancelAbsence() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (absenceId: string) => cancelAbsence(absenceId),
     onSuccess: (_data, absenceId) => {
       queryClient.invalidateQueries({ queryKey: absencesKeys.list() });
       queryClient.invalidateQueries({ queryKey: absencesKeys.detail(absenceId) });
