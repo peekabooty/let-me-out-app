@@ -1,7 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@repo/types';
 
-import { listUsers } from '../lib/api-client';
+import {
+  createUser,
+  listUsers,
+  updateUser,
+  type CreateUserPayload,
+  type UpdateUserPayload,
+} from '../lib/api-client';
 import { usersKeys } from '../lib/query-keys/users.keys';
 
 export function useUsers() {
@@ -12,4 +18,28 @@ export function useUsers() {
   });
 
   return { users: data ?? [], isLoading, isError, error };
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateUserPayload) => createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.list() });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) =>
+      updateUser(id, payload),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.list() });
+      queryClient.invalidateQueries({ queryKey: usersKeys.detail(id) });
+    },
+  });
 }
