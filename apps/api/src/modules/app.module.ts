@@ -9,6 +9,7 @@ import { JwtAuthGuard } from '../modules/auth/guards/jwt-auth.guard';
 import { envValidationSchema } from '../config';
 import { AuthModule } from './auth';
 import { UsersModule } from './users/users.module';
+import { AbsenceTypesModule } from './absence-types/absence-types.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     PrismaModule,
     UsersModule,
+    AbsenceTypesModule,
   ],
   providers: [
     ClockService,
