@@ -146,3 +146,7 @@ export async function reconsiderAbsence(absenceId: string): Promise<void> {
 export async function discardAbsence(absenceId: string): Promise<void> {
   await apiClient.post(`/absences/${absenceId}/discard`);
 }
+
+export async function cancelAbsence(absenceId: string): Promise<void> {
+  await apiClient.post(`/absences/${absenceId}/cancel`);
+}
