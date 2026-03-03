@@ -233,3 +233,42 @@ export async function listCalendarAbsences(): Promise<CalendarAbsence[]> {
   const response = await apiClient.get<CalendarAbsence[]>('/absences/calendar');
   return response.data;
 }
+
+export interface AbsenceTypeBalance {
+  absenceTypeId: string;
+  absenceTypeName: string;
+  unit: 'hours' | 'days';
+  maxPerYear: number;
+  consumed: number;
+  remaining: number;
+}
+
+export interface UpcomingAbsence {
+  id: string;
+  absenceTypeName: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  status: AbsenceStatus | null;
+}
+
+export interface PendingValidation {
+  id: string;
+  userName: string;
+  absenceTypeName: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  createdAt: string;
+}
+
+export interface DashboardData {
+  balances: AbsenceTypeBalance[];
+  upcomingAbsences: UpcomingAbsence[];
+  pendingValidations: PendingValidation[];
+}
+
+export async function fetchDashboard(): Promise<DashboardData> {
+  const response = await apiClient.get<DashboardData>('/dashboard');
+  return response.data;
+}
