@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AbsenceStatus } from '@repo/types';
 
 import { ClockService, generateId } from '../../../../common';
@@ -16,6 +16,7 @@ import { DurationCalculatorService } from '../../domain/services/duration-calcul
 import { AnnualLimitValidatorService } from '../../domain/services/annual-limit-validator.service';
 import { OverlapValidatorService } from '../../domain/services/overlap-validator.service';
 import { CreateAbsenceCommand } from './create-absence.command';
+import { AbsenceCreatedEvent } from '../../domain/events/absence-created.event';
 
 /**
  * Command handler for creating a new absence request.
@@ -39,7 +40,8 @@ export class CreateAbsenceHandler implements ICommandHandler<CreateAbsenceComman
     private readonly durationCalculator: DurationCalculatorService,
     private readonly annualLimitValidator: AnnualLimitValidatorService,
     private readonly overlapValidator: OverlapValidatorService,
-    private readonly clock: ClockService
+    private readonly clock: ClockService,
+    private readonly eventBus: EventBus
   ) {}
 
   async execute(command: CreateAbsenceCommand): Promise<string> {
@@ -117,6 +119,21 @@ export class CreateAbsenceHandler implements ICommandHandler<CreateAbsenceComman
         command.userId, // The user who created it
         now
       );
+    }
+
+    // Publish domain event for notifications (RF-47, RF-49)
+    if (absenceType.requiresValidation && command.validatorIds.length > 0) {
+      const event = new AbsenceCreatedEvent(
+        absence.id,
+        absence.userId,
+        absence.absenceTypeId,
+        absence.startAt,
+        absence.endAt,
+        absence.duration,
+        absence.status,
+        command.validatorIds
+      );
+      this.eventBus.publish(event);
     }
 
     return absence.id;
