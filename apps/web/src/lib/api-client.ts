@@ -6,6 +6,7 @@ import type {
   Observation,
   Attachment,
   Notification,
+  AbsenceStatus,
 } from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
@@ -210,4 +211,25 @@ export async function listNotifications(): Promise<Notification[]> {
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
   await apiClient.patch(`/notifications/${notificationId}/read`);
+}
+
+export interface CalendarAbsence {
+  id: string;
+  userId: string;
+  userName: string;
+  absenceTypeId: string;
+  absenceTypeName: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  status: AbsenceStatus | null;
+  isOwn: boolean;
+  teamColor: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listCalendarAbsences(): Promise<CalendarAbsence[]> {
+  const response = await apiClient.get<CalendarAbsence[]>('/absences/calendar');
+  return response.data;
 }
