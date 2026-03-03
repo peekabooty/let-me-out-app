@@ -310,4 +310,102 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
       a.startAt < b.startAt ? -1 : 1
     );
   }
+
+  /**
+   * Finds upcoming absences for a user (RF-55).
+   *
+   * Returns absences with startAt >= current date, ordered by startAt ASC.
+   * Limited to 10 most recent upcoming absences.
+   */
+  async findUpcomingAbsences(userId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+    }>
+  > {
+    const now = new Date();
+
+    const absences = await this.prisma.absence.findMany({
+      where: {
+        user_id: userId,
+        start_at: {
+          gte: now,
+        },
+      },
+      include: {
+        absence_type: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        start_at: 'asc',
+      },
+      take: 10,
+    });
+
+    return absences.map((absence) => ({
+      id: absence.id,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      status: absence.status as AbsenceStatus | null,
+    }));
+  }
+
+  /**
+   * Finds absences pending validation by a specific validator (RF-55).
+   *
+   * Returns absences where:
+   * - The validator is assigned to the absence
+   * - The absence status is WAITING_VALIDATION or RECONSIDER
+   * - Ordered by createdAt ASC (oldest first)
+   */
+  async findPendingValidations(validatorId: string): Promise<
+    Array<{
+      id: string;
+      userName: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      createdAt: Date;
+    }>
+  > {
+    const absences = await this.prisma.absence.findMany({
+      where: {
+        status: {
+          in: [AbsenceStatus.WAITING_VALIDATION, AbsenceStatus.RECONSIDER],
+        },
+        assigned_validators: {
+          some: {
+            validator_id: validatorId,
+          },
+        },
+      },
+      include: {
+        user: true,
+        absence_type: true,
+      },
+      orderBy: {
+        created_at: 'asc',
+      },
+    });
+
+    return absences.map((absence) => ({
+      id: absence.id,
+      userName: absence.user.name,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      createdAt: absence.created_at,
+    }));
+  }
 }

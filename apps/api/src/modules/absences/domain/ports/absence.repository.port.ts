@@ -131,6 +131,49 @@ export interface AbsenceRepositoryPort {
       updatedAt: Date;
     }>
   >;
+
+  /**
+   * Finds upcoming absences for a user (RF-55).
+   *
+   * Returns absences with startAt >= current date, ordered by startAt ASC.
+   * Limited to a reasonable number (e.g., 10 most recent).
+   *
+   * @param userId - The ID of the user
+   * @returns Array of upcoming absences with absence type name
+   */
+  findUpcomingAbsences(userId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+    }>
+  >;
+
+  /**
+   * Finds absences pending validation by a specific validator (RF-55).
+   *
+   * Returns absences where:
+   * - The validator is assigned to the absence
+   * - The absence status is WAITING_VALIDATION or RECONSIDER
+   * - Ordered by createdAt ASC (oldest first)
+   *
+   * @param validatorId - The ID of the validator user
+   * @returns Array of absences pending validation with user and type names
+   */
+  findPendingValidations(validatorId: string): Promise<
+    Array<{
+      id: string;
+      userName: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      createdAt: Date;
+    }>
+  >;
 }
 
 export const ABSENCE_REPOSITORY_PORT = Symbol('AbsenceRepositoryPort');

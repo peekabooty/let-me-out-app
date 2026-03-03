@@ -20,6 +20,8 @@ const makeAbsenceRepo = (
   getAssignedValidators: jest.fn(),
   assignValidators: jest.fn(),
   findCalendarAbsences: jest.fn().mockResolvedValue([]),
+  findUpcomingAbsences: jest.fn().mockResolvedValue([]),
+  findPendingValidations: jest.fn().mockResolvedValue([]),
   ...overrides,
 });
 

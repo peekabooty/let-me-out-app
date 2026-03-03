@@ -15,14 +15,16 @@ import { CreateAbsenceHandler } from './application/commands/create-absence.hand
 import { ValidateAbsenceHandler } from './application/commands/validate-absence.handler';
 import { CancelAbsenceHandler } from './application/commands/cancel-absence.handler';
 import { GetCalendarAbsencesHandler } from './application/queries/get-calendar-absences.handler';
+import { GetDashboardHandler } from './application/queries/get-dashboard.handler';
 import { AbsencesController } from './infrastructure/absences.controller';
+import { DashboardController } from './infrastructure/dashboard.controller';
 
 const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbsenceHandler];
-const queryHandlers = [GetCalendarAbsencesHandler];
+const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],
-  controllers: [AbsencesController],
+  controllers: [AbsencesController, DashboardController],
   providers: [
     ClockService,
     // Repository
