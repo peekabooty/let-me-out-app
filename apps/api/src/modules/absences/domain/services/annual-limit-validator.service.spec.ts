@@ -21,6 +21,8 @@ describe('AnnualLimitValidatorService', () => {
       getAssignedValidators: jest.fn(),
       assignValidators: jest.fn(),
       findCalendarAbsences: jest.fn(),
+      findUpcomingAbsences: jest.fn(),
+      findPendingValidations: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
