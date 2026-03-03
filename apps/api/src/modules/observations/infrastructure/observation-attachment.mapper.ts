@@ -1,10 +1,12 @@
+import { Injectable } from '@nestjs/common';
 import { observation_attachment as PrismaObservationAttachment } from '@prisma/client';
 import { ObservationAttachment } from '../domain/observation-attachment.entity';
 
 /**
  * Maps between Prisma observation_attachment model and domain ObservationAttachment entity.
  */
-export const ObservationAttachmentMapper = {
+@Injectable()
+export class ObservationAttachmentMapper {
   /**
    * Maps a Prisma observation_attachment to a domain ObservationAttachment entity.
    *
@@ -21,7 +23,7 @@ export const ObservationAttachmentMapper = {
       sizeBytes: prismaAttachment.size_bytes,
       createdAt: prismaAttachment.created_at,
     });
-  },
+  }
 
   /**
    * Maps a domain ObservationAttachment entity to Prisma create input.
@@ -47,5 +49,5 @@ export const ObservationAttachmentMapper = {
       size_bytes: attachment.sizeBytes,
       created_at: attachment.createdAt,
     };
-  },
-};
+  }
+}

@@ -11,7 +11,10 @@ import { ObservationAttachmentMapper } from './observation-attachment.mapper';
  */
 @Injectable()
 export class ObservationAttachmentPrismaRepository implements ObservationAttachmentRepositoryPort {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mapper: ObservationAttachmentMapper
+  ) {}
 
   /**
    * Saves a new observation attachment to the database.
@@ -20,7 +23,7 @@ export class ObservationAttachmentPrismaRepository implements ObservationAttachm
    * @returns {Promise<void>}
    */
   async save(attachment: ObservationAttachment): Promise<void> {
-    const data = ObservationAttachmentMapper.toPrismaCreate(attachment);
+    const data = this.mapper.toPrismaCreate(attachment);
     await this.prisma.observation_attachment.create({ data });
   }
 
@@ -35,7 +38,7 @@ export class ObservationAttachmentPrismaRepository implements ObservationAttachm
       where: { id },
     });
 
-    return attachment ? ObservationAttachmentMapper.toDomain(attachment) : null;
+    return attachment ? this.mapper.toDomain(attachment) : null;
   }
 
   /**
@@ -50,7 +53,7 @@ export class ObservationAttachmentPrismaRepository implements ObservationAttachm
       orderBy: { created_at: 'asc' },
     });
 
-    return attachments.map((attachment) => ObservationAttachmentMapper.toDomain(attachment));
+    return attachments.map((attachment) => this.mapper.toDomain(attachment));
   }
 
   /**

@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { fileTypeFromBuffer } from 'file-type';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf'] as const;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -29,6 +28,8 @@ export class FileValidationService {
     }
 
     // Non-negotiable 1.9: Validate MIME type using magic bytes
+    // Dynamic import for ESM-only package
+    const { fileTypeFromBuffer } = await import('file-type');
     const fileType = await fileTypeFromBuffer(buffer);
 
     if (!fileType) {
