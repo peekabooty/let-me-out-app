@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios';
-import type { User, AbsenceType, Absence } from '@repo/types';
+import type { User, AbsenceType, Absence, Observation } from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
@@ -149,4 +149,24 @@ export async function discardAbsence(absenceId: string): Promise<void> {
 
 export async function cancelAbsence(absenceId: string): Promise<void> {
   await apiClient.post(`/absences/${absenceId}/cancel`);
+}
+
+export async function listObservations(absenceId: string): Promise<Observation[]> {
+  const response = await apiClient.get<Observation[]>(`/absences/${absenceId}/observations`);
+  return response.data;
+}
+
+export interface CreateObservationPayload {
+  content: string;
+}
+
+export async function createObservation(
+  absenceId: string,
+  payload: CreateObservationPayload
+): Promise<{ id: string }> {
+  const response = await apiClient.post<{ id: string }>(
+    `/absences/${absenceId}/observations`,
+    payload
+  );
+  return response.data;
 }
