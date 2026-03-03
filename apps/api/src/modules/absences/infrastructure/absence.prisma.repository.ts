@@ -196,4 +196,118 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
       })),
     });
   }
+
+  /**
+   * Gets absences for the calendar view (RF-46, RF-69, RF-70).
+   *
+   * Returns:
+   * - All absences of the specified user
+   * - All absences of team members in teams the user belongs to
+   * - Includes user name, absence type name, and team color
+   *
+   * The query is optimized with proper joins to avoid N+1 queries.
+   */
+  async findCalendarAbsences(userId: string): Promise<
+    Array<{
+      id: string;
+      userId: string;
+      userName: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      teamColor: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  > {
+    // First, get the user's own absences
+    const ownAbsences = await this.prisma.absence.findMany({
+      where: { user_id: userId },
+      include: {
+        user: { select: { name: true } },
+        absence_type: { select: { name: true } },
+      },
+      orderBy: { start_at: 'asc' },
+    });
+
+    // Get team IDs where the user is a member
+    const userTeams = await this.prisma.team_member.findMany({
+      where: { user_id: userId },
+      select: { team_id: true },
+    });
+
+    const teamIds = userTeams.map((tm) => tm.team_id);
+
+    // Get absences of team members (excluding the user's own absences)
+    const teamAbsences = await this.prisma.absence.findMany({
+      where: {
+        user_id: { not: userId },
+        user: {
+          team_memberships: {
+            some: {
+              team_id: { in: teamIds },
+            },
+          },
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            team_memberships: {
+              where: { team_id: { in: teamIds } },
+              include: { team: { select: { color: true } } },
+            },
+          },
+        },
+        absence_type: { select: { name: true } },
+      },
+      orderBy: { start_at: 'asc' },
+    });
+
+    // Map own absences (no team color)
+    const mappedOwnAbsences = ownAbsences.map((absence) => ({
+      id: absence.id,
+      userId: absence.user_id,
+      userName: absence.user.name,
+      absenceTypeId: absence.absence_type_id,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      status: absence.status as AbsenceStatus | null,
+      teamColor: null,
+      createdAt: absence.created_at,
+      updatedAt: absence.updated_at,
+    }));
+
+    // Map team absences (with team color)
+    const mappedTeamAbsences = teamAbsences.map((absence) => {
+      // Get the first matching team color (a user might be in multiple teams)
+      const teamColor = absence.user.team_memberships[0]?.team.color ?? null;
+
+      return {
+        id: absence.id,
+        userId: absence.user_id,
+        userName: absence.user.name,
+        absenceTypeId: absence.absence_type_id,
+        absenceTypeName: absence.absence_type.name,
+        startAt: absence.start_at,
+        endAt: absence.end_at,
+        duration: Number(absence.duration),
+        status: absence.status as AbsenceStatus | null,
+        teamColor,
+        createdAt: absence.created_at,
+        updatedAt: absence.updated_at,
+      };
+    });
+
+    // Combine and sort by start date
+    return [...mappedOwnAbsences, ...mappedTeamAbsences].sort((a, b) =>
+      a.startAt < b.startAt ? -1 : 1
+    );
+  }
 }

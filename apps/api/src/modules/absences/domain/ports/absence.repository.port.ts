@@ -103,6 +103,34 @@ export interface AbsenceRepositoryPort {
    * @param assignedAt - The timestamp of assignment
    */
   assignValidators(absenceId: string, validatorIds: string[], assignedAt: Date): Promise<void>;
+
+  /**
+   * Gets absences for the calendar view (RF-46, RF-69, RF-70).
+   *
+   * Returns:
+   * - All absences of the specified user
+   * - All absences of team members in teams the user belongs to
+   * - Includes user name, absence type name, and team color
+   *
+   * @param userId - The ID of the user requesting the calendar view
+   * @returns Array of calendar absences with additional display information
+   */
+  findCalendarAbsences(userId: string): Promise<
+    Array<{
+      id: string;
+      userId: string;
+      userName: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      teamColor: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  >;
 }
 
 export const ABSENCE_REPOSITORY_PORT = Symbol('AbsenceRepositoryPort');
