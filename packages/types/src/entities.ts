@@ -1,9 +1,4 @@
-import type {
-  AbsenceStatus,
-  AbsenceUnit,
-  UserRole,
-  ValidationDecision,
-} from './enums';
+import type { AbsenceStatus, AbsenceUnit, UserRole, ValidationDecision } from './enums';
 
 export interface User {
   id: string;
@@ -74,5 +69,14 @@ export interface Notification {
   type: string;
   message: string;
   read: boolean;
+  createdAt: string;
+}
+
+export interface Attachment {
+  id: string;
+  observationId: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
   createdAt: string;
 }
