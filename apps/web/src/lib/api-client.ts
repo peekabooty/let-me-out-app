@@ -1,5 +1,12 @@
 import axios, { isAxiosError } from 'axios';
-import type { User, AbsenceType, Absence, Observation, Attachment } from '@repo/types';
+import type {
+  User,
+  AbsenceType,
+  Absence,
+  Observation,
+  Attachment,
+  Notification,
+} from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
@@ -194,4 +201,13 @@ export async function uploadAttachment(observationId: string, file: File): Promi
 
 export function getAttachmentDownloadUrl(attachmentId: string): string {
   return `${apiClient.defaults.baseURL}/observations/attachments/${attachmentId}/download`;
+}
+
+export async function listNotifications(): Promise<Notification[]> {
+  const response = await apiClient.get<Notification[]>('/notifications');
+  return response.data;
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  await apiClient.patch(`/notifications/${notificationId}/read`);
 }
