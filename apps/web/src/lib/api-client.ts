@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios';
-import type { User, AbsenceType, Absence, Observation } from '@repo/types';
+import type { User, AbsenceType, Absence, Observation, Attachment } from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
@@ -169,4 +169,29 @@ export async function createObservation(
     payload
   );
   return response.data;
+}
+
+export async function listAttachments(observationId: string): Promise<Attachment[]> {
+  const response = await apiClient.get<Attachment[]>(`/observations/${observationId}/attachments`);
+  return response.data;
+}
+
+export async function uploadAttachment(observationId: string, file: File): Promise<{ id: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.post<{ id: string }>(
+    `/observations/${observationId}/attachments`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return response.data;
+}
+
+export function getAttachmentDownloadUrl(attachmentId: string): string {
+  return `${apiClient.defaults.baseURL}/observations/attachments/${attachmentId}/download`;
 }
