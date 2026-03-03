@@ -10,22 +10,44 @@ import { ObservationMapper } from './infrastructure/observation.mapper';
 import { ObservationsController } from './infrastructure/observations.controller';
 import { CreateObservationHandler } from './application/commands/create-observation.handler';
 import { ListObservationsHandler } from './application/queries/list-observations.handler';
+import { OBSERVATION_ATTACHMENT_REPOSITORY_PORT } from './domain/ports/observation-attachment.repository.port';
+import { FILE_STORAGE_PORT } from './domain/ports/file-storage.port';
+import { ObservationAttachmentPrismaRepository } from './infrastructure/observation-attachment.prisma.repository';
+import { ObservationAttachmentMapper } from './infrastructure/observation-attachment.mapper';
+import { LocalFileStorageService } from './infrastructure/local-file-storage.service';
+import { FileValidationService } from './domain/services/file-validation.service';
+import { ObservationAttachmentsController } from './infrastructure/observation-attachments.controller';
+import { UploadAttachmentHandler } from './application/commands/upload-attachment.handler';
+import { DownloadAttachmentHandler } from './application/queries/download-attachment.handler';
+import { ListAttachmentsHandler } from './application/queries/list-attachments.handler';
 
-const commandHandlers = [CreateObservationHandler];
-const queryHandlers = [ListObservationsHandler];
+const commandHandlers = [CreateObservationHandler, UploadAttachmentHandler];
+const queryHandlers = [ListObservationsHandler, DownloadAttachmentHandler, ListAttachmentsHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsencesModule],
-  controllers: [ObservationsController],
+  controllers: [ObservationsController, ObservationAttachmentsController],
   providers: [
     ClockService,
-    // Repository
+    // Repositories
     {
       provide: OBSERVATION_REPOSITORY_PORT,
       useClass: ObservationPrismaRepository,
     },
-    // Mapper
+    {
+      provide: OBSERVATION_ATTACHMENT_REPOSITORY_PORT,
+      useClass: ObservationAttachmentPrismaRepository,
+    },
+    // File storage
+    {
+      provide: FILE_STORAGE_PORT,
+      useClass: LocalFileStorageService,
+    },
+    // Services
+    FileValidationService,
+    // Mappers
     ObservationMapper,
+    ObservationAttachmentMapper,
     // Handlers
     ...commandHandlers,
     ...queryHandlers,
