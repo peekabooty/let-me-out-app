@@ -28,6 +28,11 @@ const makeAbsenceRepo = (
   createStatusHistory: jest.fn(),
   calculateConsumedByUserAndTypeInYear: jest.fn(),
   hasOverlap: jest.fn(),
+  createValidationHistory: jest.fn(),
+  getValidationHistory: jest.fn(),
+  getAssignedValidators: jest.fn(),
+  assignValidators: jest.fn(),
+  findCalendarAbsences: jest.fn(),
   ...overrides,
 });
 

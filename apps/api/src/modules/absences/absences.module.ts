@@ -14,11 +14,15 @@ import { AbsenceStateMachineService } from './domain/services/absence-state-mach
 import { CreateAbsenceHandler } from './application/commands/create-absence.handler';
 import { ValidateAbsenceHandler } from './application/commands/validate-absence.handler';
 import { CancelAbsenceHandler } from './application/commands/cancel-absence.handler';
+import { GetCalendarAbsencesHandler } from './application/queries/get-calendar-absences.handler';
+import { AbsencesController } from './infrastructure/absences.controller';
 
 const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbsenceHandler];
+const queryHandlers = [GetCalendarAbsencesHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],
+  controllers: [AbsencesController],
   providers: [
     ClockService,
     // Repository
@@ -35,6 +39,8 @@ const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbs
     AbsenceStateMachineService,
     // Command handlers
     ...commandHandlers,
+    // Query handlers
+    ...queryHandlers,
   ],
   exports: [ABSENCE_REPOSITORY_PORT, DurationCalculatorService, AnnualLimitValidatorService],
 })

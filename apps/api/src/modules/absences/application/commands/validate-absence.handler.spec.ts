@@ -37,6 +37,7 @@ describe('ValidateAbsenceHandler', () => {
       getValidationHistory: jest.fn(),
       getAssignedValidators: jest.fn(),
       assignValidators: jest.fn(),
+      findCalendarAbsences: jest.fn(),
     };
 
     mockClockService = {
