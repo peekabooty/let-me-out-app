@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AbsenceStatus, ValidationDecision } from '@repo/types';
 
 import { ClockService } from '../../../../common';
@@ -16,6 +16,7 @@ import {
 } from '../../domain/ports/absence.repository.port';
 import { AbsenceStateMachineService } from '../../domain/services/absence-state-machine.service';
 import { ValidateAbsenceCommand } from './validate-absence.command';
+import { AbsenceStatusChangedEvent } from '../../domain/events/absence-status-changed.event';
 
 /**
  * Command handler for validating (accepting or rejecting) an absence.
@@ -35,7 +36,8 @@ export class ValidateAbsenceHandler implements ICommandHandler<ValidateAbsenceCo
     private readonly absenceRepository: AbsenceRepositoryPort,
     private readonly stateMachine: AbsenceStateMachineService,
     private readonly clock: ClockService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBus
   ) {}
 
   async execute(command: ValidateAbsenceCommand): Promise<void> {
@@ -118,6 +120,17 @@ export class ValidateAbsenceHandler implements ICommandHandler<ValidateAbsenceCo
           command.validatorId, // The validator who triggered the final decision
           now
         );
+
+        // Publish domain event for notifications (RF-48, RF-49)
+        const event = new AbsenceStatusChangedEvent(
+          absence.id,
+          absence.userId,
+          absence.status,
+          newStatus,
+          command.validatorId,
+          now
+        );
+        this.eventBus.publish(event);
       }
     });
   }

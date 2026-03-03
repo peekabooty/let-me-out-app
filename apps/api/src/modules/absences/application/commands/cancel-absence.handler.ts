@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AbsenceStatus } from '@repo/types';
 
 import { ClockService } from '../../../../common';
@@ -16,6 +16,7 @@ import {
 } from '../../domain/ports/absence.repository.port';
 import { AbsenceStateMachineService } from '../../domain/services/absence-state-machine.service';
 import { CancelAbsenceCommand } from './cancel-absence.command';
+import { AbsenceStatusChangedEvent } from '../../domain/events/absence-status-changed.event';
 
 /**
  * Command handler for cancelling an accepted absence before its start date.
@@ -33,7 +34,8 @@ export class CancelAbsenceHandler implements ICommandHandler<CancelAbsenceComman
     private readonly absenceRepository: AbsenceRepositoryPort,
     private readonly stateMachine: AbsenceStateMachineService,
     private readonly clock: ClockService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBus
   ) {}
 
   async execute(command: CancelAbsenceCommand): Promise<void> {
@@ -79,6 +81,17 @@ export class CancelAbsenceHandler implements ICommandHandler<CancelAbsenceComman
         command.userId,
         now
       );
+
+      // Publish domain event for notifications (RF-48, RF-49)
+      const event = new AbsenceStatusChangedEvent(
+        absence.id,
+        absence.userId,
+        absence.status,
+        AbsenceStatus.CANCELLED,
+        command.userId,
+        now
+      );
+      this.eventBus.publish(event);
     });
   }
 }
