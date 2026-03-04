@@ -32,9 +32,15 @@ const mockAdminUser = {
   role: UserRole.ADMIN,
 };
 
+const mockValidatorUser = {
+  ...mockUser,
+  role: UserRole.VALIDATOR,
+};
+
 const server = setupServer(
   http.get('*/users', () => HttpResponse.json([])),
   http.get('*/absence-types', () => HttpResponse.json([])),
+  http.get('*/teams', () => HttpResponse.json([])),
   http.get('*/absences/calendar', () => HttpResponse.json([])),
   http.get('*/dashboard', () =>
     HttpResponse.json({
@@ -169,6 +175,21 @@ describe('Guard de rol: ruta de administracion', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
+    });
+  });
+
+  it('muestra la pagina de admin cuando el usuario es VALIDATOR', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockValidatorUser);
+      })
+    );
+
+    const router = buildRouter('/admin');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Usuarios', level: 2 })).toBeInTheDocument();
     });
   });
 });
