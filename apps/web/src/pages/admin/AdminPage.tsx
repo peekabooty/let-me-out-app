@@ -11,9 +11,13 @@ import { usersKeys } from '../../lib/query-keys/users.keys';
 import { absenceTypesKeys } from '../../lib/query-keys/absence-types.keys';
 import { useUsers } from '../../hooks/use-users';
 import { useAbsenceTypes } from '../../hooks/use-absence-types';
+import { useTeams } from '../../hooks/use-teams';
 import { UserFormDialog } from '../../components/users/UserFormDialog';
 import { AbsenceTypeFormDialog } from '../../components/absence-types/AbsenceTypeFormDialog';
 import { AbsenceTypesTable } from '../../components/absence-types/AbsenceTypesTable';
+import { TeamFormDialog } from '../../components/teams/TeamFormDialog';
+import { TeamsTable } from '../../components/teams/TeamsTable';
+import { teamsKeys } from '../../lib/query-keys/teams.keys';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.STANDARD]: 'Empleado',
@@ -29,6 +33,7 @@ export function AdminPage() {
     isLoading: absenceTypesLoading,
     isError: absenceTypesError,
   } = useAbsenceTypes();
+  const { teams, isLoading: teamsLoading, isError: teamsError } = useTeams();
   const queryClient = useQueryClient();
 
   const [userDialogOpen, setUserDialogOpen] = useState(false);
@@ -40,6 +45,8 @@ export function AdminPage() {
   const [editingAbsenceType, setEditingAbsenceType] = useState<AbsenceType | undefined>();
   const [deactivatingAbsenceTypeId, setDeactivatingAbsenceTypeId] = useState<string | null>(null);
   const [absenceTypeDeactivateError, setAbsenceTypeDeactivateError] = useState<string | null>(null);
+
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
 
   const handleNewUser = () => {
     setEditingUser(undefined);
@@ -86,6 +93,10 @@ export function AdminPage() {
     void queryClient.invalidateQueries({ queryKey: absenceTypesKeys.list() });
   };
 
+  const handleTeamDialogSuccess = () => {
+    void queryClient.invalidateQueries({ queryKey: teamsKeys.list() });
+  };
+
   const handleDeactivateAbsenceType = async (absenceType: AbsenceType) => {
     setDeactivatingAbsenceTypeId(absenceType.id);
     setAbsenceTypeDeactivateError(null);
@@ -116,6 +127,7 @@ export function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
           <TabsTrigger value="absence-types">Tipos de Ausencia</TabsTrigger>
+          <TabsTrigger value="teams">Equipos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -275,6 +287,41 @@ export function AdminPage() {
             )}
           </div>
         </TabsContent>
+
+        <TabsContent value="teams">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-medium">Equipos</h2>
+                <p className="text-sm text-muted-foreground">
+                  Gestión de equipos y colores para visualización en calendario.
+                </p>
+              </div>
+              <Button onClick={() => setTeamDialogOpen(true)}>Nuevo equipo</Button>
+            </div>
+
+            {teamsLoading && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="py-8 text-center text-sm text-muted-foreground"
+              >
+                Cargando equipos…
+              </p>
+            )}
+
+            {teamsError && !teamsLoading && (
+              <div
+                role="alert"
+                className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                No se pudo cargar la lista de equipos. Inténtalo de nuevo.
+              </div>
+            )}
+
+            {!teamsLoading && !teamsError && <TeamsTable teams={teams} />}
+          </div>
+        </TabsContent>
       </Tabs>
 
       <UserFormDialog
@@ -289,6 +336,12 @@ export function AdminPage() {
         onOpenChange={setAbsenceTypeDialogOpen}
         absenceType={editingAbsenceType}
         onSuccess={handleAbsenceTypeDialogSuccess}
+      />
+
+      <TeamFormDialog
+        open={teamDialogOpen}
+        onOpenChange={setTeamDialogOpen}
+        onSuccess={handleTeamDialogSuccess}
       />
     </div>
   );
