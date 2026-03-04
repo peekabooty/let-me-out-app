@@ -7,6 +7,7 @@ import type {
   Attachment,
   Notification,
   AbsenceStatus,
+  Team,
 } from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
@@ -271,4 +272,31 @@ export interface DashboardData {
 export async function fetchDashboard(): Promise<DashboardData> {
   const response = await apiClient.get<DashboardData>('/dashboard');
   return response.data;
+}
+
+export interface CreateTeamPayload {
+  name: string;
+  color: string;
+}
+
+export async function listTeams(): Promise<Team[]> {
+  const response = await apiClient.get<Team[]>('/teams');
+  return response.data;
+}
+
+export async function createTeam(payload: CreateTeamPayload): Promise<{ id: string }> {
+  const response = await apiClient.post<{ id: string }>('/teams', payload);
+  return response.data;
+}
+
+export interface TeamMembershipPayload {
+  userId: string;
+}
+
+export async function addTeamMember(teamId: string, payload: TeamMembershipPayload): Promise<void> {
+  await apiClient.post(`/teams/${teamId}/members`, payload);
+}
+
+export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
+  await apiClient.delete(`/teams/${teamId}/members/${userId}`);
 }
