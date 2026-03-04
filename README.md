@@ -61,6 +61,8 @@ Usa `.env.example` como base.
 - `pnpm --filter @repo/api prisma:migrate`: migraciones en desarrollo
 - `pnpm --filter @repo/api prisma:studio`: UI de Prisma
 
+Los scripts de Prisma en `apps/api` cargan automaticamente el archivo `.env` de la raiz (`../../.env`).
+
 ### apps/web
 
 - `pnpm --filter @repo/web dev`: frontend (placeholder por ahora)
