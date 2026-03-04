@@ -47,17 +47,28 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
   }): Promise<AuditAbsencePage> {
     const where = this.buildWhere(params.filters);
 
-    const records = (await this.prisma.absence.findMany({
-      where,
-      include: {
-        user: { select: { name: true } },
-        absence_type: { select: { name: true } },
-      },
-      orderBy: { id: 'asc' },
-      take: params.limit + 1,
-      skip: params.cursor ? 1 : 0,
-      cursor: params.cursor ? { id: params.cursor } : undefined,
-    })) as AuditAbsencePrismaRecord[];
+    const records = (await (params.cursor
+      ? this.prisma.absence.findMany({
+          where,
+          include: {
+            user: { select: { name: true } },
+            absence_type: { select: { name: true } },
+          },
+          orderBy: { id: 'asc' },
+          take: params.limit + 1,
+          skip: 1,
+          cursor: { id: params.cursor },
+        })
+      : this.prisma.absence.findMany({
+          where,
+          include: {
+            user: { select: { name: true } },
+            absence_type: { select: { name: true } },
+          },
+          orderBy: { id: 'asc' },
+          take: params.limit + 1,
+          skip: 0,
+        }))) as AuditAbsencePrismaRecord[];
 
     return this.toPage(records, params.limit);
   }
@@ -71,17 +82,28 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
     const where = this.buildWhere(params.filters);
     where.user_id = params.userId;
 
-    const records = (await this.prisma.absence.findMany({
-      where,
-      include: {
-        user: { select: { name: true } },
-        absence_type: { select: { name: true } },
-      },
-      orderBy: { id: 'asc' },
-      take: params.limit + 1,
-      skip: params.cursor ? 1 : 0,
-      cursor: params.cursor ? { id: params.cursor } : undefined,
-    })) as AuditAbsencePrismaRecord[];
+    const records = (await (params.cursor
+      ? this.prisma.absence.findMany({
+          where,
+          include: {
+            user: { select: { name: true } },
+            absence_type: { select: { name: true } },
+          },
+          orderBy: { id: 'asc' },
+          take: params.limit + 1,
+          skip: 1,
+          cursor: { id: params.cursor },
+        })
+      : this.prisma.absence.findMany({
+          where,
+          include: {
+            user: { select: { name: true } },
+            absence_type: { select: { name: true } },
+          },
+          orderBy: { id: 'asc' },
+          take: params.limit + 1,
+          skip: 0,
+        }))) as AuditAbsencePrismaRecord[];
 
     return this.toPage(records, params.limit);
   }
@@ -117,8 +139,8 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
 
     if (filters.startDate || filters.endDate) {
       where.start_at = {
-        gte: filters.startDate,
-        lte: filters.endDate,
+        ...(filters.startDate ? { gte: filters.startDate } : {}),
+        ...(filters.endDate ? { lte: filters.endDate } : {}),
       };
     }
 

@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { fileTypeFromBuffer } from 'file-type';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf'] as const;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -16,6 +15,11 @@ export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
  */
 @Injectable()
 export class FileValidationService {
+  protected async detectFileType(buffer: Buffer): Promise<{ mime: string } | undefined> {
+    const { fileTypeFromBuffer } = await import('file-type');
+    return fileTypeFromBuffer(buffer);
+  }
+
   /**
    * Validates a file buffer and returns its validated MIME type.
    * Throws BadRequestException if validation fails.
@@ -29,7 +33,7 @@ export class FileValidationService {
     }
 
     // Non-negotiable 1.9: Validate MIME type using magic bytes
-    const fileType = await fileTypeFromBuffer(buffer);
+    const fileType = await this.detectFileType(buffer);
 
     if (!fileType) {
       throw new BadRequestException(

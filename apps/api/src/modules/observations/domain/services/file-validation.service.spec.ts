@@ -2,23 +2,37 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { FileValidationService } from './file-validation.service';
 
-// Mock file-type since it's ESM-only
-jest.mock('file-type', () => ({
-  fileTypeFromBuffer: jest.fn(),
-}));
+class TestableFileValidationService extends FileValidationService {
+  constructor(
+    private readonly detector: jest.Mock<Promise<{ mime: string } | undefined>, [Buffer]>
+  ) {
+    super();
+  }
 
-// Import after mocking
-import { fileTypeFromBuffer } from 'file-type';
+  protected override async detectFileType(buffer: Buffer): Promise<{ mime: string } | undefined> {
+    return this.detector(buffer);
+  }
+}
 
 describe('FileValidationService', () => {
-  let service: FileValidationService;
+  let service: TestableFileValidationService;
+  let detectFileTypeMock: jest.Mock<Promise<{ mime: string } | undefined>, [Buffer]>;
 
   beforeEach(async () => {
+    detectFileTypeMock = jest.fn();
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FileValidationService],
+      providers: [
+        {
+          provide: FileValidationService,
+          useFactory: () => new TestableFileValidationService(detectFileTypeMock),
+        },
+      ],
     }).compile();
 
-    service = module.get<FileValidationService>(FileValidationService);
+    service = module.get<FileValidationService>(
+      FileValidationService
+    ) as TestableFileValidationService;
     jest.clearAllMocks();
   });
 
@@ -27,6 +41,8 @@ describe('FileValidationService', () => {
   });
 
   describe('validateFile', () => {
+    const bytes = (size: number, value = 0): number[] => new Array<number>(size).fill(value);
+
     it('should reject a file larger than 5 MB', async () => {
       const largeBuffer = Buffer.alloc(6 * 1024 * 1024); // 6 MB
 
@@ -39,8 +55,8 @@ describe('FileValidationService', () => {
     });
 
     it('should accept a JPEG file with valid magic bytes', async () => {
-      const jpegBuffer = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, ...Array.from({length: 100}).fill(0)]);
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue({
+      const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0, ...bytes(100)]);
+      detectFileTypeMock.mockResolvedValue({
         mime: 'image/jpeg',
       });
 
@@ -53,15 +69,15 @@ describe('FileValidationService', () => {
       const pngBuffer = Buffer.from([
         0x89,
         0x50,
-        0x4E,
+        0x4e,
         0x47,
-        0x0D,
-        0x0A,
-        0x1A,
-        0x0A,
-        ...Array.from({length: 100}).fill(0),
+        0x0d,
+        0x0a,
+        0x1a,
+        0x0a,
+        ...bytes(100),
       ]);
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue({
+      detectFileTypeMock.mockResolvedValue({
         mime: 'image/png',
       });
 
@@ -76,13 +92,13 @@ describe('FileValidationService', () => {
         0x50,
         0x44,
         0x46,
-        0x2D,
+        0x2d,
         0x31,
-        0x2E,
+        0x2e,
         0x34,
-        ...Array.from({length: 100}).fill(0),
+        ...bytes(100),
       ]);
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue({
+      detectFileTypeMock.mockResolvedValue({
         mime: 'application/pdf',
       });
 
@@ -92,8 +108,8 @@ describe('FileValidationService', () => {
     });
 
     it('should reject a file with unsupported MIME type based on magic bytes', async () => {
-      const gifBuffer = Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, ...Array.from({length: 100}).fill(0)]);
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue({
+      const gifBuffer = Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, ...bytes(100)]);
+      detectFileTypeMock.mockResolvedValue({
         mime: 'image/gif',
       });
 
@@ -104,8 +120,8 @@ describe('FileValidationService', () => {
     });
 
     it('should reject a file with no detectable MIME type', async () => {
-      const randomBuffer = Buffer.from(Array.from({length: 100}).fill(0x00));
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue();
+      const randomBuffer = Buffer.from(bytes(100, 0x00));
+      detectFileTypeMock.mockResolvedValue(undefined);
 
       await expect(service.validateFile(randomBuffer, 'test.txt')).rejects.toThrow(
         BadRequestException
@@ -117,7 +133,7 @@ describe('FileValidationService', () => {
 
     it('should reject a file that claims to be JPEG but has wrong magic bytes', async () => {
       const fakeJpegBuffer = Buffer.from('This is not a JPEG file');
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue();
+      detectFileTypeMock.mockResolvedValue(undefined);
 
       await expect(service.validateFile(fakeJpegBuffer, 'fake.jpg')).rejects.toThrow(
         BadRequestException
@@ -126,7 +142,7 @@ describe('FileValidationService', () => {
 
     it('should accept a file exactly 5 MB in size', async () => {
       const exactSizeBuffer = Buffer.alloc(5 * 1024 * 1024);
-      (fileTypeFromBuffer as jest.Mock).mockResolvedValue({
+      detectFileTypeMock.mockResolvedValue({
         mime: 'application/pdf',
       });
 
