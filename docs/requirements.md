@@ -124,7 +124,7 @@
 - El usuario creador puede reenviar la ausencia a validación → vuelve a **"Esperando validación"**.
 - El usuario creador puede decidir no continuar con la solicitud → pasa a **"Descartada"**.
 
-**RF-32** Los estados **"Aceptada"** y **"Descartada"** son estados finales; no se permite ninguna transición posterior.
+**RF-32** El estado **"Descartada"** es final y no permite transiciones posteriores. El estado **"Aceptada"** se considera final para el flujo de validación ordinario y solo admite una transición excepcional a **"Cancelada"** según lo definido en RF-51 y RF-52.
 
 ### 4.3 Acciones de los validadores
 
