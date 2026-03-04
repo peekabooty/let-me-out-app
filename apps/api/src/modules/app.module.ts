@@ -13,6 +13,7 @@ import { AbsenceTypesModule } from './absence-types/absence-types.module';
 import { AbsencesModule } from './absences/absences.module';
 import { ObservationsModule } from './observations/observations.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AbsencesModule,
     ObservationsModule,
     NotificationsModule,
+    TeamsModule,
   ],
   providers: [
     ClockService,
