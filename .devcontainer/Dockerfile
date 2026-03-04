@@ -4,7 +4,7 @@ FROM node:24
 # La instalación se realiza durante el build de la imagen (como root),
 # de forma que el contenedor arranca y opera siempre como el usuario node.
 RUN apt-get update && \
-    apt-get install -y curl gpg && \
+    apt-get install -y curl gpg nano && \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
         | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
