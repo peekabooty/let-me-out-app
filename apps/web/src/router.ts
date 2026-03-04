@@ -4,6 +4,8 @@ import { authRoute } from './routes/_auth';
 import { adminRoute } from './routes/_auth.admin';
 import { adminIndexRoute } from './routes/_auth.admin.index';
 import { absenceDetailRoute } from './routes/_auth.absences.$absenceId';
+import { auditRoute } from './routes/_auth.audit';
+import { auditIndexRoute } from './routes/_auth.audit.index';
 import { calendarRoute } from './routes/_auth.calendar';
 import { dashboardRoute } from './routes/_auth.index';
 import { publicRoute } from './routes/_public';
@@ -18,6 +20,7 @@ const routeTree = rootRoute.addChildren([
     calendarRoute,
     absenceDetailRoute,
     adminRoute.addChildren([adminIndexRoute]),
+    auditRoute.addChildren([auditIndexRoute]),
   ]),
   unauthorizedRoute,
 ]);
