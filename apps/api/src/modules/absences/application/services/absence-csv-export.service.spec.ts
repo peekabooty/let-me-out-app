@@ -1,3 +1,5 @@
+import { AbsenceStatus } from '@repo/types';
+
 import type { AbsenceAuditRepositoryPort } from '../../domain/ports/absence-audit.repository.port';
 import { AbsenceCsvExportService } from './absence-csv-export.service';
 
@@ -134,5 +136,26 @@ describe('AbsenceCsvExportService', () => {
 
     expect(csv).toContain('"Doe, ""Jane"""');
     expect(csv).toContain('"Medical, Leave"');
+  });
+
+  it('forwards audit filters to repository calls', async () => {
+    const repository = makeAuditRepository();
+    const service = new AbsenceCsvExportService();
+
+    await readStream(
+      service.exportAuditAbsences(repository, {
+        teamId: '01930000-0000-7000-8000-000000000111',
+        status: AbsenceStatus.ACCEPTED,
+      })
+    );
+
+    expect(repository.findAuditAbsencesPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: {
+          teamId: '01930000-0000-7000-8000-000000000111',
+          status: AbsenceStatus.ACCEPTED,
+        },
+      })
+    );
   });
 });
