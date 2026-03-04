@@ -41,7 +41,8 @@ const mockUsers: User[] = [
 
 const server = setupServer(
   http.get('*/users', () => HttpResponse.json(mockUsers)),
-  http.get('*/absence-types', () => HttpResponse.json([]))
+  http.get('*/absence-types', () => HttpResponse.json([])),
+  http.get('*/teams', () => HttpResponse.json([]))
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -214,6 +215,82 @@ describe('AdminPage: creación de usuario', () => {
     });
 
     expect(screen.getByText('carlos@example.com')).toBeInTheDocument();
+  });
+});
+
+describe('AdminPage: equipos', () => {
+  it('muestra el tab de equipos y el botón de crear', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get('*/teams', () =>
+        HttpResponse.json([
+          {
+            id: '01930000-0000-7000-8000-000000000201',
+            name: 'Plataforma',
+            color: '#2563EB',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+          },
+        ])
+      )
+    );
+
+    renderAdminPage();
+
+    await user.click(screen.getByRole('tab', { name: 'Equipos' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Equipos' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: 'Nuevo equipo' })).toBeInTheDocument();
+    expect(screen.getByText('Plataforma')).toBeInTheDocument();
+  });
+
+  it('crea un equipo desde el formulario y lo muestra en la tabla', async () => {
+    const user = userEvent.setup();
+    const teamsState: Array<{
+      id: string;
+      name: string;
+      color: string;
+      createdAt: string;
+      updatedAt: string;
+    }> = [];
+
+    server.use(
+      http.get('*/teams', () => HttpResponse.json(teamsState)),
+      http.post('*/teams', async ({ request }) => {
+        const body = (await request.json()) as { name: string; color: string };
+        teamsState.push({
+          id: '01930000-0000-7000-8000-000000000220',
+          name: body.name,
+          color: body.color,
+          createdAt: '2024-01-03T00:00:00.000Z',
+          updatedAt: '2024-01-03T00:00:00.000Z',
+        });
+        return HttpResponse.json({ id: '01930000-0000-7000-8000-000000000220' }, { status: 201 });
+      })
+    );
+
+    renderAdminPage();
+
+    await user.click(screen.getByRole('tab', { name: 'Equipos' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Nuevo equipo' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Nuevo equipo' }));
+    await user.type(screen.getByLabelText('Nombre'), 'Operaciones');
+    await user.clear(screen.getByLabelText('Color (HEX)'));
+    await user.type(screen.getByLabelText('Color (HEX)'), '#F59E0B');
+    await user.click(screen.getByRole('button', { name: 'Crear equipo' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Operaciones')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('#F59E0B')).toBeInTheDocument();
   });
 });
 

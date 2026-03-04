@@ -72,6 +72,14 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Attachment {
   id: string;
   observationId: string;
