@@ -14,18 +14,43 @@ import { ValidationDecision } from '@repo/types';
 import { useAuthStore } from '../store/auth.store';
 import type { SessionUser } from '../store/auth.store';
 
+export function resolveApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_URL;
+  if (typeof configured === 'string' && configured.trim().length > 0) {
+    const normalized = configured
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .replace(/\/+$/g, '');
+
+    try {
+      return new URL(normalized).toString().replace(/\/$/, '');
+    } catch {
+      return 'http://localhost:3050';
+    }
+  }
+
+  return 'http://localhost:3050';
+}
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
+  baseURL: resolveApiBaseUrl(),
   withCredentials: true,
 });
 
 apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
+    const requestUrl = isAxiosError(error) ? error.config?.url : undefined;
+    const isAuthBootstrapRequest = requestUrl?.includes('/auth/me');
+    const isAuthLoginRequest = requestUrl?.includes('/auth/login');
+    const isAuthRefreshRequest = requestUrl?.includes('/auth/refresh');
+
     if (
       isAxiosError(error) &&
       error.response?.status === 401 &&
-      !error.config?.url?.includes('/auth/me')
+      !isAuthBootstrapRequest &&
+      !isAuthLoginRequest &&
+      !isAuthRefreshRequest
     ) {
       useAuthStore.getState().clearSession();
       globalThis.location.replace('/login');
@@ -299,4 +324,44 @@ export async function addTeamMember(teamId: string, payload: TeamMembershipPaylo
 
 export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
   await apiClient.delete(`/teams/${teamId}/members/${userId}`);
+}
+
+export interface AuditAbsence {
+  id: string;
+  userId: string;
+  userName: string;
+  absenceTypeId: string;
+  absenceTypeName: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  status: AbsenceStatus | null;
+  teamId: string | null;
+  teamName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditFilters {
+  teamId?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function listAuditAbsences(filters?: AuditFilters): Promise<AuditAbsence[]> {
+  const response = await apiClient.get<AuditAbsence[]>('/audit/absences', {
+    params: filters,
+  });
+  return response.data;
+}
+
+export function getAuditExportCsvUrl(filters?: AuditFilters): string {
+  const params = new URLSearchParams();
+  if (filters?.teamId) params.append('teamId', filters.teamId);
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  const query = params.toString();
+  return `${apiClient.defaults.baseURL}/audit/export${query ? `?${query}` : ''}`;
 }
