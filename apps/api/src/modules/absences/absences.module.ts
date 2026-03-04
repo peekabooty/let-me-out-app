@@ -16,15 +16,20 @@ import { ValidateAbsenceHandler } from './application/commands/validate-absence.
 import { CancelAbsenceHandler } from './application/commands/cancel-absence.handler';
 import { GetCalendarAbsencesHandler } from './application/queries/get-calendar-absences.handler';
 import { GetDashboardHandler } from './application/queries/get-dashboard.handler';
+import { GetAuditAbsencesHandler } from './application/queries/get-audit-absences.handler';
+import { ABSENCE_AUDIT_REPOSITORY_PORT } from './domain/ports/absence-audit.repository.port';
 import { AbsencesController } from './infrastructure/absences.controller';
 import { DashboardController } from './infrastructure/dashboard.controller';
+import { AuditController } from './infrastructure/audit.controller';
+import { AuditPrismaRepository } from './infrastructure/audit.prisma.repository';
+import { AbsenceCsvExportService } from './application/services/absence-csv-export.service';
 
 const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbsenceHandler];
-const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler];
+const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler, GetAuditAbsencesHandler];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],
-  controllers: [AbsencesController, DashboardController],
+  controllers: [AbsencesController, DashboardController, AuditController],
   providers: [
     ClockService,
     // Repository
@@ -32,8 +37,13 @@ const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler];
       provide: ABSENCE_REPOSITORY_PORT,
       useClass: AbsencePrismaRepository,
     },
+    {
+      provide: ABSENCE_AUDIT_REPOSITORY_PORT,
+      useClass: AuditPrismaRepository,
+    },
     // Mapper
     AbsenceMapper,
+    AbsenceCsvExportService,
     // Domain services
     DurationCalculatorService,
     AnnualLimitValidatorService,
@@ -44,6 +54,11 @@ const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler];
     // Query handlers
     ...queryHandlers,
   ],
-  exports: [ABSENCE_REPOSITORY_PORT, DurationCalculatorService, AnnualLimitValidatorService],
+  exports: [
+    ABSENCE_REPOSITORY_PORT,
+    ABSENCE_AUDIT_REPOSITORY_PORT,
+    DurationCalculatorService,
+    AnnualLimitValidatorService,
+  ],
 })
 export class AbsencesModule {}
