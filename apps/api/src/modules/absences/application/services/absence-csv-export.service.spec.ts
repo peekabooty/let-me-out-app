@@ -106,4 +106,33 @@ describe('AbsenceCsvExportService', () => {
     expect(csv).toContain('row-2');
     expect(repository.findUserAbsencesPageForExport).toHaveBeenCalledTimes(2);
   });
+
+  it('escapes CSV values with commas and quotes', async () => {
+    const repository = makeAuditRepository({
+      findAuditAbsencesPage: jest.fn().mockResolvedValue({
+        items: [
+          {
+            id: 'row-3',
+            userId: 'u-2',
+            userName: 'Doe, "Jane"',
+            absenceTypeId: 't-2',
+            absenceTypeName: 'Medical, Leave',
+            startAt: new Date('2025-01-05T00:00:00.000Z'),
+            endAt: new Date('2025-01-06T00:00:00.000Z'),
+            duration: 1,
+            status: 'accepted',
+            createdAt: new Date('2024-12-03T00:00:00.000Z'),
+            updatedAt: new Date('2024-12-03T00:00:00.000Z'),
+          },
+        ],
+        nextCursor: null,
+      }),
+    });
+
+    const service = new AbsenceCsvExportService();
+    const csv = await readStream(service.exportAuditAbsences(repository, {}));
+
+    expect(csv).toContain('"Doe, ""Jane"""');
+    expect(csv).toContain('"Medical, Leave"');
+  });
 });
