@@ -187,7 +187,7 @@ describe('CalendarView', () => {
     });
   });
 
-  it('applies correct event structure for own vs team absences', async () => {
+  it('applies color differentiation for own vs team absences', async () => {
     server.use(http.get('*/absences/calendar', () => HttpResponse.json(mockCalendarAbsences)));
 
     renderComponent();
@@ -196,11 +196,10 @@ describe('CalendarView', () => {
       const ownAbsence = screen.getByText(/John Doe - Vacation/i).closest('.fc-event');
       const teamAbsence = screen.getByText(/Jane Smith - Medical Leave/i).closest('.fc-event');
 
-      // Both should exist and be events
       expect(ownAbsence).toBeInTheDocument();
       expect(teamAbsence).toBeInTheDocument();
-      expect(ownAbsence).toHaveClass('fc-event');
-      expect(teamAbsence).toHaveClass('fc-event');
+      expect(ownAbsence).toHaveStyle({ backgroundColor: 'rgb(37, 99, 235)' });
+      expect(teamAbsence).toHaveStyle({ backgroundColor: 'rgb(245, 158, 11)' });
     });
   });
 
