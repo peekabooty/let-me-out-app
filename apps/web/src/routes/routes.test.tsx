@@ -10,6 +10,8 @@ import type { ReactNode } from 'react';
 import { authRoute } from '../routes/_auth';
 import { adminRoute } from '../routes/_auth.admin';
 import { adminIndexRoute } from '../routes/_auth.admin.index';
+import { absenceDetailRoute } from '../routes/_auth.absences.$absenceId';
+import { calendarRoute } from '../routes/_auth.calendar';
 import { dashboardRoute } from '../routes/_auth.index';
 import { publicRoute } from '../routes/_public';
 import { loginRoute } from '../routes/_public.login';
@@ -32,7 +34,15 @@ const mockAdminUser = {
 
 const server = setupServer(
   http.get('*/users', () => HttpResponse.json([])),
-  http.get('*/absence-types', () => HttpResponse.json([]))
+  http.get('*/absence-types', () => HttpResponse.json([])),
+  http.get('*/absences/calendar', () => HttpResponse.json([])),
+  http.get('*/dashboard', () =>
+    HttpResponse.json({
+      balances: [],
+      upcomingAbsences: [],
+      pendingValidations: [],
+    })
+  )
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -45,7 +55,12 @@ afterAll(() => server.close());
 function buildRouter(initialPath: string) {
   const routeTree = rootRoute.addChildren([
     publicRoute.addChildren([loginRoute]),
-    authRoute.addChildren([dashboardRoute, adminRoute.addChildren([adminIndexRoute])]),
+    authRoute.addChildren([
+      dashboardRoute,
+      calendarRoute,
+      absenceDetailRoute,
+      adminRoute.addChildren([adminIndexRoute]),
+    ]),
     unauthorizedRoute,
   ]);
 
@@ -150,6 +165,38 @@ describe('Guard de rol: ruta de administracion', () => {
     );
 
     const router = buildRouter('/admin');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Guard de rol: ruta de calendario', () => {
+  it('muestra calendario para usuario STANDARD', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockUser);
+      })
+    );
+
+    const router = buildRouter('/calendar');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Calendario', level: 1 })).toBeInTheDocument();
+    });
+  });
+
+  it('redirige a /unauthorized para usuario ADMIN', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockAdminUser);
+      })
+    );
+
+    const router = buildRouter('/calendar');
     render(<RouterProvider router={router} />, { wrapper: Wrapper });
 
     await waitFor(() => {
