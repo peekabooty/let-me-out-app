@@ -13,7 +13,6 @@ import { ListObservationsHandler } from './application/queries/list-observations
 import { OBSERVATION_ATTACHMENT_REPOSITORY_PORT } from './domain/ports/observation-attachment.repository.port';
 import { FILE_STORAGE_PORT } from './domain/ports/file-storage.port';
 import { ObservationAttachmentPrismaRepository } from './infrastructure/observation-attachment.prisma.repository';
-import { ObservationAttachmentMapper } from './infrastructure/observation-attachment.mapper';
 import { LocalFileStorageService } from './infrastructure/local-file-storage.service';
 import { FileValidationService } from './domain/services/file-validation.service';
 import { ObservationAttachmentsController } from './infrastructure/observation-attachments.controller';
@@ -47,7 +46,6 @@ const queryHandlers = [ListObservationsHandler, DownloadAttachmentHandler, ListA
     FileValidationService,
     // Mappers
     ObservationMapper,
-    ObservationAttachmentMapper,
     // Handlers
     ...commandHandlers,
     ...queryHandlers,
