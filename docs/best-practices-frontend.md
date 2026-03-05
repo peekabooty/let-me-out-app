@@ -79,7 +79,11 @@ Toda la lógica que no es renderizado (llamadas a la API, transformaciones de da
 ```typescript
 // hooks/use-absences.ts
 export function useAbsences() {
-  const { data: absences = [], isLoading, isError } = useQuery({
+  const {
+    data: absences = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: absenceKeys.list(),
     queryFn: () => absenceApi.getMyAbsences(),
   });
@@ -102,8 +106,7 @@ export const absenceKeys = {
   all: ['absences'] as const,
   list: () => [...absenceKeys.all, 'list'] as const,
   detail: (id: string) => [...absenceKeys.all, 'detail', id] as const,
-  balance: (userId: string, year: number) =>
-    [...absenceKeys.all, 'balance', userId, year] as const,
+  balance: (userId: string, year: number) => [...absenceKeys.all, 'balance', userId, year] as const,
 };
 ```
 
@@ -154,7 +157,7 @@ useQuery({
 useQuery({
   queryKey: notificationKeys.unread(),
   queryFn: notificationApi.getUnread,
-  staleTime: 30 * 1000,      // 30 segundos
+  staleTime: 30 * 1000, // 30 segundos
   refetchInterval: 60 * 1000, // polling cada 60 segundos
 });
 ```
@@ -285,7 +288,7 @@ export const absencesRoute = createRoute({
 
 ### Usar componentes de Radix UI / shadcn/ui
 
-Los componentes de shadcn/ui están construidos sobre Radix UI, que implementa los patrones ARIA correctos por defecto: diálogos, menús desplegables, tooltips, comboboxes. No hay que añadir atributos ARIA manualmente a estos componentes.
+Los componentes de shadcn/ui están construidos sobre Radix UI, que implementa los patrones ARIA correctos por defecto: diálogos, menús desplegables, tooltips, comboboxes. No hay que añadir atributos ARIA manualmente a estos componentes salvo que el caso de uso lo requiera explícitamente.
 
 ### Elementos interactivos semánticamente correctos
 
@@ -311,9 +314,60 @@ Los iconos usados sin texto visible deben tener un `aria-label` descriptivo:
 </button>
 ```
 
-### Contraste de color
+### Contraste WCAG AA obligatorio en toda la UI
 
-Los colores de equipo seleccionados en la aplicación deben tener suficiente contraste con el fondo del calendario para ser legibles. Informar al administrador en el selector de color si el contraste es insuficiente (ratio mínimo WCAG AA: 4.5:1 para texto normal).
+El estándar mínimo obligatorio para esta aplicación es **WCAG AA**. El contraste no aplica solo al calendario o a los colores de equipo, sino a toda la interfaz.
+
+Reglas mínimas:
+
+- Texto normal (< 24px, o < 18.66px en negrita): **mínimo 4.5:1**
+- Texto grande (>= 24px, o >= 18.66px en negrita): **mínimo 3:1**
+- Componentes UI y estados interactivos (bordes de inputs, iconos funcionales, indicadores de foco): **mínimo 3:1**
+
+Superficies obligatorias donde aplicar estas reglas:
+
+- Formularios (labels, placeholders, ayudas, errores)
+- Tablas y listados
+- Badges, alerts y toasts
+- Botones, links y acciones secundarias
+- Modales, dropdowns y popovers
+- Cabeceras, menús y navegación lateral
+
+### Tokens semánticos de color (sin hardcode en componentes)
+
+No se deben usar colores hardcodeados (`#xxxxxx`) directamente en componentes de producto, salvo casos excepcionales documentados (ej. picker de color).
+
+Usar siempre tokens semánticos para foreground/background:
+
+- `--color-text-primary`, `--color-text-secondary`
+- `--color-bg-surface`, `--color-bg-muted`
+- `--color-action-primary`, `--color-action-primary-foreground`
+- `--color-border-default`, `--color-focus-ring`
+- `--color-error`, `--color-warning`, `--color-success`
+
+Esto evita combinaciones ilegibles y facilita auditorías de accesibilidad.
+
+### Estados interactivos accesibles
+
+Los estados `hover`, `focus-visible`, `active` y `disabled` deben seguir siendo legibles y distinguibles.
+
+- El foco visible debe ser perceptible y consistente.
+- El foco no puede depender únicamente de un cambio de color sutil.
+- Un botón `disabled` debe seguir siendo legible (texto y borde/fondo con contraste suficiente).
+
+### Verificación de accesibilidad en Pull Requests
+
+Checklist mínima obligatoria en revisiones frontend:
+
+- Contraste de texto y elementos UI conforme a WCAG AA.
+- Navegación por teclado funcional (`Tab`, `Shift+Tab`, `Enter`, `Space`).
+- Foco visible en todas las acciones interactivas.
+- Inputs con label accesible y mensajes de error asociables.
+- Iconos sin texto visible con `aria-label` correcto.
+
+### Contraste de color en equipos
+
+Los colores de equipo seleccionados en la aplicación deben tener suficiente contraste con el fondo del calendario para ser legibles. Informar al administrador en el selector de color si el contraste es insuficiente (ratio mínimo WCAG AA: 4.5:1 para texto normal), según la regla no negociable 7.5.
 
 ---
 
@@ -383,13 +437,13 @@ export const absenceHandlers = [
 
 ### Qué testear en el frontend
 
-| Qué testear | Cómo |
-|---|---|
-| Formularios: validación y envío | RTL + MSW |
-| Navegación y guards de rol | RTL + TanStack Router en modo test |
-| Estados de carga y error en queries | RTL + MSW con respuestas de error |
-| Flujo de validación de ausencias | RTL + MSW |
-| Componentes de presentación | RTL (sin MSW, solo props) |
+| Qué testear                         | Cómo                               |
+| ----------------------------------- | ---------------------------------- |
+| Formularios: validación y envío     | RTL + MSW                          |
+| Navegación y guards de rol          | RTL + TanStack Router en modo test |
+| Estados de carga y error en queries | RTL + MSW con respuestas de error  |
+| Flujo de validación de ausencias    | RTL + MSW                          |
+| Componentes de presentación         | RTL (sin MSW, solo props)          |
 
 ### Qué NO testear
 
@@ -397,3 +451,24 @@ export const absenceHandlers = [
 - Librerías de terceros (TanStack Query, FullCalendar, shadcn/ui).
 - Estilos CSS (el comportamiento visual se valida con snapshots o pruebas manuales).
 - Que un componente llama a una función específica (testear el efecto, no la llamada).
+
+### Pruebas de accesibilidad mínimas (a11y)
+
+Para cada vista nueva o modificada de forma relevante (formularios, tablas administrativas, modales, navegación), incluir validación mínima de accesibilidad:
+
+- Al menos una prueba de teclado para el flujo principal (`Tab`, `Enter`, `Space`).
+- Al menos una prueba de roles/labels accesibles con React Testing Library (`getByRole`, `getByLabelText`).
+- Recomendado: ejecutar `axe`/`jest-axe` en componentes críticos y corregir violaciones graves.
+
+```typescript
+import { render } from '@testing-library/react';
+import { axe } from 'jest-axe';
+
+it('no tiene violaciones graves de accesibilidad', async () => {
+  const { container } = render(<CreateUserForm />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+```
+
+Estas pruebas no sustituyen la revisión visual manual de contraste, pero ayudan a prevenir regresiones en PR.
