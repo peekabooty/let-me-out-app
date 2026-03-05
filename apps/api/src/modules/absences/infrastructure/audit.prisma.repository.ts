@@ -18,7 +18,12 @@ interface AuditAbsencePrismaRecord {
   status: string | null;
   created_at: Date;
   updated_at: Date;
-  user: { name: string };
+  user: {
+    name: string;
+    team_memberships: Array<{
+      team: { id: string; name: string };
+    }>;
+  };
   absence_type: { name: string };
 }
 
@@ -51,7 +56,12 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
       ? this.prisma.absence.findMany({
           where,
           include: {
-            user: { select: { name: true } },
+            user: {
+              select: {
+                name: true,
+                team_memberships: { select: { team: { select: { id: true, name: true } } } },
+              },
+            },
             absence_type: { select: { name: true } },
           },
           orderBy: { id: 'asc' },
@@ -62,7 +72,12 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
       : this.prisma.absence.findMany({
           where,
           include: {
-            user: { select: { name: true } },
+            user: {
+              select: {
+                name: true,
+                team_memberships: { select: { team: { select: { id: true, name: true } } } },
+              },
+            },
             absence_type: { select: { name: true } },
           },
           orderBy: { id: 'asc' },
@@ -86,7 +101,12 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
       ? this.prisma.absence.findMany({
           where,
           include: {
-            user: { select: { name: true } },
+            user: {
+              select: {
+                name: true,
+                team_memberships: { select: { team: { select: { id: true, name: true } } } },
+              },
+            },
             absence_type: { select: { name: true } },
           },
           orderBy: { id: 'asc' },
@@ -97,7 +117,12 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
       : this.prisma.absence.findMany({
           where,
           include: {
-            user: { select: { name: true } },
+            user: {
+              select: {
+                name: true,
+                team_memberships: { select: { team: { select: { id: true, name: true } } } },
+              },
+            },
             absence_type: { select: { name: true } },
           },
           orderBy: { id: 'asc' },
@@ -111,6 +136,8 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
   private toPage(records: AuditAbsencePrismaRecord[], limit: number): AuditAbsencePage {
     const hasMore = records.length > limit;
     const pageItems = hasMore ? records.slice(0, limit) : records;
+    const firstTeam = (record: AuditAbsencePrismaRecord) =>
+      record.user.team_memberships[0]?.team ?? null;
 
     return {
       items: pageItems.map((record) => ({
@@ -123,6 +150,8 @@ export class AuditPrismaRepository implements AbsenceAuditRepositoryPort {
         endAt: record.end_at,
         duration: Number(record.duration),
         status: record.status as AbsenceStatus | null,
+        teamId: firstTeam(record)?.id ?? null,
+        teamName: firstTeam(record)?.name ?? null,
         createdAt: record.created_at,
         updatedAt: record.updated_at,
       })),

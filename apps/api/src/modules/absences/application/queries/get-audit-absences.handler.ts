@@ -25,21 +25,20 @@ export class GetAuditAbsencesHandler implements IQueryHandler<
       filters: query.filters,
     });
 
-    return {
-      items: page.items.map((absence) => ({
-        id: absence.id,
-        userId: absence.userId,
-        userName: absence.userName,
-        absenceTypeId: absence.absenceTypeId,
-        absenceTypeName: absence.absenceTypeName,
-        startAt: absence.startAt.toISOString(),
-        endAt: absence.endAt.toISOString(),
-        duration: absence.duration,
-        status: absence.status,
-        createdAt: absence.createdAt.toISOString(),
-        updatedAt: absence.updatedAt.toISOString(),
-      })),
-      nextCursor: page.nextCursor,
-    };
+    return page.items.map((absence) => ({
+      id: absence.id,
+      userId: absence.userId,
+      userName: absence.userName,
+      absenceTypeId: absence.absenceTypeId,
+      absenceTypeName: absence.absenceTypeName,
+      startAt: absence.startAt.toISOString(),
+      endAt: absence.endAt.toISOString(),
+      duration: absence.duration,
+      status: absence.status,
+      teamId: absence.teamId,
+      teamName: absence.teamName,
+      createdAt: absence.createdAt.toISOString(),
+      updatedAt: absence.updatedAt.toISOString(),
+    }));
   }
 }
