@@ -185,6 +185,15 @@ export async function cancelAbsence(absenceId: string): Promise<void> {
   await apiClient.post(`/absences/${absenceId}/cancel`);
 }
 
+export interface AbsenceDetail extends Absence {
+  validatorIds: string[];
+}
+
+export async function getAbsence(absenceId: string): Promise<AbsenceDetail> {
+  const response = await apiClient.get<AbsenceDetail>(`/absences/${absenceId}`);
+  return response.data;
+}
+
 export async function listObservations(absenceId: string): Promise<Observation[]> {
   const response = await apiClient.get<Observation[]>(`/absences/${absenceId}/observations`);
   return response.data;
