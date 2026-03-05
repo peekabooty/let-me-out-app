@@ -353,4 +353,36 @@ describe('DashboardPage', () => {
       expect(screen.getByText('Nueva ausencia')).toBeInTheDocument();
     });
   });
+
+  it('muestra el enlace Exportar CSV para usuarios STANDARD', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.STANDARD);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Exportar CSV' })).toBeInTheDocument();
+    });
+  });
+
+  it('muestra el enlace Exportar CSV para usuarios VALIDATOR', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.VALIDATOR);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Exportar CSV' })).toBeInTheDocument();
+    });
+  });
+
+  it('no muestra el enlace Exportar CSV para usuarios AUDITOR', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.AUDITOR);
+
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('link', { name: 'Exportar CSV' })).not.toBeInTheDocument();
+  });
 });
