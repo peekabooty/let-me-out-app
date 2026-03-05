@@ -10,19 +10,18 @@ import {
   ABSENCE_REPOSITORY_PORT,
 } from '../../domain/ports/absence.repository.port';
 import { AbsenceStateMachineService } from '../../domain/services/absence-state-machine.service';
-import { CancelAbsenceHandler } from './cancel-absence.handler';
-import { CancelAbsenceCommand } from './cancel-absence.command';
+import { DiscardAbsenceHandler } from './discard-absence.handler';
+import { DiscardAbsenceCommand } from './discard-absence.command';
 import { Absence } from '../../domain/absence.entity';
 
-describe('CancelAbsenceHandler', () => {
-  let handler: CancelAbsenceHandler;
+describe('DiscardAbsenceHandler', () => {
+  let handler: DiscardAbsenceHandler;
   let mockAbsenceRepository: jest.Mocked<AbsenceRepositoryPort>;
   let mockPrismaService: jest.Mocked<PrismaService>;
   let mockClockService: jest.Mocked<ClockService>;
 
   const now = new Date('2024-03-15T10:00:00Z');
   const futureDate = new Date('2024-04-01T09:00:00Z');
-  const pastDate = new Date('2024-03-14T09:00:00Z');
   const absenceId = 'absence-123';
   const userId = 'user-456';
   const otherUserId = 'user-789';
@@ -48,9 +47,9 @@ describe('CancelAbsenceHandler', () => {
 
     mockClockService = {
       now: jest.fn().mockReturnValue(now),
-    };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
 
-    // Mock PrismaService with $transaction support
     mockPrismaService = {
       $transaction: jest.fn((callback) => callback(mockPrismaService)),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +57,7 @@ describe('CancelAbsenceHandler', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CancelAbsenceHandler,
+        DiscardAbsenceHandler,
         AbsenceStateMachineService,
         {
           provide: ABSENCE_REPOSITORY_PORT,
@@ -79,11 +78,11 @@ describe('CancelAbsenceHandler', () => {
       ],
     }).compile();
 
-    handler = module.get<CancelAbsenceHandler>(CancelAbsenceHandler);
+    handler = module.get<DiscardAbsenceHandler>(DiscardAbsenceHandler);
   });
 
-  describe('RF-51: Cancel accepted absence before start date', () => {
-    it('should successfully cancel an accepted absence before its start date', async () => {
+  describe('RF-31: Discard absence from RECONSIDER state', () => {
+    it('should successfully transition absence to DISCARDED', async () => {
       const absence = new Absence({
         id: absenceId,
         userId,
@@ -91,30 +90,27 @@ describe('CancelAbsenceHandler', () => {
         startAt: futureDate,
         endAt: new Date('2024-04-05T18:00:00Z'),
         duration: 5,
-        status: AbsenceStatus.ACCEPTED,
+        status: AbsenceStatus.RECONSIDER,
         createdAt: new Date('2024-03-01T10:00:00Z'),
         updatedAt: new Date('2024-03-01T10:00:00Z'),
       });
 
       mockAbsenceRepository.findById.mockResolvedValue(absence);
 
-      const command = new CancelAbsenceCommand(absenceId, userId);
-
+      const command = new DiscardAbsenceCommand(absenceId, userId);
       await handler.execute(command);
 
-      // Verify absence was updated with CANCELLED status
       expect(mockAbsenceRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: absenceId,
-          status: AbsenceStatus.CANCELLED,
+          status: AbsenceStatus.DISCARDED,
         })
       );
 
-      // Verify status history was created
       expect(mockAbsenceRepository.createStatusHistory).toHaveBeenCalledWith(
         absenceId,
-        AbsenceStatus.ACCEPTED,
-        AbsenceStatus.CANCELLED,
+        AbsenceStatus.RECONSIDER,
+        AbsenceStatus.DISCARDED,
         userId,
         now
       );
@@ -123,12 +119,9 @@ describe('CancelAbsenceHandler', () => {
     it('should throw NotFoundException when absence does not exist', async () => {
       mockAbsenceRepository.findById.mockResolvedValue(null);
 
-      const command = new CancelAbsenceCommand(absenceId, userId);
+      const command = new DiscardAbsenceCommand(absenceId, userId);
 
       await expect(handler.execute(command)).rejects.toThrow(NotFoundException);
-      await expect(handler.execute(command)).rejects.toThrow(
-        `Absence with ID ${absenceId} not found`
-      );
     });
 
     it('should throw ForbiddenException when user is not the absence creator', async () => {
@@ -139,22 +132,22 @@ describe('CancelAbsenceHandler', () => {
         startAt: futureDate,
         endAt: new Date('2024-04-05T18:00:00Z'),
         duration: 5,
-        status: AbsenceStatus.ACCEPTED,
+        status: AbsenceStatus.RECONSIDER,
         createdAt: new Date('2024-03-01T10:00:00Z'),
         updatedAt: new Date('2024-03-01T10:00:00Z'),
       });
 
       mockAbsenceRepository.findById.mockResolvedValue(absence);
 
-      const command = new CancelAbsenceCommand(absenceId, otherUserId);
+      const command = new DiscardAbsenceCommand(absenceId, otherUserId);
 
       await expect(handler.execute(command)).rejects.toThrow(ForbiddenException);
       await expect(handler.execute(command)).rejects.toThrow(
-        'Only the absence creator can cancel it'
+        'Only the absence creator can discard it'
       );
     });
 
-    it('should throw BadRequestException when absence is not in ACCEPTED status', async () => {
+    it('should throw BadRequestException when absence is not in RECONSIDER state', async () => {
       const absence = new Absence({
         id: absenceId,
         userId,
@@ -169,102 +162,21 @@ describe('CancelAbsenceHandler', () => {
 
       mockAbsenceRepository.findById.mockResolvedValue(absence);
 
-      const command = new CancelAbsenceCommand(absenceId, userId);
+      const command = new DiscardAbsenceCommand(absenceId, userId);
 
       await expect(handler.execute(command)).rejects.toThrow(BadRequestException);
       await expect(handler.execute(command)).rejects.toThrow(
-        `Only accepted absences can be cancelled. Current status: ${AbsenceStatus.WAITING_VALIDATION}`
+        `Only absences in RECONSIDER state can be discarded. Current status: ${AbsenceStatus.WAITING_VALIDATION}`
       );
     });
 
-    it('should throw BadRequestException when absence has already started', async () => {
-      const absence = new Absence({
-        id: absenceId,
-        userId,
-        absenceTypeId: 'type-123',
-        startAt: pastDate, // Already started
-        endAt: new Date('2024-03-20T18:00:00Z'),
-        duration: 5,
-        status: AbsenceStatus.ACCEPTED,
-        createdAt: new Date('2024-03-01T10:00:00Z'),
-        updatedAt: new Date('2024-03-01T10:00:00Z'),
-      });
-
-      mockAbsenceRepository.findById.mockResolvedValue(absence);
-
-      const command = new CancelAbsenceCommand(absenceId, userId);
-
-      await expect(handler.execute(command)).rejects.toThrow(BadRequestException);
-      await expect(handler.execute(command)).rejects.toThrow(
-        'Cannot cancel an absence that has already started'
-      );
-    });
-
-    it('should throw BadRequestException when trying to cancel on the exact start time', async () => {
-      const absence = new Absence({
-        id: absenceId,
-        userId,
-        absenceTypeId: 'type-123',
-        startAt: now, // Same as current time
-        endAt: new Date('2024-03-20T18:00:00Z'),
-        duration: 5,
-        status: AbsenceStatus.ACCEPTED,
-        createdAt: new Date('2024-03-01T10:00:00Z'),
-        updatedAt: new Date('2024-03-01T10:00:00Z'),
-      });
-
-      mockAbsenceRepository.findById.mockResolvedValue(absence);
-
-      const command = new CancelAbsenceCommand(absenceId, userId);
-
-      await expect(handler.execute(command)).rejects.toThrow(BadRequestException);
-      await expect(handler.execute(command)).rejects.toThrow(
-        'Cannot cancel an absence that has already started'
-      );
-    });
-  });
-
-  describe('RF-52: CANCELLED is a final state', () => {
-    it('should not allow any further transitions from CANCELLED state', async () => {
-      // This is tested via AbsenceStateMachineService
-      // The state machine service ensures no transitions from CANCELLED
+    it('should confirm DISCARDED is a final state (RF-32)', () => {
       const stateMachine = new AbsenceStateMachineService();
 
-      expect(stateMachine.isFinalState(AbsenceStatus.CANCELLED)).toBe(true);
-      expect(stateMachine.isTransitionValid(AbsenceStatus.CANCELLED, AbsenceStatus.ACCEPTED)).toBe(
-        false
-      );
+      expect(stateMachine.isFinalState(AbsenceStatus.DISCARDED)).toBe(true);
       expect(
-        stateMachine.isTransitionValid(AbsenceStatus.CANCELLED, AbsenceStatus.WAITING_VALIDATION)
+        stateMachine.isTransitionValid(AbsenceStatus.DISCARDED, AbsenceStatus.WAITING_VALIDATION)
       ).toBe(false);
-      expect(
-        stateMachine.isTransitionValid(AbsenceStatus.CANCELLED, AbsenceStatus.RECONSIDER)
-      ).toBe(false);
-    });
-  });
-
-  describe('Transaction handling', () => {
-    it('should execute all operations within a transaction', async () => {
-      const absence = new Absence({
-        id: absenceId,
-        userId,
-        absenceTypeId: 'type-123',
-        startAt: futureDate,
-        endAt: new Date('2024-04-05T18:00:00Z'),
-        duration: 5,
-        status: AbsenceStatus.ACCEPTED,
-        createdAt: new Date('2024-03-01T10:00:00Z'),
-        updatedAt: new Date('2024-03-01T10:00:00Z'),
-      });
-
-      mockAbsenceRepository.findById.mockResolvedValue(absence);
-
-      const command = new CancelAbsenceCommand(absenceId, userId);
-
-      await handler.execute(command);
-
-      // Verify transaction was used
-      expect(mockPrismaService.$transaction).toHaveBeenCalled();
     });
   });
 });

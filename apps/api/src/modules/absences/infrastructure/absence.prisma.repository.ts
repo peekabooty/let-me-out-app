@@ -408,4 +408,65 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
       createdAt: absence.created_at,
     }));
   }
+
+  /**
+   * Finds all absences for a specific user, ordered by startAt DESC.
+   */
+  async findByUserId(userId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  > {
+    const absences = await this.prisma.absence.findMany({
+      where: { user_id: userId },
+      include: { absence_type: { select: { name: true } } },
+      orderBy: { start_at: 'desc' },
+    });
+
+    return absences.map((absence) => ({
+      id: absence.id,
+      absenceTypeId: absence.absence_type_id,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      status: absence.status as AbsenceStatus | null,
+      createdAt: absence.created_at,
+      updatedAt: absence.updated_at,
+    }));
+  }
+
+  /**
+   * Gets the full status history for an absence, ordered by changedAt ASC (RF-53, RF-54).
+   */
+  async getStatusHistory(absenceId: string): Promise<
+    Array<{
+      id: string;
+      fromStatus: AbsenceStatus | null;
+      toStatus: AbsenceStatus;
+      changedBy: string;
+      changedAt: Date;
+    }>
+  > {
+    const records = await this.prisma.absence_status_history.findMany({
+      where: { absence_id: absenceId },
+      orderBy: { changed_at: 'asc' },
+    });
+
+    return records.map((record) => ({
+      id: record.id,
+      fromStatus: record.from_status as AbsenceStatus | null,
+      toStatus: record.to_status as AbsenceStatus,
+      changedBy: record.changed_by,
+      changedAt: record.changed_at,
+    }));
+  }
 }

@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsDateString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateAbsenceDto {
   @IsUUID()
@@ -13,8 +13,8 @@ export class CreateAbsenceDto {
   @IsNotEmpty()
   endAt!: string;
 
-  @IsUUID()
-  @IsNotEmpty()
-  @IsString()
-  userId!: string;
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  validatorIds?: string[];
 }

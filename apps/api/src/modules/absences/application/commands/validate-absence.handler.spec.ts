@@ -40,6 +40,8 @@ describe('ValidateAbsenceHandler', () => {
       findCalendarAbsences: jest.fn(),
       findUpcomingAbsences: jest.fn(),
       findPendingValidations: jest.fn(),
+      findByUserId: jest.fn(),
+      getStatusHistory: jest.fn(),
     };
 
     mockClockService = {

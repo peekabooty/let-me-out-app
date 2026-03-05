@@ -22,6 +22,8 @@ const makeAbsenceRepo = (
   findCalendarAbsences: jest.fn().mockResolvedValue([]),
   findUpcomingAbsences: jest.fn().mockResolvedValue([]),
   findPendingValidations: jest.fn().mockResolvedValue([]),
+  findByUserId: jest.fn().mockResolvedValue([]),
+  getStatusHistory: jest.fn().mockResolvedValue([]),
   ...overrides,
 });
 
