@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   createMemoryHistory,
   createRootRoute,
@@ -109,7 +109,13 @@ function renderComponent(userRole: UserRole = UserRole.STANDARD) {
     component: () => <div>Absence Detail Page</div>,
   });
 
-  const routeTree = rootRoute.addChildren([dashboardRoute, absenceDetailRoute]);
+  const absenceNewRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/absences/new',
+    component: () => <div>Nueva ausencia</div>,
+  });
+
+  const routeTree = rootRoute.addChildren([dashboardRoute, absenceDetailRoute, absenceNewRoute]);
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: ['/'] }),
@@ -296,6 +302,55 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/no hay tipos de ausencia configurados/i)).toBeInTheDocument();
+    });
+  });
+
+  it('muestra el botón CTA de solicitar ausencia para usuarios STANDARD', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.STANDARD);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Solicitar ausencia' })).toBeInTheDocument();
+    });
+  });
+
+  it('muestra el botón CTA de solicitar ausencia para usuarios VALIDATOR', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.VALIDATOR);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Solicitar ausencia' })).toBeInTheDocument();
+    });
+  });
+
+  it('no muestra el botón CTA de solicitar ausencia para usuarios AUDITOR', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    renderComponent(UserRole.AUDITOR);
+
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('link', { name: 'Solicitar ausencia' })).not.toBeInTheDocument();
+  });
+
+  it('navega a /absences/new al hacer clic en el botón CTA', async () => {
+    server.use(http.get('*/dashboard', () => HttpResponse.json(mockDashboardData)));
+
+    const user = userEvent.setup();
+    renderComponent(UserRole.STANDARD);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Solicitar ausencia' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('link', { name: 'Solicitar ausencia' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Nueva ausencia')).toBeInTheDocument();
     });
   });
 });

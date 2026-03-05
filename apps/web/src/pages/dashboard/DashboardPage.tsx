@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { UserRole } from '@repo/types';
 
 import { useDashboard } from '../../hooks/use-dashboard';
@@ -21,6 +22,7 @@ export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
 
   const isValidator = user?.role === UserRole.VALIDATOR;
+  const canRequestAbsence = user?.role === UserRole.STANDARD || user?.role === UserRole.VALIDATOR;
 
   if (isLoading) {
     return (
@@ -48,7 +50,17 @@ export function DashboardPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        {canRequestAbsence && (
+          <Link
+            to="/absences/new"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Solicitar ausencia
+          </Link>
+        )}
+      </div>
 
       {/* Balance section */}
       <section>
