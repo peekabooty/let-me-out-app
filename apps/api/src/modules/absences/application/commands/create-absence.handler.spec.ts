@@ -224,11 +224,12 @@ describe('CreateAbsenceHandler', () => {
 
     it('should throw BadRequestException when duration exceeds maximum limit', async () => {
       // Arrange
+      // Use a date far enough in the future to pass the 7-day minDaysInAdvance check
       const command = new CreateAbsenceCommand(
         'user-123',
         'type-123',
-        new Date('2026-03-01T09:00:00Z'),
-        new Date('2026-03-20T18:00:00Z')
+        new Date('2026-03-15T09:00:00Z'),
+        new Date('2026-04-05T18:00:00Z')
       );
 
       mockAbsenceTypeRepository.findById.mockResolvedValue(mockAbsenceType);
@@ -446,4 +447,3 @@ describe('CreateAbsenceHandler', () => {
     });
   });
 });
-

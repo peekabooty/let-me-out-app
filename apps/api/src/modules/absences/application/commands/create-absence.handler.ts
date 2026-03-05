@@ -21,13 +21,18 @@ import { AbsenceCreatedEvent } from '../../domain/events/absence-created.event';
 /**
  * Command handler for creating a new absence request.
  *
- * Implements RF-23 to RF-27 and RF-50:
- * - RF-23: Validates required fields (type, start, end)
+ * Implements RF-23 to RF-27, RF-34, RF-50, RF-11, RF-15, RF-19, RF-20:
+ * - RF-23: Validates required fields (type, start, end, validators for validation types)
  * - RF-24: Validates duration within allowed limits
  * - RF-25: Validates annual limit not exceeded
  * - RF-26: Absences without validation flow are registered directly
  * - RF-27: Absences with validation flow start in WAITING_VALIDATION status
+ * - RF-34: Prevents the absence owner from self-assigning as validator
  * - RF-50: Prevents overlapping absences for the same user
+ * - RF-11: Unpaid planned absence only allows future dates
+ * - RF-15: Unpaid unplanned absence allows past and future dates
+ * - RF-19: Paid absence only allows future dates
+ * - RF-20: Paid absence requires minimum 15 calendar days in advance
  */
 @Injectable()
 @CommandHandler(CreateAbsenceCommand)
@@ -59,6 +64,33 @@ export class CreateAbsenceHandler implements ICommandHandler<CreateAbsenceComman
     // Validate date range
     if (command.endAt <= command.startAt) {
       throw new BadRequestException('End date must be after start date');
+    }
+
+    // RF-11, RF-19: Types that do not allow past dates must start in the future
+    if (!absenceType.allowPastDates && command.startAt < now) {
+      throw new BadRequestException(
+        'This absence type does not allow past dates. Start date must be in the future'
+      );
+    }
+
+    // RF-20: Validate minimum days in advance when required
+    const minDaysInAdvance = absenceType.getMinDaysInAdvance();
+    if (minDaysInAdvance !== null) {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const daysInAdvance = Math.floor((command.startAt.getTime() - now.getTime()) / msPerDay);
+      if (daysInAdvance < minDaysInAdvance) {
+        throw new BadRequestException(
+          `This absence type requires at least ${minDaysInAdvance} calendar days in advance. ` +
+            `Start date is only ${daysInAdvance} day(s) away`
+        );
+      }
+    }
+
+    // RF-34: Prevent self-assignment as validator before any DB writes
+    if (absenceType.requiresValidation && command.validatorIds.includes(command.userId)) {
+      throw new BadRequestException(
+        'A user cannot be assigned as a validator for their own absence'
+      );
     }
 
     // Calculate duration based on the absence type's unit
@@ -110,14 +142,8 @@ export class CreateAbsenceHandler implements ICommandHandler<CreateAbsenceComman
     // Save the absence
     await this.absenceRepository.save(absence);
 
-    // RF-23, RF-34: Persist assigned validators (for absences requiring validation)
+    // RF-23, RF-33: Persist assigned validators (for absences requiring validation)
     if (absenceType.requiresValidation && command.validatorIds.length > 0) {
-      // Prevent the absence owner from being assigned as their own validator (RF-34)
-      if (command.validatorIds.includes(command.userId)) {
-        throw new BadRequestException(
-          'A user cannot be assigned as a validator for their own absence'
-        );
-      }
       await this.absenceRepository.assignValidators(absence.id, command.validatorIds, now);
     }
 
