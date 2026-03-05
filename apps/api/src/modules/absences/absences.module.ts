@@ -22,6 +22,7 @@ import { GetAuditAbsencesHandler } from './application/queries/get-audit-absence
 import { GetAbsenceDetailHandler } from './application/queries/get-absence-detail.handler';
 import { GetAbsenceStatusHistoryHandler } from './application/queries/get-absence-status-history.handler';
 import { ListUserAbsencesHandler } from './application/queries/list-user-absences.handler';
+import { ListAbsencesByRoleHandler } from './application/queries/list-absences-by-role.handler';
 import { ABSENCE_AUDIT_REPOSITORY_PORT } from './domain/ports/absence-audit.repository.port';
 import { AbsencesController } from './infrastructure/absences.controller';
 import { DashboardController } from './infrastructure/dashboard.controller';
@@ -44,6 +45,7 @@ const queryHandlers = [
   GetAbsenceDetailHandler,
   GetAbsenceStatusHistoryHandler,
   ListUserAbsencesHandler,
+  ListAbsencesByRoleHandler,
 ];
 
 @Module({

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import type { Request } from 'express';
+import { UserRole, ValidationDecision } from '@repo/types';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CreateAbsenceDto } from '../application/dtos/create-absence.dto';
@@ -12,13 +13,12 @@ import { DiscardAbsenceCommand } from '../application/commands/discard-absence.c
 import { GetCalendarAbsencesQuery } from '../application/queries/get-calendar-absences.query';
 import { GetAbsenceDetailQuery } from '../application/queries/get-absence-detail.query';
 import { GetAbsenceStatusHistoryQuery } from '../application/queries/get-absence-status-history.query';
-import { ListUserAbsencesQuery } from '../application/queries/list-user-absences.query';
+import { ListAbsencesByRoleQuery } from '../application/queries/list-absences-by-role.query';
 import type { CalendarAbsenceResponseDto } from '../application/dtos/calendar-absence-response.dto';
 import type { AbsenceDetailResponseDto } from '../application/queries/get-absence-detail.handler';
 import type { AbsenceStatusHistoryItemDto } from '../application/queries/get-absence-status-history.handler';
-import type { UserAbsenceItemDto } from '../application/queries/list-user-absences.handler';
+import type { AbsenceListItemDto } from '../application/queries/list-absences-by-role.handler';
 import { ValidateAbsenceDto } from '../application/dtos/validate-absence.dto';
-import { ValidationDecision } from '@repo/types';
 
 /**
  * Controller for absence endpoints.
@@ -27,6 +27,7 @@ import { ValidationDecision } from '@repo/types';
  * - RF-23 to RF-27: Absence creation
  * - RF-29 to RF-32: Status transitions (validate, reconsider, discard, cancel)
  * - RF-33: Parallel validation
+ * - RF-38 to RF-41: Role-based absence visibility
  * - RF-51: Cancellation
  * - RF-53, RF-54: Status history
  * - RF-46: Calendar view
@@ -40,16 +41,21 @@ export class AbsencesController {
   ) {}
 
   /**
-   * Lists all absences of the authenticated user.
+   * Lists absences visible to the authenticated user based on their role.
    *
    * GET /absences
+   *
+   * RF-38: STANDARD — own absences only
+   * RF-39: VALIDATOR — own + assigned-as-validator absences
+   * RF-40: AUDITOR   — all absences (read-only)
+   * RF-41: ADMIN     — 403 Forbidden
    */
   @Get()
-  async listMyAbsences(@Req() request: Request): Promise<UserAbsenceItemDto[]> {
-    const user = request.user as { userId: string };
+  async listAbsences(@Req() request: Request): Promise<AbsenceListItemDto[]> {
+    const user = request.user as { userId: string; role: string };
 
-    return this.queryBus.execute<ListUserAbsencesQuery, UserAbsenceItemDto[]>(
-      new ListUserAbsencesQuery(user.userId)
+    return this.queryBus.execute<ListAbsencesByRoleQuery, AbsenceListItemDto[]>(
+      new ListAbsencesByRoleQuery(user.userId, user.role as UserRole)
     );
   }
 

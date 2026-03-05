@@ -196,6 +196,49 @@ export interface AbsenceRepositoryPort {
   >;
 
   /**
+   * Finds absences where the given user is an assigned validator, ordered by startAt DESC.
+   *
+   * Used for RF-39: validators can view absences they are assigned to validate.
+   *
+   * @param validatorId - The ID of the validator user
+   * @returns Array of absences with absence type name
+   */
+  findByValidatorId(validatorId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  >;
+
+  /**
+   * Finds all absences in the system, ordered by startAt DESC.
+   *
+   * Used for RF-40: auditors can view all absences in read-only mode.
+   *
+   * @returns Array of all absences with absence type name
+   */
+  findAll(): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  >;
+
+  /**
    * Gets the full status history for an absence, ordered by changedAt ASC (RF-53, RF-54).
    *
    * @param absenceId - The ID of the absence

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Absence } from '@repo/types';
 import { ValidationDecision } from '@repo/types';
 
@@ -8,9 +8,18 @@ import {
   reconsiderAbsence,
   discardAbsence,
   cancelAbsence,
+  getAbsence,
   type CreateAbsencePayload,
 } from '../lib/api-client';
 import { absencesKeys } from '../lib/query-keys/absences.keys';
+
+export function useAbsence(absenceId: string) {
+  return useQuery({
+    queryKey: absencesKeys.detail(absenceId),
+    queryFn: () => getAbsence(absenceId),
+    enabled: Boolean(absenceId),
+  });
+}
 
 export function useCreateAbsence() {
   const queryClient = useQueryClient();

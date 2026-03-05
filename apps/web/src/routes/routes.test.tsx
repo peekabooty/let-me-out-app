@@ -11,6 +11,7 @@ import { authRoute } from '../routes/_auth';
 import { adminRoute } from '../routes/_auth.admin';
 import { adminIndexRoute } from '../routes/_auth.admin.index';
 import { absenceDetailRoute } from '../routes/_auth.absences.$absenceId';
+import { absenceNewRoute } from '../routes/_auth.absences.new';
 import { calendarRoute } from '../routes/_auth.calendar';
 import { dashboardRoute } from '../routes/_auth.index';
 import { publicRoute } from '../routes/_public';
@@ -64,6 +65,7 @@ function buildRouter(initialPath: string) {
     authRoute.addChildren([
       dashboardRoute,
       calendarRoute,
+      absenceNewRoute,
       absenceDetailRoute,
       adminRoute.addChildren([adminIndexRoute]),
     ]),
@@ -178,7 +180,7 @@ describe('Guard de rol: ruta de administracion', () => {
     });
   });
 
-  it('muestra la pagina de admin cuando el usuario es VALIDATOR', async () => {
+  it('redirige a /unauthorized cuando el usuario es VALIDATOR', async () => {
     server.use(
       http.get('*/auth/me', () => {
         return HttpResponse.json(mockValidatorUser);
@@ -189,7 +191,7 @@ describe('Guard de rol: ruta de administracion', () => {
     render(<RouterProvider router={router} />, { wrapper: Wrapper });
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Usuarios', level: 2 })).toBeInTheDocument();
+      expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
     });
   });
 });
@@ -218,6 +220,53 @@ describe('Guard de rol: ruta de calendario', () => {
     );
 
     const router = buildRouter('/calendar');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Guard de rol: ruta de solicitar ausencia', () => {
+  it('muestra el formulario de nueva ausencia para usuario STANDARD', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockUser);
+      })
+    );
+
+    const router = buildRouter('/absences/new');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Nueva ausencia' })).toBeInTheDocument();
+    });
+  });
+
+  it('muestra el formulario de nueva ausencia para usuario VALIDATOR', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockValidatorUser);
+      })
+    );
+
+    const router = buildRouter('/absences/new');
+    render(<RouterProvider router={router} />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Nueva ausencia' })).toBeInTheDocument();
+    });
+  });
+
+  it('redirige a /unauthorized para usuario ADMIN', async () => {
+    server.use(
+      http.get('*/auth/me', () => {
+        return HttpResponse.json(mockAdminUser);
+      })
+    );
+
+    const router = buildRouter('/absences/new');
     render(<RouterProvider router={router} />, { wrapper: Wrapper });
 
     await waitFor(() => {

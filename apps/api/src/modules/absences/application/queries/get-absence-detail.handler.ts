@@ -16,6 +16,7 @@ export interface AbsenceDetailResponseDto {
   endAt: string;
   duration: number;
   status: AbsenceStatus | null;
+  validatorIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +61,7 @@ export class GetAbsenceDetailHandler implements IQueryHandler<
       endAt: absence.endAt.toISOString(),
       duration: absence.duration,
       status: absence.status,
+      validatorIds: assignedValidators,
       createdAt: absence.createdAt.toISOString(),
       updatedAt: absence.updatedAt.toISOString(),
     };

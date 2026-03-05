@@ -56,6 +56,8 @@ const makeAbsenceRepo = (
   findPendingValidations: jest.fn(),
   findByUserId: jest.fn(),
   getStatusHistory: jest.fn(),
+  findByValidatorId: jest.fn(),
+  findAll: jest.fn(),
   ...overrides,
 });
 
@@ -176,7 +178,7 @@ describe('UploadAttachmentHandler', () => {
     const command = new UploadAttachmentCommand(
       'observation-id',
       'photo.jpg',
-      Buffer.from([0xFF, 0xD8, 0xFF]),
+      Buffer.from([0xff, 0xd8, 0xff]),
       'validator-id'
     );
 

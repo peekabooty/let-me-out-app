@@ -445,6 +445,81 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
   }
 
   /**
+   * Finds absences where the given user is an assigned validator, ordered by startAt DESC.
+   * RF-39: validators can view absences they are assigned to validate.
+   */
+  async findByValidatorId(validatorId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  > {
+    const absences = await this.prisma.absence.findMany({
+      where: {
+        assigned_validators: {
+          some: { validator_id: validatorId },
+        },
+      },
+      include: { absence_type: { select: { name: true } } },
+      orderBy: { start_at: 'desc' },
+    });
+
+    return absences.map((absence) => ({
+      id: absence.id,
+      absenceTypeId: absence.absence_type_id,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      status: absence.status as AbsenceStatus | null,
+      createdAt: absence.created_at,
+      updatedAt: absence.updated_at,
+    }));
+  }
+
+  /**
+   * Finds all absences in the system, ordered by startAt DESC.
+   * RF-40: auditors can view all absences in read-only mode.
+   */
+  async findAll(): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  > {
+    const absences = await this.prisma.absence.findMany({
+      include: { absence_type: { select: { name: true } } },
+      orderBy: { start_at: 'desc' },
+    });
+
+    return absences.map((absence) => ({
+      id: absence.id,
+      absenceTypeId: absence.absence_type_id,
+      absenceTypeName: absence.absence_type.name,
+      startAt: absence.start_at,
+      endAt: absence.end_at,
+      duration: Number(absence.duration),
+      status: absence.status as AbsenceStatus | null,
+      createdAt: absence.created_at,
+      updatedAt: absence.updated_at,
+    }));
+  }
+
+  /**
    * Gets the full status history for an absence, ordered by changedAt ASC (RF-53, RF-54).
    */
   async getStatusHistory(absenceId: string): Promise<

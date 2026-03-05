@@ -2,12 +2,14 @@ import { createRoute } from '@tanstack/react-router';
 import { UserRole } from '@repo/types';
 
 import { requireRole } from '../lib/require-role';
+import { AbsenceNewPage } from '../pages/absences/AbsenceNewPage';
 import { authRoute } from './_auth';
 
-export const adminRoute = createRoute({
+export const absenceNewRoute = createRoute({
   getParentRoute: () => authRoute,
-  id: '_admin',
+  path: '/absences/new',
   beforeLoad: () => {
-    requireRole([UserRole.ADMIN]);
+    requireRole([UserRole.STANDARD, UserRole.VALIDATOR]);
   },
+  component: AbsenceNewPage,
 });
