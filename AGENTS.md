@@ -10,7 +10,7 @@ Este fichero es el punto de entrada para cualquier agente de IA que trabaje en e
 
 Existen cuatro tipos de usuario: **Empleado** (solicita ausencias, añade observaciones, adjunta ficheros), **Validador** (aprueba o rechaza ausencias asignadas), **Auditor** (visibilidad de solo lectura sobre todas las ausencias, con capacidad de filtrar por equipo) y **Administrador** (gestión de usuarios, tipos de ausencia y equipos; sin perfil de empleado propio).
 
-El estado actual del proyecto es **fase de documentación**. Toda la arquitectura, los requisitos funcionales y las convenciones de código están definidos y documentados. No existe código de producción todavía; el siguiente paso es iniciar el monorepo y comenzar el desarrollo siguiendo estrictamente la documentación existente.
+El estado actual del proyecto es **fase de implementación activa**. La arquitectura, los requisitos funcionales y las convenciones de código están definidos y documentados. El monorepo está inicializado y el desarrollo sigue las fases definidas: autenticación, gestión de usuarios y tipos de ausencia, creación de ausencias, flujo de validación, observaciones, adjuntos, notificaciones, calendario y exportación.
 
 ---
 
@@ -18,14 +18,14 @@ El estado actual del proyecto es **fase de documentación**. Toda la arquitectur
 
 Lee los documentos en el orden indicado antes de empezar cualquier tarea. No improvises decisiones que ya están tomadas en estos documentos.
 
-| Prioridad | Documento | Qué encontrarás |
-|---|---|---|
-| 1 | [`docs/non-negotiable.md`](docs/non-negotiable.md) | 35 reglas absolutas. Ninguna tiene excepción. Léelo siempre primero. |
-| 2 | [`docs/requirements.md`](docs/requirements.md) | 73 requisitos funcionales (RF-01 a RF-73) organizados en 15 secciones: tipos de usuario, tipos de ausencia, flujo de validación, observaciones, notificaciones, exportación CSV, adjuntos, equipos, etc. |
-| 3 | [`docs/technical-requirements.md`](docs/technical-requirements.md) | Stack técnico completo, estructura del monorepo, los 10 modelos de base de datos con todas sus columnas y tipos, estrategia de migraciones, variables de entorno. |
-| 4 | [`docs/best-practices-architecture.md`](docs/best-practices-architecture.md) | Arquitectura hexagonal (puertos y adaptadores), SOLID con ejemplos en TypeScript, CQRS con `@nestjs/cqrs`, contratos de API, gestión global de errores. |
-| 5 | [`docs/best-practices-backend.md`](docs/best-practices-backend.md) | Convenciones de NestJS, Prisma y PostgreSQL: validación por capas, transacciones, seguridad, logging, manejo de fechas, índices, paginación, tests. |
-| 6 | [`docs/best-practices-frontend.md`](docs/best-practices-frontend.md) | Convenciones de React, TanStack Query, TanStack Router, formularios con React Hook Form + Zod, accesibilidad, rendimiento, tests con RTL y MSW. |
+| Prioridad | Documento                                                                    | Qué encontrarás                                                                                                                                                                                          |
+| --------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1         | [`docs/non-negotiable.md`](docs/non-negotiable.md)                           | 35 reglas absolutas. Ninguna tiene excepción. Léelo siempre primero.                                                                                                                                     |
+| 2         | [`docs/requirements.md`](docs/requirements.md)                               | 73 requisitos funcionales (RF-01 a RF-73) organizados en 15 secciones: tipos de usuario, tipos de ausencia, flujo de validación, observaciones, notificaciones, exportación CSV, adjuntos, equipos, etc. |
+| 3         | [`docs/technical-requirements.md`](docs/technical-requirements.md)           | Stack técnico completo, estructura del monorepo, los 11 modelos de base de datos con todas sus columnas y tipos, estrategia de migraciones, variables de entorno.                                        |
+| 4         | [`docs/best-practices-architecture.md`](docs/best-practices-architecture.md) | Arquitectura hexagonal (puertos y adaptadores), SOLID con ejemplos en TypeScript, CQRS con `@nestjs/cqrs`, contratos de API, gestión global de errores.                                                  |
+| 5         | [`docs/best-practices-backend.md`](docs/best-practices-backend.md)           | Convenciones de NestJS, Prisma y PostgreSQL: validación por capas, transacciones, seguridad, logging, manejo de fechas, índices, paginación, tests.                                                      |
+| 6         | [`docs/best-practices-frontend.md`](docs/best-practices-frontend.md)         | Convenciones de React, TanStack Query, TanStack Router, formularios con React Hook Form + Zod, accesibilidad, rendimiento, tests con RTL y MSW.                                                          |
 
 ---
 
@@ -46,7 +46,7 @@ Estas son las decisiones de diseño más importantes. Están desarrolladas en lo
 - **UUID v7** como clave primaria en todas las tablas, generado en el backend con la librería `uuidv7`. Nunca autoincrement.
 - Base de datos PostgreSQL creada con `ENCODING='UTF8'`.
 - Todos los cambios de schema se realizan **exclusivamente con migraciones de Prisma** (`prisma migrate dev` en local, `prisma migrate deploy` en CI/staging/producción). Nunca cambios manuales.
-- Los 10 modelos de la base de datos son: `user`, `absence_type`, `absence`, `absence_validation_history`, `absence_status_history`, `observation`, `notification`, `team`, `team_member`, `observation_attachment`. Todos los nombres de tabla en **singular**.
+- Los 11 modelos de la base de datos son: `user`, `absence_type`, `absence`, `absence_validator`, `absence_validation_history`, `absence_status_history`, `observation`, `notification`, `team`, `team_member`, `observation_attachment`. Todos los nombres de tabla en **singular**.
 
 ### Autenticación y seguridad
 

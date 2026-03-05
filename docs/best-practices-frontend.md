@@ -180,7 +180,7 @@ export const apiClient = axios.create({
 
 ### Sesión desde `/me`
 
-El frontend obtiene el estado de sesión y el rol del usuario llamando a un endpoint protegido (`GET /me`), que devuelve el perfil mínimo necesario (id, nombre, rol). La sesión en Zustand se alimenta de esa respuesta, nunca de un JWT decodificado.
+El frontend obtiene el estado de sesión y el rol del usuario llamando a un endpoint protegido (`GET /auth/me`), que devuelve el perfil mínimo necesario (id, nombre, rol). La sesión en Zustand se alimenta de esa respuesta, nunca de un JWT decodificado.
 
 ### El backend es la única fuente de verdad
 
