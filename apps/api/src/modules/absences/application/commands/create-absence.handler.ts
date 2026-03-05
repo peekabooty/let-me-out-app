@@ -110,6 +110,17 @@ export class CreateAbsenceHandler implements ICommandHandler<CreateAbsenceComman
     // Save the absence
     await this.absenceRepository.save(absence);
 
+    // RF-23, RF-34: Persist assigned validators (for absences requiring validation)
+    if (absenceType.requiresValidation && command.validatorIds.length > 0) {
+      // Prevent the absence owner from being assigned as their own validator (RF-34)
+      if (command.validatorIds.includes(command.userId)) {
+        throw new BadRequestException(
+          'A user cannot be assigned as a validator for their own absence'
+        );
+      }
+      await this.absenceRepository.assignValidators(absence.id, command.validatorIds, now);
+    }
+
     // Create status history record if this absence requires validation (RF-27)
     if (initialStatus !== null) {
       await this.absenceRepository.createStatusHistory(

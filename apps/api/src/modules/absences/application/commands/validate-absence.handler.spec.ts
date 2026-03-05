@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { AbsenceStatus, ValidationDecision } from '@repo/types';
 
 import { ClockService } from '../../../../common';
@@ -18,7 +19,6 @@ describe('ValidateAbsenceHandler', () => {
   let mockAbsenceRepository: jest.Mocked<AbsenceRepositoryPort>;
   let mockPrismaService: jest.Mocked<PrismaService>;
   let mockClockService: jest.Mocked<ClockService>;
-
   const now = new Date('2024-03-15T10:00:00Z');
   const absenceId = 'absence-123';
   const userId = 'user-456';
@@ -67,6 +67,10 @@ describe('ValidateAbsenceHandler', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: EventBus,
+          useValue: { publish: jest.fn() },
         },
       ],
     }).compile();

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { AbsenceStatus } from '@repo/types';
 
 import { ClockService } from '../../../../common';
@@ -68,6 +69,10 @@ describe('CancelAbsenceHandler', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: EventBus,
+          useValue: { publish: jest.fn() },
         },
       ],
     }).compile();

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { CreateAbsenceHandler } from './create-absence.handler';
 import { CreateAbsenceCommand } from './create-absence.command';
 import {
@@ -25,6 +26,7 @@ describe('CreateAbsenceHandler', () => {
   let mockAnnualLimitValidator: jest.Mocked<AnnualLimitValidatorService>;
   let mockOverlapValidator: jest.Mocked<OverlapValidatorService>;
   let mockClock: jest.Mocked<ClockService>;
+  let mockEventBus: jest.Mocked<EventBus>;
 
   beforeEach(async () => {
     mockAbsenceRepository = {
@@ -72,6 +74,11 @@ describe('CreateAbsenceHandler', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
+    mockEventBus = {
+      publish: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAbsenceHandler,
@@ -98,6 +105,10 @@ describe('CreateAbsenceHandler', () => {
         {
           provide: ClockService,
           useValue: mockClock,
+        },
+        {
+          provide: EventBus,
+          useValue: mockEventBus,
         },
       ],
     }).compile();
@@ -314,6 +325,7 @@ describe('CreateAbsenceHandler', () => {
         })
       );
       expect(mockAbsenceRepository.createStatusHistory).not.toHaveBeenCalled();
+      expect(mockAbsenceRepository.assignValidators).not.toHaveBeenCalled();
     });
 
     it('should create absence with validation flow (status = WAITING_VALIDATION, status history created)', async () => {
@@ -354,5 +366,84 @@ describe('CreateAbsenceHandler', () => {
         expect.any(Date) // changedAt
       );
     });
+
+    it('should persist assigned validators when absence requires validation (RF-23, RF-33)', async () => {
+      // Arrange
+      const command = new CreateAbsenceCommand(
+        'user-123',
+        'type-123',
+        new Date('2026-03-10T09:00:00Z'),
+        new Date('2026-03-15T18:00:00Z'),
+        ['validator-1', 'validator-2']
+      );
+
+      mockAbsenceTypeRepository.findById.mockResolvedValue(mockAbsenceType);
+      mockDurationCalculator.calculateDuration.mockReturnValue(5);
+      mockAnnualLimitValidator.validateLimit.mockResolvedValue();
+      mockOverlapValidator.validate.mockResolvedValue();
+      mockAbsenceRepository.save.mockResolvedValue();
+      mockAbsenceRepository.createStatusHistory.mockResolvedValue();
+      mockAbsenceRepository.assignValidators.mockResolvedValue();
+
+      // Act
+      await handler.execute(command);
+
+      // Assert
+      expect(mockAbsenceRepository.assignValidators).toHaveBeenCalledWith(
+        expect.any(String), // absence ID
+        ['validator-1', 'validator-2'],
+        expect.any(Date)
+      );
+    });
+
+    it('should throw BadRequestException when user assigns themselves as validator (RF-34)', async () => {
+      // Arrange
+      const command = new CreateAbsenceCommand(
+        'user-123',
+        'type-123',
+        new Date('2026-03-10T09:00:00Z'),
+        new Date('2026-03-15T18:00:00Z'),
+        ['user-123', 'validator-2'] // user-123 is the absence owner
+      );
+
+      mockAbsenceTypeRepository.findById.mockResolvedValue(mockAbsenceType);
+      mockDurationCalculator.calculateDuration.mockReturnValue(5);
+      mockAnnualLimitValidator.validateLimit.mockResolvedValue();
+      mockOverlapValidator.validate.mockResolvedValue();
+      mockAbsenceRepository.save.mockResolvedValue();
+      mockAbsenceRepository.createStatusHistory.mockResolvedValue();
+
+      // Act & Assert
+      await expect(handler.execute(command)).rejects.toThrow(BadRequestException);
+      await expect(handler.execute(command)).rejects.toThrow(
+        'A user cannot be assigned as a validator for their own absence'
+      );
+    });
+
+    it('should publish AbsenceCreatedEvent when validators are assigned (RF-47)', async () => {
+      // Arrange
+      const command = new CreateAbsenceCommand(
+        'user-123',
+        'type-123',
+        new Date('2026-03-10T09:00:00Z'),
+        new Date('2026-03-15T18:00:00Z'),
+        ['validator-1']
+      );
+
+      mockAbsenceTypeRepository.findById.mockResolvedValue(mockAbsenceType);
+      mockDurationCalculator.calculateDuration.mockReturnValue(5);
+      mockAnnualLimitValidator.validateLimit.mockResolvedValue();
+      mockOverlapValidator.validate.mockResolvedValue();
+      mockAbsenceRepository.save.mockResolvedValue();
+      mockAbsenceRepository.createStatusHistory.mockResolvedValue();
+      mockAbsenceRepository.assignValidators.mockResolvedValue();
+
+      // Act
+      await handler.execute(command);
+
+      // Assert
+      expect(mockEventBus.publish).toHaveBeenCalledTimes(1);
+    });
   });
 });
+
