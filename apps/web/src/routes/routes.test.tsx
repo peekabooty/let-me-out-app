@@ -178,7 +178,7 @@ describe('Guard de rol: ruta de administracion', () => {
     });
   });
 
-  it('muestra la pagina de admin cuando el usuario es VALIDATOR', async () => {
+  it('redirige a /unauthorized cuando el usuario es VALIDATOR', async () => {
     server.use(
       http.get('*/auth/me', () => {
         return HttpResponse.json(mockValidatorUser);
@@ -189,7 +189,7 @@ describe('Guard de rol: ruta de administracion', () => {
     render(<RouterProvider router={router} />, { wrapper: Wrapper });
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Usuarios', level: 2 })).toBeInTheDocument();
+      expect(screen.getByText('Acceso no permitido')).toBeInTheDocument();
     });
   });
 });

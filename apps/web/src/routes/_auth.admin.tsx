@@ -8,6 +8,6 @@ export const adminRoute = createRoute({
   getParentRoute: () => authRoute,
   id: '_admin',
   beforeLoad: () => {
-    requireRole([UserRole.ADMIN, UserRole.VALIDATOR]);
+    requireRole([UserRole.ADMIN]);
   },
 });
