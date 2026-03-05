@@ -335,6 +335,18 @@ export async function removeTeamMember(teamId: string, userId: string): Promise<
   await apiClient.delete(`/teams/${teamId}/members/${userId}`);
 }
 
+export interface TeamMemberDto {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  joinedAt: string;
+}
+
+export async function listTeamMembers(teamId: string): Promise<TeamMemberDto[]> {
+  const response = await apiClient.get<TeamMemberDto[]>(`/teams/${teamId}/members`);
+  return response.data;
+}
+
 export interface AuditAbsence {
   id: string;
   userId: string;
