@@ -16,6 +16,7 @@ import { ObservationAttachmentPrismaRepository } from './infrastructure/observat
 import { LocalFileStorageService } from './infrastructure/local-file-storage.service';
 import { FileValidationService } from './domain/services/file-validation.service';
 import { ObservationAttachmentsController } from './infrastructure/observation-attachments.controller';
+import { AttachmentsController } from './infrastructure/attachments.controller';
 import { UploadAttachmentHandler } from './application/commands/upload-attachment.handler';
 import { DownloadAttachmentHandler } from './application/queries/download-attachment.handler';
 import { ListAttachmentsHandler } from './application/queries/list-attachments.handler';
@@ -25,7 +26,7 @@ const queryHandlers = [ListObservationsHandler, DownloadAttachmentHandler, ListA
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsencesModule],
-  controllers: [ObservationsController, ObservationAttachmentsController],
+  controllers: [ObservationsController, ObservationAttachmentsController, AttachmentsController],
   providers: [
     ClockService,
     // Repositories

@@ -39,11 +39,12 @@ export class ListObservationsHandler implements IQueryHandler<
       throw new NotFoundException(`Absence with ID ${query.absenceId} not found`);
     }
 
-    // RF-36: Verify user is involved (creator or validator)
-    // TODO: Add validator check when validation flow is implemented (phase 7)
+    // RF-36: Verify user is involved (creator or assigned validator)
     const isCreator = absence.userId === query.userId;
+    const assignedValidators = await this.absenceRepository.getAssignedValidators(query.absenceId);
+    const isValidator = assignedValidators.includes(query.userId);
 
-    if (!isCreator) {
+    if (!isCreator && !isValidator) {
       throw new ForbiddenException('Only involved users can view observations on this absence');
     }
 

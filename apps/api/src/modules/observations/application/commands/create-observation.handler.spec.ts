@@ -15,6 +15,7 @@ const makeObservationRepo = (
 ): ObservationRepositoryPort => ({
   save: jest.fn(),
   findByAbsenceId: jest.fn(),
+  findById: jest.fn(),
   ...overrides,
 });
 
@@ -29,11 +30,13 @@ const makeAbsenceRepo = (
   hasOverlap: jest.fn(),
   createValidationHistory: jest.fn(),
   getValidationHistory: jest.fn(),
-  getAssignedValidators: jest.fn(),
+  getAssignedValidators: jest.fn().mockResolvedValue([]),
   assignValidators: jest.fn(),
   findCalendarAbsences: jest.fn(),
   findUpcomingAbsences: jest.fn(),
   findPendingValidations: jest.fn(),
+  findByUserId: jest.fn(),
+  getStatusHistory: jest.fn(),
   ...overrides,
 });
 
@@ -70,6 +73,7 @@ describe('CreateObservationHandler', () => {
     const absence = makeAbsence({ userId: 'creator-id' });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
     const observationRepo = makeObservationRepo();
     const clock = makeClockService();
@@ -89,17 +93,37 @@ describe('CreateObservationHandler', () => {
     expect(savedObservation.createdAt).toEqual(NOW);
   });
 
-  it('throws ForbiddenException when user is not creator', async () => {
+  it('successfully creates observation when user is an assigned validator', async () => {
     const absence = makeAbsence({ userId: 'creator-id' });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
+    });
+    const observationRepo = makeObservationRepo();
+    const clock = makeClockService();
+    const handler = new CreateObservationHandler(observationRepo, absenceRepo, clock);
+    const command = new CreateObservationCommand('absence-id', 'validator-id', 'Validator note');
+
+    const result = await handler.execute(command);
+
+    expect(result).toBe('generated-observation-id');
+    expect(observationRepo.save).toHaveBeenCalledTimes(1);
+    const savedObservation = (observationRepo.save as jest.Mock).mock.calls[0][0] as Observation;
+    expect(savedObservation.userId).toBe('validator-id');
+  });
+
+  it('throws ForbiddenException when user is neither creator nor validator', async () => {
+    const absence = makeAbsence({ userId: 'creator-id' });
+    const absenceRepo = makeAbsenceRepo({
+      findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
     });
     const observationRepo = makeObservationRepo();
     const clock = makeClockService();
     const handler = new CreateObservationHandler(observationRepo, absenceRepo, clock);
     const command = new CreateObservationCommand(
       'absence-id',
-      'other-user-id',
+      'uninvolved-user-id',
       'I should not be able to post'
     );
 
@@ -122,27 +146,6 @@ describe('CreateObservationHandler', () => {
     await expect(handler.execute(command)).rejects.toThrow(NotFoundException);
     await expect(handler.execute(command)).rejects.toThrow(
       'Absence with ID non-existent-id not found'
-    );
-    expect(observationRepo.save).not.toHaveBeenCalled();
-  });
-
-  it('throws ForbiddenException when user is not creator', async () => {
-    const absence = makeAbsence({ userId: 'creator-id' });
-    const absenceRepo = makeAbsenceRepo({
-      findById: jest.fn().mockResolvedValue(absence),
-    });
-    const observationRepo = makeObservationRepo();
-    const clock = makeClockService();
-    const handler = new CreateObservationHandler(observationRepo, absenceRepo, clock);
-    const command = new CreateObservationCommand(
-      'absence-id',
-      'uninvolved-user-id',
-      'I should not be able to post'
-    );
-
-    await expect(handler.execute(command)).rejects.toThrow(ForbiddenException);
-    await expect(handler.execute(command)).rejects.toThrow(
-      'Only involved users can create observations on this absence'
     );
     expect(observationRepo.save).not.toHaveBeenCalled();
   });

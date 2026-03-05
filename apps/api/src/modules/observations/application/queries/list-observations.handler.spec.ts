@@ -16,6 +16,7 @@ const makeObservationRepo = (
 ): ObservationRepositoryPort => ({
   save: jest.fn(),
   findByAbsenceId: jest.fn().mockResolvedValue([]),
+  findById: jest.fn(),
   ...overrides,
 });
 
@@ -30,11 +31,13 @@ const makeAbsenceRepo = (
   hasOverlap: jest.fn(),
   createValidationHistory: jest.fn(),
   getValidationHistory: jest.fn(),
-  getAssignedValidators: jest.fn(),
+  getAssignedValidators: jest.fn().mockResolvedValue([]),
   assignValidators: jest.fn(),
   findCalendarAbsences: jest.fn(),
   findUpcomingAbsences: jest.fn(),
   findPendingValidations: jest.fn(),
+  findByUserId: jest.fn(),
+  getStatusHistory: jest.fn(),
   ...overrides,
 });
 
@@ -79,6 +82,7 @@ describe('ListObservationsHandler', () => {
     });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
     const observationRepo = makeObservationRepo({
       findByAbsenceId: jest.fn().mockResolvedValue([observation1, observation2]),
@@ -98,15 +102,37 @@ describe('ListObservationsHandler', () => {
     expect(observationRepo.findByAbsenceId).toHaveBeenCalledWith('absence-id');
   });
 
-  it('throws ForbiddenException when user is not creator', async () => {
+  it('successfully lists observations when user is an assigned validator', async () => {
+    const absence = makeAbsence({ userId: 'creator-id' });
+    const observation = makeObservation({ id: 'obs-1', userId: 'creator-id', content: 'Note' });
+    const absenceRepo = makeAbsenceRepo({
+      findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
+    });
+    const observationRepo = makeObservationRepo({
+      findByAbsenceId: jest.fn().mockResolvedValue([observation]),
+    });
+    const mapper = new ObservationMapper();
+    const handler = new ListObservationsHandler(observationRepo, absenceRepo, mapper);
+    const query = new ListObservationsQuery('absence-id', 'validator-id');
+
+    const result = await handler.execute(query);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('obs-1');
+    expect(observationRepo.findByAbsenceId).toHaveBeenCalledWith('absence-id');
+  });
+
+  it('throws ForbiddenException when user is neither creator nor validator', async () => {
     const absence = makeAbsence({ userId: 'creator-id' });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
     });
     const observationRepo = makeObservationRepo();
     const mapper = new ObservationMapper();
     const handler = new ListObservationsHandler(observationRepo, absenceRepo, mapper);
-    const query = new ListObservationsQuery('absence-id', 'other-user-id');
+    const query = new ListObservationsQuery('absence-id', 'uninvolved-user-id');
 
     await expect(handler.execute(query)).rejects.toThrow(ForbiddenException);
     await expect(handler.execute(query)).rejects.toThrow(
@@ -131,27 +157,11 @@ describe('ListObservationsHandler', () => {
     expect(observationRepo.findByAbsenceId).not.toHaveBeenCalled();
   });
 
-  it('throws ForbiddenException when user is not creator', async () => {
-    const absence = makeAbsence({ userId: 'creator-id' });
-    const absenceRepo = makeAbsenceRepo({
-      findById: jest.fn().mockResolvedValue(absence),
-    });
-    const observationRepo = makeObservationRepo();
-    const mapper = new ObservationMapper();
-    const handler = new ListObservationsHandler(observationRepo, absenceRepo, mapper);
-    const query = new ListObservationsQuery('absence-id', 'uninvolved-user-id');
-
-    await expect(handler.execute(query)).rejects.toThrow(ForbiddenException);
-    await expect(handler.execute(query)).rejects.toThrow(
-      'Only involved users can view observations on this absence'
-    );
-    expect(observationRepo.findByAbsenceId).not.toHaveBeenCalled();
-  });
-
   it('returns empty array when no observations exist', async () => {
     const absence = makeAbsence({ userId: 'creator-id' });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
     const observationRepo = makeObservationRepo({
       findByAbsenceId: jest.fn().mockResolvedValue([]),
@@ -176,6 +186,7 @@ describe('ListObservationsHandler', () => {
     });
     const absenceRepo = makeAbsenceRepo({
       findById: jest.fn().mockResolvedValue(absence),
+      getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
     const observationRepo = makeObservationRepo({
       findByAbsenceId: jest.fn().mockResolvedValue([observation]),

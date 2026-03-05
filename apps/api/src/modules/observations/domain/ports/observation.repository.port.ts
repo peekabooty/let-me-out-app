@@ -15,6 +15,14 @@ export interface ObservationRepositoryPort {
    * @returns Array of observations ordered by createdAt ascending
    */
   findByAbsenceId(absenceId: string): Promise<Observation[]>;
+
+  /**
+   * Finds a single observation by its ID.
+   *
+   * @param id - The ID of the observation
+   * @returns The observation or null if not found
+   */
+  findById(id: string): Promise<Observation | null>;
 }
 
 export const OBSERVATION_REPOSITORY_PORT = Symbol('ObservationRepositoryPort');

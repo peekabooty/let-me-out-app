@@ -1,8 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { DownloadAttachmentQuery } from './download-attachment.query';
-import { DownloadAttachmentHandler } from './download-attachment.handler';
+import { ListAttachmentsQuery } from './list-attachments.query';
+import { ListAttachmentsHandler } from './list-attachments.handler';
 import type { ObservationAttachmentRepositoryPort } from '../../domain/ports/observation-attachment.repository.port';
-import type { FileStoragePort } from '../../domain/ports/file-storage.port';
 import type { ObservationRepositoryPort } from '../../domain/ports/observation.repository.port';
 import type { AbsenceRepositoryPort } from '../../../absences/domain/ports/absence.repository.port';
 import { ObservationAttachment } from '../../domain/observation-attachment.entity';
@@ -17,14 +16,7 @@ const makeAttachmentRepo = (
 ): ObservationAttachmentRepositoryPort => ({
   save: jest.fn(),
   findById: jest.fn(),
-  findByObservationId: jest.fn(),
-  ...overrides,
-});
-
-const makeFileStorage = (overrides: Partial<FileStoragePort> = {}): FileStoragePort => ({
-  saveFile: jest.fn(),
-  getFile: jest.fn(),
-  deleteFile: jest.fn(),
+  findByObservationId: jest.fn().mockResolvedValue([]),
   ...overrides,
 });
 
@@ -58,24 +50,11 @@ const makeAbsenceRepo = (
   ...overrides,
 });
 
-const makeAttachment = (overrides: Partial<ObservationAttachment> = {}): ObservationAttachment => {
-  return new ObservationAttachment({
-    id: 'attachment-id',
-    observationId: 'observation-id',
-    filename: 'document.pdf',
-    storedFilename: 'stored-uuid.pdf',
-    mimeType: 'application/pdf',
-    sizeBytes: 12_345,
-    createdAt: NOW,
-    ...overrides,
-  });
-};
-
 const makeObservation = (overrides: Partial<Observation> = {}): Observation => {
   return {
     id: 'observation-id',
     absenceId: 'absence-id',
-    userId: 'user-id',
+    userId: 'creator-id',
     content: 'Test observation',
     createdAt: NOW,
     ...overrides,
@@ -96,16 +75,29 @@ const makeAbsence = (overrides: Partial<Absence> = {}): Absence =>
     ...overrides,
   });
 
-describe('DownloadAttachmentHandler', () => {
-  it('successfully downloads an attachment when user is the absence creator', async () => {
-    const attachment = makeAttachment();
+const makeAttachment = (overrides: Partial<ObservationAttachment> = {}): ObservationAttachment =>
+  new ObservationAttachment({
+    id: 'attachment-id',
+    observationId: 'observation-id',
+    filename: 'document.pdf',
+    storedFilename: 'stored-uuid.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 12_345,
+    createdAt: NOW,
+    ...overrides,
+  });
+
+describe('ListAttachmentsHandler', () => {
+  it('successfully lists attachments when user is the absence creator', async () => {
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'user-id' });
-    const fileBuffer = Buffer.from('PDF file content');
-
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
+    const attachment1 = makeAttachment({ id: 'att-1', filename: 'doc1.pdf' });
+    const attachment2 = makeAttachment({
+      id: 'att-2',
+      filename: 'photo.png',
+      mimeType: 'image/png',
     });
+
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -113,38 +105,30 @@ describe('DownloadAttachmentHandler', () => {
       findById: jest.fn().mockResolvedValue(absence),
       getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
-    const fileStorage = makeFileStorage({
-      getFile: jest.fn().mockResolvedValue(fileBuffer),
+    const attachmentRepo = makeAttachmentRepo({
+      findByObservationId: jest.fn().mockResolvedValue([attachment1, attachment2]),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      fileStorage,
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(attachmentRepo, observationRepo, absenceRepo);
+    const query = new ListAttachmentsQuery('observation-id', 'user-id');
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'user-id');
     const result = await handler.execute(query);
 
-    expect(result.buffer).toEqual(fileBuffer);
-    expect(result.filename).toBe('document.pdf');
-    expect(result.mimeType).toBe('application/pdf');
-    expect(attachmentRepo.findById).toHaveBeenCalledWith('attachment-id');
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe('att-1');
+    expect(result[0].filename).toBe('doc1.pdf');
+    expect(result[1].id).toBe('att-2');
+    expect(result[1].filename).toBe('photo.png');
     expect(observationRepo.findById).toHaveBeenCalledWith('observation-id');
     expect(absenceRepo.findById).toHaveBeenCalledWith('absence-id');
-    expect(fileStorage.getFile).toHaveBeenCalledWith('stored-uuid.pdf');
+    expect(attachmentRepo.findByObservationId).toHaveBeenCalledWith('observation-id');
   });
 
-  it('successfully downloads an attachment when user is an assigned validator', async () => {
-    const attachment = makeAttachment();
+  it('successfully lists attachments when user is an assigned validator', async () => {
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'creator-id' });
-    const fileBuffer = Buffer.from('PDF file content');
+    const attachment = makeAttachment({ id: 'att-1' });
 
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
-    });
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -152,74 +136,40 @@ describe('DownloadAttachmentHandler', () => {
       findById: jest.fn().mockResolvedValue(absence),
       getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
     });
-    const fileStorage = makeFileStorage({
-      getFile: jest.fn().mockResolvedValue(fileBuffer),
+    const attachmentRepo = makeAttachmentRepo({
+      findByObservationId: jest.fn().mockResolvedValue([attachment]),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      fileStorage,
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(attachmentRepo, observationRepo, absenceRepo);
+    const query = new ListAttachmentsQuery('observation-id', 'validator-id');
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'validator-id');
     const result = await handler.execute(query);
 
-    expect(result.buffer).toEqual(fileBuffer);
-    expect(result.filename).toBe('document.pdf');
-  });
-
-  it('throws NotFoundException when attachment does not exist', async () => {
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(null),
-    });
-
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      makeFileStorage(),
-      makeObservationRepo(),
-      makeAbsenceRepo()
-    );
-
-    const query = new DownloadAttachmentQuery('non-existent-attachment-id', 'user-id');
-
-    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
-    await expect(handler.execute(query)).rejects.toThrow(
-      'Attachment with ID non-existent-attachment-id not found'
-    );
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('att-1');
   });
 
   it('throws NotFoundException when observation does not exist', async () => {
-    const attachment = makeAttachment();
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
-    });
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(null),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      makeFileStorage(),
+    const handler = new ListAttachmentsHandler(
+      makeAttachmentRepo(),
       observationRepo,
       makeAbsenceRepo()
     );
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'user-id');
+    const query = new ListAttachmentsQuery('non-existent-observation-id', 'user-id');
 
     await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
     await expect(handler.execute(query)).rejects.toThrow(
-      'Observation with ID observation-id not found'
+      'Observation with ID non-existent-observation-id not found'
     );
   });
 
   it('throws NotFoundException when absence does not exist', async () => {
-    const attachment = makeAttachment();
     const observation = makeObservation({ absenceId: 'absence-id' });
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
-    });
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -227,27 +177,18 @@ describe('DownloadAttachmentHandler', () => {
       findById: jest.fn().mockResolvedValue(null),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      makeFileStorage(),
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(makeAttachmentRepo(), observationRepo, absenceRepo);
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'user-id');
+    const query = new ListAttachmentsQuery('observation-id', 'user-id');
 
     await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
     await expect(handler.execute(query)).rejects.toThrow('Absence with ID absence-id not found');
   });
 
   it('throws ForbiddenException when user is neither creator nor validator', async () => {
-    const attachment = makeAttachment();
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'creator-id' });
 
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
-    });
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -256,34 +197,20 @@ describe('DownloadAttachmentHandler', () => {
       getAssignedValidators: jest.fn().mockResolvedValue(['validator-id']),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      makeFileStorage(),
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(makeAttachmentRepo(), observationRepo, absenceRepo);
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'uninvolved-user-id');
+    const query = new ListAttachmentsQuery('observation-id', 'uninvolved-user-id');
 
     await expect(handler.execute(query)).rejects.toThrow(ForbiddenException);
     await expect(handler.execute(query)).rejects.toThrow(
-      'You do not have permission to download this attachment'
+      'You do not have permission to view attachments for this observation'
     );
   });
 
-  it('successfully downloads a PNG image attachment', async () => {
-    const attachment = makeAttachment({
-      filename: 'photo.png',
-      storedFilename: 'stored-uuid.png',
-      mimeType: 'image/png',
-    });
+  it('returns empty array when observation has no attachments', async () => {
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'user-id' });
-    const imageBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
 
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
-    });
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -291,33 +218,29 @@ describe('DownloadAttachmentHandler', () => {
       findById: jest.fn().mockResolvedValue(absence),
       getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
-    const fileStorage = makeFileStorage({
-      getFile: jest.fn().mockResolvedValue(imageBuffer),
+    const attachmentRepo = makeAttachmentRepo({
+      findByObservationId: jest.fn().mockResolvedValue([]),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      fileStorage,
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(attachmentRepo, observationRepo, absenceRepo);
+    const query = new ListAttachmentsQuery('observation-id', 'user-id');
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'user-id');
     const result = await handler.execute(query);
 
-    expect(result.filename).toBe('photo.png');
-    expect(result.mimeType).toBe('image/png');
-    expect(result.buffer).toEqual(imageBuffer);
+    expect(result).toEqual([]);
+    expect(attachmentRepo.findByObservationId).toHaveBeenCalledWith('observation-id');
   });
 
-  it('throws NotFoundException when file storage returns null', async () => {
-    const attachment = makeAttachment();
+  it('maps attachments to AttachmentResponseDto', async () => {
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'user-id' });
-
-    const attachmentRepo = makeAttachmentRepo({
-      findById: jest.fn().mockResolvedValue(attachment),
+    const attachment = makeAttachment({
+      id: 'att-1',
+      filename: 'report.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 54_321,
     });
+
     const observationRepo = makeObservationRepo({
       findById: jest.fn().mockResolvedValue(observation),
     });
@@ -325,22 +248,20 @@ describe('DownloadAttachmentHandler', () => {
       findById: jest.fn().mockResolvedValue(absence),
       getAssignedValidators: jest.fn().mockResolvedValue([]),
     });
-    const fileStorage = makeFileStorage({
-      getFile: jest.fn().mockResolvedValue(null),
+    const attachmentRepo = makeAttachmentRepo({
+      findByObservationId: jest.fn().mockResolvedValue([attachment]),
     });
 
-    const handler = new DownloadAttachmentHandler(
-      attachmentRepo,
-      fileStorage,
-      observationRepo,
-      absenceRepo
-    );
+    const handler = new ListAttachmentsHandler(attachmentRepo, observationRepo, absenceRepo);
+    const query = new ListAttachmentsQuery('observation-id', 'user-id');
 
-    const query = new DownloadAttachmentQuery('attachment-id', 'user-id');
+    const result = await handler.execute(query);
 
-    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
-    await expect(handler.execute(query)).rejects.toThrow(
-      'File for attachment attachment-id not found in storage'
-    );
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('att-1');
+    expect(result[0].observationId).toBe('observation-id');
+    expect(result[0].filename).toBe('report.pdf');
+    expect(result[0].mimeType).toBe('application/pdf');
+    expect(result[0].sizeBytes).toBe(54_321);
   });
 });
