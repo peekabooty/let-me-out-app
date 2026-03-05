@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../../prisma/prisma.service';
-import type { TeamRepositoryPort } from '../domain/ports/team.repository.port';
+import type { TeamRepositoryPort, TeamMemberRecord } from '../domain/ports/team.repository.port';
 import type { Team } from '../domain/team.entity';
 import { TeamMapper } from './team.mapper';
 
@@ -69,5 +69,28 @@ export class TeamPrismaRepository implements TeamRepositoryPort {
     });
 
     return !!record;
+  }
+
+  async findMembers(teamId: string): Promise<TeamMemberRecord[]> {
+    const records = await this.prisma.team_member.findMany({
+      where: { team_id: teamId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { joined_at: 'asc' },
+    });
+
+    return records.map((r) => ({
+      userId: r.user_id,
+      userName: r.user.name,
+      userEmail: r.user.email,
+      joinedAt: r.joined_at,
+    }));
   }
 }
