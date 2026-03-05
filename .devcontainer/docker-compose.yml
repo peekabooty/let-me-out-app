@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+      - 3050:3050
     volumes:
       - ..:/workspace:cached
     command: sleep infinity
