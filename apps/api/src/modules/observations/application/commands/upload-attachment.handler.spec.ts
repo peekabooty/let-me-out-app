@@ -176,7 +176,7 @@ describe('UploadAttachmentHandler', () => {
     const command = new UploadAttachmentCommand(
       'observation-id',
       'photo.jpg',
-      Buffer.from([0xff, 0xd8, 0xff]),
+      Buffer.from([0xFF, 0xD8, 0xFF]),
       'validator-id'
     );
 

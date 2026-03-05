@@ -279,7 +279,7 @@ describe('DownloadAttachmentHandler', () => {
     });
     const observation = makeObservation({ absenceId: 'absence-id' });
     const absence = makeAbsence({ userId: 'user-id' });
-    const imageBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    const imageBuffer = Buffer.from([0x89, 0x50, 0x4E, 0x47]);
 
     const attachmentRepo = makeAttachmentRepo({
       findById: jest.fn().mockResolvedValue(attachment),
