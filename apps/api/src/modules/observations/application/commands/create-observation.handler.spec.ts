@@ -37,6 +37,8 @@ const makeAbsenceRepo = (
   findPendingValidations: jest.fn(),
   findByUserId: jest.fn(),
   getStatusHistory: jest.fn(),
+  findByValidatorId: jest.fn(),
+  findAll: jest.fn(),
   ...overrides,
 });
 

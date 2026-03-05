@@ -56,6 +56,8 @@ describe('ListUserAbsencesHandler', () => {
       findPendingValidations: jest.fn(),
       findByUserId: jest.fn(),
       getStatusHistory: jest.fn(),
+      findByValidatorId: jest.fn(),
+      findAll: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
