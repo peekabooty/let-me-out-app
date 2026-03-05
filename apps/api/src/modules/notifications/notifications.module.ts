@@ -5,7 +5,9 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { NotificationPrismaRepository } from './infrastructure/notification.prisma.repository';
 import { NodemailerService } from './infrastructure/nodemailer.service';
+import { NotificationsController } from './infrastructure/notifications.controller';
 import { MarkNotificationAsReadHandler } from './application/commands/mark-notification-as-read.handler';
+import { ListNotificationsHandler } from './application/queries/list-notifications.handler';
 import { AbsenceCreatedEventHandler } from './application/event-handlers/absence-created.event-handler';
 import { AbsenceStatusChangedEventHandler } from './application/event-handlers/absence-status-changed.event-handler';
 import { UsersModule } from '../users/users.module';
@@ -14,6 +16,8 @@ import { USER_REPOSITORY_PORT } from '../users/domain/ports/user.repository.port
 import { ABSENCE_REPOSITORY_PORT } from '../absences/domain/ports/absence.repository.port';
 
 const CommandHandlers = [MarkNotificationAsReadHandler];
+
+const QueryHandlers = [ListNotificationsHandler];
 
 const EventHandlers = [AbsenceCreatedEventHandler, AbsenceStatusChangedEventHandler];
 
@@ -27,8 +31,10 @@ const EventHandlers = [AbsenceCreatedEventHandler, AbsenceStatusChangedEventHand
  */
 @Module({
   imports: [CqrsModule, PrismaModule, ConfigModule, UsersModule, AbsencesModule],
+  controllers: [NotificationsController],
   providers: [
     ...CommandHandlers,
+    ...QueryHandlers,
     ...EventHandlers,
     {
       provide: 'NotificationRepositoryPort',
