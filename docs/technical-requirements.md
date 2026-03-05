@@ -2,31 +2,31 @@
 
 ## 1. Visión General del Stack
 
-| Capa | Tecnología | Versión |
-|---|---|---|
-| Gestor de monorepo | Turborepo + pnpm workspaces | Turborepo 2.x / pnpm 9.x |
-| Lenguaje | TypeScript (strict mode) | 5.x |
-| Backend framework | NestJS | 10.x |
-| Base de datos | PostgreSQL | 16.x |
-| ORM | Prisma | 5.x |
-| Autenticación | JWT + Passport.js | — |
-| Frontend bundler | Vite | 5.x |
-| Frontend framework | React | 18.x |
-| Routing frontend | TanStack Router | 1.x |
-| Estado servidor | TanStack Query (React Query) | 5.x |
-| Estado global UI | Zustand | 4.x |
-| Formularios | React Hook Form + Zod | RHF 7.x / Zod 3.x |
-| Componentes UI | shadcn/ui + Tailwind CSS | — |
-| Calendario | FullCalendar | 6.x |
-| Exportación CSV | papaparse | 5.x |
-| HTTP client | Axios | 1.x |
-| Notificaciones email | Nodemailer | 6.x |
-| Test runner backend | Jest | 29.x |
-| Test runner frontend | Vitest | 1.x |
-| Tests de componentes | React Testing Library | 14.x |
-| Mock de API en tests | MSW (Mock Service Worker) | 2.x |
-| Tests e2e backend | Supertest | 6.x |
-| Tests de integración BD | Testcontainers | 1.x |
+| Capa                    | Tecnología                   | Versión                  |
+| ----------------------- | ---------------------------- | ------------------------ |
+| Gestor de monorepo      | Turborepo + pnpm workspaces  | Turborepo 2.x / pnpm 9.x |
+| Lenguaje                | TypeScript (strict mode)     | 5.x                      |
+| Backend framework       | NestJS                       | 10.x                     |
+| Base de datos           | PostgreSQL                   | 16.x                     |
+| ORM                     | Prisma                       | 5.x                      |
+| Autenticación           | JWT + Passport.js            | —                        |
+| Frontend bundler        | Vite                         | 5.x                      |
+| Frontend framework      | React                        | 18.x                     |
+| Routing frontend        | TanStack Router              | 1.x                      |
+| Estado servidor         | TanStack Query (React Query) | 5.x                      |
+| Estado global UI        | Zustand                      | 5.x                      |
+| Formularios             | React Hook Form + Zod        | RHF 7.x / Zod 3.x        |
+| Componentes UI          | shadcn/ui + Tailwind CSS     | —                        |
+| Calendario              | FullCalendar                 | 6.x                      |
+| Exportación CSV         | papaparse                    | 5.x                      |
+| HTTP client             | Axios                        | 1.x                      |
+| Notificaciones email    | Nodemailer                   | 8.x                      |
+| Test runner backend     | Jest                         | 29.x                     |
+| Test runner frontend    | Vitest                       | 1.x                      |
+| Tests de componentes    | React Testing Library        | 14.x                     |
+| Mock de API en tests    | MSW (Mock Service Worker)    | 2.x                      |
+| Tests e2e backend       | Supertest                    | 6.x                      |
+| Tests de integración BD | Testcontainers               | 1.x                      |
 
 ### Justificación de las decisiones principales
 
@@ -120,18 +120,19 @@ Controller (HTTP) → Command/Query → Handler → Dominio → Puerto → Adapt
 
 **Módulos principales:**
 
-| Módulo | Responsabilidad |
-|---|---|
-| `AuthModule` | Login, generación y refresco de tokens JWT, estrategias Passport |
-| `UsersModule` | CRUD de usuarios, gestión de roles |
-| `AbsenceTypesModule` | CRUD de tipos de ausencia, configuración de límites |
-| `AbsencesModule` | Creación de ausencias, flujo de validación, cancelación, saldo anual |
-| `NotificationsModule` | Envío de emails y persistencia de notificaciones in-app |
-| `AuditModule` | Consulta del historial de cambios de estado |
+| Módulo                | Responsabilidad                                                      |
+| --------------------- | -------------------------------------------------------------------- |
+| `AuthModule`          | Login, generación y refresco de tokens JWT, estrategias Passport     |
+| `UsersModule`         | CRUD de usuarios, gestión de roles                                   |
+| `AbsenceTypesModule`  | CRUD de tipos de ausencia, configuración de límites                  |
+| `AbsencesModule`      | Creación de ausencias, flujo de validación, cancelación, saldo anual |
+| `NotificationsModule` | Envío de emails y persistencia de notificaciones in-app              |
+| `AuditModule`         | Consulta del historial de cambios de estado                          |
 
 ### 3.2 Autenticación y autorización
 
 **Autenticación:**
+
 - Login mediante email y contraseña. La contraseña se almacena como hash bcrypt (factor de coste 12).
 - Tras un login exitoso se emiten dos tokens:
   - **Access token** (JWT firmado con `JWT_SECRET`): duración de 15 minutos. Incluye en el payload el `userId`, `email` y `role`.
@@ -141,12 +142,14 @@ Controller (HTTP) → Command/Query → Handler → Dominio → Puerto → Adapt
 - En despliegue cross-site, las cookies usan `SameSite=None` y `Secure=true`, con `Path` del refresh token restringido a `/auth/refresh`. CORS debe permitir `credentials`.
 
 **Autorización:**
+
 - Decorador `@Roles(...roles)` sobre controllers o handlers para declarar los roles con acceso permitido.
 - Guard `RolesGuard` que lee el rol del payload del JWT y lo compara con los roles requeridos.
 - Para casos más complejos (ej. un validador no puede validar sus propias ausencias) la comprobación se realiza en la capa de servicio.
 
 **Endpoint de sesión:**
-- `GET /me` devuelve el perfil mínimo del usuario autenticado (`id`, `email`, `name`, `role`, `is_active`).
+
+- `GET /auth/me` devuelve el perfil mínimo del usuario autenticado (`id`, `email`, `name`, `role`, `is_active`).
 - Requiere cookie de access token válida y se usa por el frontend para inicializar la sesión.
 
 ### 3.3 Validación de entrada
@@ -189,23 +192,20 @@ TanStack Router organiza las rutas en dos layouts principales:
 
 **Rutas principales:**
 
-| Ruta | Roles con acceso | Descripción |
-|---|---|---|
-| `/` | standard, validator | Dashboard con saldo y próximas ausencias |
-| `/absences` | standard, validator | Listado de ausencias propias |
-| `/absences/new` | standard, validator | Formulario de creación de ausencia |
-| `/absences/:id` | standard, validator, auditor | Detalle de una ausencia |
-| `/calendar` | standard, validator | Vista de calendario |
-| `/validations` | validator | Ausencias pendientes de validar |
-| `/admin` | admin | Panel de administración |
-| `/admin/users` | admin | Gestión de usuarios |
-| `/admin/absence-types` | admin | Gestión de tipos de ausencia |
-| `/audit` | auditor | Listado de todas las ausencias |
+| Ruta            | Roles con acceso             | Descripción                                        |
+| --------------- | ---------------------------- | -------------------------------------------------- |
+| `/`             | standard, validator          | Dashboard con saldo y próximas ausencias           |
+| `/absences/new` | standard, validator          | Formulario de creación de ausencia                 |
+| `/absences/:id` | standard, validator, auditor | Detalle de una ausencia                            |
+| `/calendar`     | standard, validator          | Vista de calendario                                |
+| `/admin`        | admin                        | Panel de administración (usuarios, tipos, equipos) |
+| `/audit`        | auditor                      | Listado de todas las ausencias                     |
+| `/unauthorized` | —                            | Pantalla de acceso denegado                        |
 
 ### 4.2 Gestión del estado
 
 - **Estado del servidor** (TanStack Query): ausencias, tipos de ausencia, usuarios, notificaciones, saldo anual. La caché se invalida automáticamente tras cada mutación relevante.
-- **Estado global UI** (Zustand): datos de la sesión activa del usuario obtenidos desde el endpoint `/me` (id, nombre, rol), estado de lectura de notificaciones in-app.
+- **Estado global UI** (Zustand): datos de la sesión activa del usuario obtenidos desde el endpoint `GET /auth/me` (id, nombre, rol), estado de lectura de notificaciones in-app.
 - No se usa ningún store global para datos remotos; TanStack Query cubre este rol completamente.
 
 ### 4.3 Formularios y validación
@@ -215,6 +215,7 @@ React Hook Form con `zodResolver` conecta cada formulario con su schema Zod corr
 ### 4.4 Cliente HTTP (Axios)
 
 Se configura una instancia única de Axios con:
+
 - `baseURL` apuntando a la URL de la API.
 - `withCredentials: true` para enviar cookies en peticiones cross-origin.
 - Interceptor de response: cuando recibe un `401`, intenta refrescar el access token llamando al endpoint de refresh. Si el refresco falla (refresh token expirado), redirige al login y limpia la sesión de Zustand.
@@ -300,11 +301,11 @@ Todas las tablas usan `UUID` como tipo de clave primaria. Los valores se generan
 
 **Ventajas de UUID v7 frente a alternativas:**
 
-| Tipo de ID | Predecible | Ordenable | Fragmentación de índice |
-|---|---|---|---|
-| Integer autoincremental | Sí (inseguro) | Sí | Ninguna |
-| UUID v4 | No | No | Alta |
-| UUID v7 | No | Sí (por timestamp) | Baja |
+| Tipo de ID              | Predecible    | Ordenable          | Fragmentación de índice |
+| ----------------------- | ------------- | ------------------ | ----------------------- |
+| Integer autoincremental | Sí (inseguro) | Sí                 | Ninguna                 |
+| UUID v4                 | No            | No                 | Alta                    |
+| UUID v7                 | No            | Sí (por timestamp) | Baja                    |
 
 ### 6.3 Modelo de tablas
 
@@ -314,16 +315,16 @@ Todas las tablas usan `UUID` como tipo de clave primaria. Los valores se generan
 
 Almacena los usuarios del sistema con su rol y credenciales de acceso.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `email` | `VARCHAR(255)` | UNIQUE NOT NULL | Email del usuario, usado como identificador de login |
-| `name` | `VARCHAR(255)` | NOT NULL | Nombre completo del usuario |
-| `password_hash` | `VARCHAR(255)` | NOT NULL | Hash bcrypt de la contraseña (factor de coste 12) |
-| `role` | `VARCHAR(50)` | NOT NULL | Rol del usuario: `standard`, `validator`, `auditor`, `admin` |
-| `is_active` | `BOOLEAN` | NOT NULL DEFAULT TRUE | Permite deshabilitar usuarios sin eliminarlos físicamente |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de la última modificación |
+| columna         | tipo PostgreSQL | restricciones          | descripción                                                  |
+| --------------- | --------------- | ---------------------- | ------------------------------------------------------------ |
+| `id`            | `UUID`          | PK                     | UUID v7 generado en backend                                  |
+| `email`         | `VARCHAR(255)`  | UNIQUE NOT NULL        | Email del usuario, usado como identificador de login         |
+| `name`          | `VARCHAR(255)`  | NOT NULL               | Nombre completo del usuario                                  |
+| `password_hash` | `VARCHAR(255)`  | NOT NULL               | Hash bcrypt de la contraseña (factor de coste 12)            |
+| `role`          | `VARCHAR(50)`   | NOT NULL               | Rol del usuario: `standard`, `validator`, `auditor`, `admin` |
+| `is_active`     | `BOOLEAN`       | NOT NULL DEFAULT TRUE  | Permite deshabilitar usuarios sin eliminarlos físicamente    |
+| `created_at`    | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro                        |
+| `updated_at`    | `TIMESTAMPTZ`   | NOT NULL               | Fecha y hora de la última modificación                       |
 
 ---
 
@@ -331,20 +332,20 @@ Almacena los usuarios del sistema con su rol y credenciales de acceso.
 
 Almacena los tipos de ausencia configurables desde el panel de administración.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `name` | `VARCHAR(255)` | NOT NULL | Nombre descriptivo del tipo de ausencia |
-| `unit` | `VARCHAR(10)` | NOT NULL | Unidad de medida: `hours` o `days` |
-| `max_per_year` | `NUMERIC(6,2)` | NOT NULL | Máximo de horas o días permitidos por usuario por año natural |
-| `min_duration` | `NUMERIC(6,2)` | NOT NULL | Duración mínima permitida por ausencia en la unidad definida |
-| `max_duration` | `NUMERIC(6,2)` | NOT NULL | Duración máxima permitida por ausencia en la unidad definida |
-| `requires_validation` | `BOOLEAN` | NOT NULL DEFAULT FALSE | Indica si la ausencia pasa por flujo de validación |
-| `allow_past_dates` | `BOOLEAN` | NOT NULL DEFAULT FALSE | Indica si se puede registrar en fechas pasadas |
-| `min_days_in_advance` | `INTEGER` | NULL | Días naturales mínimos de antelación requeridos; NULL si no aplica |
-| `is_active` | `BOOLEAN` | NOT NULL DEFAULT TRUE | Permite desactivar el tipo sin eliminarlo |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de la última modificación |
+| columna               | tipo PostgreSQL | restricciones          | descripción                                                        |
+| --------------------- | --------------- | ---------------------- | ------------------------------------------------------------------ |
+| `id`                  | `UUID`          | PK                     | UUID v7 generado en backend                                        |
+| `name`                | `VARCHAR(255)`  | NOT NULL               | Nombre descriptivo del tipo de ausencia                            |
+| `unit`                | `VARCHAR(10)`   | NOT NULL               | Unidad de medida: `hours` o `days`                                 |
+| `max_per_year`        | `NUMERIC(6,2)`  | NOT NULL               | Máximo de horas o días permitidos por usuario por año natural      |
+| `min_duration`        | `NUMERIC(6,2)`  | NOT NULL               | Duración mínima permitida por ausencia en la unidad definida       |
+| `max_duration`        | `NUMERIC(6,2)`  | NOT NULL               | Duración máxima permitida por ausencia en la unidad definida       |
+| `requires_validation` | `BOOLEAN`       | NOT NULL DEFAULT FALSE | Indica si la ausencia pasa por flujo de validación                 |
+| `allow_past_dates`    | `BOOLEAN`       | NOT NULL DEFAULT FALSE | Indica si se puede registrar en fechas pasadas                     |
+| `min_days_in_advance` | `INTEGER`       | NULL                   | Días naturales mínimos de antelación requeridos; NULL si no aplica |
+| `is_active`           | `BOOLEAN`       | NOT NULL DEFAULT TRUE  | Permite desactivar el tipo sin eliminarlo                          |
+| `created_at`          | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro                              |
+| `updated_at`          | `TIMESTAMPTZ`   | NOT NULL               | Fecha y hora de la última modificación                             |
 
 ---
 
@@ -352,17 +353,17 @@ Almacena los tipos de ausencia configurables desde el panel de administración.
 
 Almacena cada ausencia registrada por un usuario.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `user_id` | `UUID` | FK → `user.id` NOT NULL | Usuario propietario de la ausencia |
-| `absence_type_id` | `UUID` | FK → `absence_type.id` NOT NULL | Tipo de ausencia seleccionado |
-| `start_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de inicio de la ausencia |
-| `end_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de fin de la ausencia |
-| `duration` | `NUMERIC(6,2)` | NOT NULL | Duración calculada y almacenada en la unidad del tipo (horas o días laborales) |
-| `status` | `VARCHAR(50)` | NULL | Estado actual del flujo de validación; NULL para ausencias sin validación |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de la última modificación |
+| columna           | tipo PostgreSQL | restricciones                   | descripción                                                                    |
+| ----------------- | --------------- | ------------------------------- | ------------------------------------------------------------------------------ |
+| `id`              | `UUID`          | PK                              | UUID v7 generado en backend                                                    |
+| `user_id`         | `UUID`          | FK → `user.id` NOT NULL         | Usuario propietario de la ausencia                                             |
+| `absence_type_id` | `UUID`          | FK → `absence_type.id` NOT NULL | Tipo de ausencia seleccionado                                                  |
+| `start_at`        | `TIMESTAMPTZ`   | NOT NULL                        | Fecha y hora de inicio de la ausencia                                          |
+| `end_at`          | `TIMESTAMPTZ`   | NOT NULL                        | Fecha y hora de fin de la ausencia                                             |
+| `duration`        | `NUMERIC(6,2)`  | NOT NULL                        | Duración calculada y almacenada en la unidad del tipo (horas o días laborales) |
+| `status`          | `VARCHAR(50)`   | NULL                            | Estado actual del flujo de validación; NULL para ausencias sin validación      |
+| `created_at`      | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()          | Fecha y hora de creación del registro                                          |
+| `updated_at`      | `TIMESTAMPTZ`   | NOT NULL                        | Fecha y hora de la última modificación                                         |
 
 ---
 
@@ -372,13 +373,13 @@ Registra cada acto de validación (aceptación o rechazo) realizado por un valid
 
 Para determinar la decisión vigente de cada validador sobre una ausencia, se toma la fila más reciente por `(absence_id, validator_id)` ordenada por `decided_at DESC`.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `absence_id` | `UUID` | FK → `absence.id` NOT NULL | Ausencia sobre la que se toma la decisión |
-| `validator_id` | `UUID` | FK → `user.id` NOT NULL | Usuario validador que emite la decisión |
-| `decision` | `VARCHAR(20)` | NOT NULL | Decisión emitida: `accepted` o `rejected` |
-| `decided_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Momento exacto en que se tomó la decisión |
+| columna        | tipo PostgreSQL | restricciones              | descripción                               |
+| -------------- | --------------- | -------------------------- | ----------------------------------------- |
+| `id`           | `UUID`          | PK                         | UUID v7 generado en backend               |
+| `absence_id`   | `UUID`          | FK → `absence.id` NOT NULL | Ausencia sobre la que se toma la decisión |
+| `validator_id` | `UUID`          | FK → `user.id` NOT NULL    | Usuario validador que emite la decisión   |
+| `decision`     | `VARCHAR(20)`   | NOT NULL                   | Decisión emitida: `accepted` o `rejected` |
+| `decided_at`   | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()     | Momento exacto en que se tomó la decisión |
 
 ---
 
@@ -386,14 +387,14 @@ Para determinar la decisión vigente de cada validador sobre una ausencia, se to
 
 Registra cada transición de estado en el flujo de validación de una ausencia, incluyendo el usuario responsable y el momento del cambio. Es la base del sistema de auditoría.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `absence_id` | `UUID` | FK → `absence.id` NOT NULL | Ausencia cuyo estado cambia |
-| `from_status` | `VARCHAR(50)` | NULL | Estado anterior; NULL en la transición inicial al crear la ausencia |
-| `to_status` | `VARCHAR(50)` | NOT NULL | Nuevo estado tras la transición |
-| `changed_by` | `UUID` | FK → `user.id` NOT NULL | Usuario que provocó el cambio de estado |
-| `changed_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Momento exacto del cambio de estado |
+| columna       | tipo PostgreSQL | restricciones              | descripción                                                         |
+| ------------- | --------------- | -------------------------- | ------------------------------------------------------------------- |
+| `id`          | `UUID`          | PK                         | UUID v7 generado en backend                                         |
+| `absence_id`  | `UUID`          | FK → `absence.id` NOT NULL | Ausencia cuyo estado cambia                                         |
+| `from_status` | `VARCHAR(50)`   | NULL                       | Estado anterior; NULL en la transición inicial al crear la ausencia |
+| `to_status`   | `VARCHAR(50)`   | NOT NULL                   | Nuevo estado tras la transición                                     |
+| `changed_by`  | `UUID`          | FK → `user.id` NOT NULL    | Usuario que provocó el cambio de estado                             |
+| `changed_at`  | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()     | Momento exacto del cambio de estado                                 |
 
 ---
 
@@ -401,13 +402,13 @@ Registra cada transición de estado en el flujo de validación de una ausencia, 
 
 Almacena los comentarios que los usuarios implicados pueden añadir a una ausencia. El campo `content` usa el tipo `TEXT` de PostgreSQL, que en una base de datos con encoding `UTF8` soporta texto de longitud arbitraria con el rango Unicode completo, incluyendo emojis y cualquier carácter del plano suplementario.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `absence_id` | `UUID` | FK → `absence.id` NOT NULL | Ausencia a la que pertenece la observación |
-| `user_id` | `UUID` | FK → `user.id` NOT NULL | Usuario autor de la observación |
-| `content` | `TEXT` | NOT NULL | Texto del comentario. Tipo `TEXT` con encoding `UTF8` para soporte completo de emojis y caracteres Unicode (U+0000 a U+10FFFF) |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación de la observación |
+| columna      | tipo PostgreSQL | restricciones              | descripción                                                                                                                    |
+| ------------ | --------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `id`         | `UUID`          | PK                         | UUID v7 generado en backend                                                                                                    |
+| `absence_id` | `UUID`          | FK → `absence.id` NOT NULL | Ausencia a la que pertenece la observación                                                                                     |
+| `user_id`    | `UUID`          | FK → `user.id` NOT NULL    | Usuario autor de la observación                                                                                                |
+| `content`    | `TEXT`          | NOT NULL                   | Texto del comentario. Tipo `TEXT` con encoding `UTF8` para soporte completo de emojis y caracteres Unicode (U+0000 a U+10FFFF) |
+| `created_at` | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()     | Fecha y hora de creación de la observación                                                                                     |
 
 ---
 
@@ -415,15 +416,15 @@ Almacena los comentarios que los usuarios implicados pueden añadir a una ausenc
 
 Almacena las notificaciones in-app generadas por el sistema para cada usuario destinatario.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `user_id` | `UUID` | FK → `user.id` NOT NULL | Usuario destinatario de la notificación |
-| `absence_id` | `UUID` | FK → `absence.id` NOT NULL | Ausencia relacionada con la notificación |
-| `type` | `VARCHAR(100)` | NOT NULL | Tipo de evento: `validation_requested`, `status_changed`, etc. |
-| `message` | `TEXT` | NOT NULL | Texto descriptivo de la notificación mostrado al usuario |
-| `read` | `BOOLEAN` | NOT NULL DEFAULT FALSE | Indica si el usuario ha leído la notificación |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación de la notificación |
+| columna      | tipo PostgreSQL | restricciones              | descripción                                                    |
+| ------------ | --------------- | -------------------------- | -------------------------------------------------------------- |
+| `id`         | `UUID`          | PK                         | UUID v7 generado en backend                                    |
+| `user_id`    | `UUID`          | FK → `user.id` NOT NULL    | Usuario destinatario de la notificación                        |
+| `absence_id` | `UUID`          | FK → `absence.id` NOT NULL | Ausencia relacionada con la notificación                       |
+| `type`       | `VARCHAR(100)`  | NOT NULL                   | Tipo de evento: `validation_requested`, `status_changed`, etc. |
+| `message`    | `TEXT`          | NOT NULL                   | Texto descriptivo de la notificación mostrado al usuario       |
+| `read`       | `BOOLEAN`       | NOT NULL DEFAULT FALSE     | Indica si el usuario ha leído la notificación                  |
+| `created_at` | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()     | Fecha y hora de creación de la notificación                    |
 
 ---
 
@@ -431,13 +432,13 @@ Almacena las notificaciones in-app generadas por el sistema para cada usuario de
 
 Almacena los equipos de usuarios. Cada equipo tiene un color asociado que se usará para representar las ausencias de sus miembros en el calendario de otros compañeros del mismo equipo.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `name` | `VARCHAR(255)` | NOT NULL | Nombre del equipo |
-| `color` | `VARCHAR(7)` | NOT NULL | Color del equipo en formato hexadecimal (ej. `#FF5733`). No se restringe la unicidad del color |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL | Fecha y hora de la última modificación |
+| columna      | tipo PostgreSQL | restricciones          | descripción                                                                                    |
+| ------------ | --------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `id`         | `UUID`          | PK                     | UUID v7 generado en backend                                                                    |
+| `name`       | `VARCHAR(255)`  | NOT NULL               | Nombre del equipo                                                                              |
+| `color`      | `VARCHAR(7)`    | NOT NULL               | Color del equipo en formato hexadecimal (ej. `#FF5733`). No se restringe la unicidad del color |
+| `created_at` | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW() | Fecha y hora de creación del registro                                                          |
+| `updated_at` | `TIMESTAMPTZ`   | NOT NULL               | Fecha y hora de la última modificación                                                         |
 
 ---
 
@@ -445,11 +446,11 @@ Almacena los equipos de usuarios. Cada equipo tiene un color asociado que se usa
 
 Relación N:M entre usuarios y equipos. Registra la pertenencia de un usuario a un equipo y la fecha en que se produjo la incorporación. La clave primaria es compuesta `(team_id, user_id)`, garantizando que un usuario no puede pertenecer al mismo equipo más de una vez.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `team_id` | `UUID` | FK → `team.id` NOT NULL | Equipo al que pertenece el usuario |
-| `user_id` | `UUID` | FK → `user.id` NOT NULL | Usuario miembro del equipo |
-| `joined_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora en que el usuario fue incorporado al equipo |
+| columna     | tipo PostgreSQL | restricciones           | descripción                                              |
+| ----------- | --------------- | ----------------------- | -------------------------------------------------------- |
+| `team_id`   | `UUID`          | FK → `team.id` NOT NULL | Equipo al que pertenece el usuario                       |
+| `user_id`   | `UUID`          | FK → `user.id` NOT NULL | Usuario miembro del equipo                               |
+| `joined_at` | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()  | Fecha y hora en que el usuario fue incorporado al equipo |
 
 PK compuesta: `(team_id, user_id)`.
 
@@ -461,15 +462,29 @@ Almacena los metadatos de los ficheros adjuntos a observaciones. El contenido bi
 
 Tipos de fichero permitidos: `image/jpeg`, `image/png`, `application/pdf`. Tamaño máximo por fichero: 5 MB.
 
-| columna | tipo PostgreSQL | restricciones | descripción |
-|---|---|---|---|
-| `id` | `UUID` | PK | UUID v7 generado en backend |
-| `observation_id` | `UUID` | FK → `observation.id` NOT NULL | Observación a la que pertenece el adjunto |
-| `filename` | `VARCHAR(255)` | NOT NULL | Nombre original del fichero tal como lo subió el usuario |
-| `stored_filename` | `VARCHAR(255)` | NOT NULL | Nombre con el que se almacena en disco (UUID v7 + extensión) |
-| `mime_type` | `VARCHAR(100)` | NOT NULL | Tipo MIME validado: `image/jpeg`, `image/png` o `application/pdf` |
-| `size_bytes` | `INTEGER` | NOT NULL | Tamaño del fichero en bytes (máximo 5.242.880) |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT NOW() | Fecha y hora de subida del fichero |
+| columna           | tipo PostgreSQL | restricciones                  | descripción                                                       |
+| ----------------- | --------------- | ------------------------------ | ----------------------------------------------------------------- |
+| `id`              | `UUID`          | PK                             | UUID v7 generado en backend                                       |
+| `observation_id`  | `UUID`          | FK → `observation.id` NOT NULL | Observación a la que pertenece el adjunto                         |
+| `filename`        | `VARCHAR(255)`  | NOT NULL                       | Nombre original del fichero tal como lo subió el usuario          |
+| `stored_filename` | `VARCHAR(255)`  | NOT NULL                       | Nombre con el que se almacena en disco (UUID v7 + extensión)      |
+| `mime_type`       | `VARCHAR(100)`  | NOT NULL                       | Tipo MIME validado: `image/jpeg`, `image/png` o `application/pdf` |
+| `size_bytes`      | `INTEGER`       | NOT NULL                       | Tamaño del fichero en bytes (máximo 5.242.880)                    |
+| `created_at`      | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()         | Fecha y hora de subida del fichero                                |
+
+---
+
+#### Tabla `absence_validator`
+
+Relación N:M entre ausencias y los validadores asignados para revisar esa ausencia. La clave primaria es compuesta `(absence_id, validator_id)`, garantizando que un validador no puede estar asignado a la misma ausencia más de una vez.
+
+| columna        | tipo PostgreSQL | restricciones              | descripción                                   |
+| -------------- | --------------- | -------------------------- | --------------------------------------------- |
+| `absence_id`   | `UUID`          | FK → `absence.id` NOT NULL | Ausencia a la que está asignado el validador  |
+| `validator_id` | `UUID`          | FK → `user.id` NOT NULL    | Usuario validador asignado                    |
+| `assigned_at`  | `TIMESTAMPTZ`   | NOT NULL DEFAULT NOW()     | Fecha y hora en que el validador fue asignado |
+
+PK compuesta: `(absence_id, validator_id)`. Índice adicional sobre `validator_id`.
 
 ---
 
@@ -506,7 +521,11 @@ Cuando se necesita un cambio en el esquema:
 1. Modificar `prisma/schema.prisma` con los cambios deseados.
 2. Ejecutar el comando de migración en desarrollo:
    ```bash
-   pnpm prisma migrate dev --name describe_the_change
+   pnpm --filter @repo/api prisma:migrate
+   ```
+   Para pasar un nombre descriptivo a la migración, usa directamente el wrapper de Prisma:
+   ```bash
+   pnpm --filter @repo/api exec prisma migrate dev --name describe_the_change --schema ./prisma/schema.prisma
    ```
 3. Prisma genera el archivo SQL en `prisma/migrations/`, aplica la migración sobre la base de datos de desarrollo y regenera el cliente Prisma con los nuevos tipos.
 4. Commitear tanto el `schema.prisma` modificado como el archivo de migración generado.
@@ -516,20 +535,20 @@ Cuando se necesita un cambio en el esquema:
 En entornos que no son de desarrollo se usa el comando de despliegue, que **solo aplica** migraciones pendientes sin generar ningún archivo nuevo:
 
 ```bash
-pnpm prisma migrate deploy
+pnpm --filter @repo/api exec prisma migrate deploy --schema ./prisma/schema.prisma
 ```
 
 Este comando es seguro para producción: es idempotente, consulta la tabla interna `_prisma_migrations` de PostgreSQL para saber qué migraciones ya han sido aplicadas y solo ejecuta las pendientes. Si alguna migración falla, el proceso se detiene y se puede corregir sin dejar la base de datos en un estado inconsistente.
 
 #### Comandos de referencia
 
-| Comando | Entorno | Descripción |
-|---|---|---|
-| `prisma migrate dev --name <nombre>` | Desarrollo | Genera la migración, la aplica y regenera el cliente |
-| `prisma migrate deploy` | CI / Staging / Producción | Solo aplica las migraciones pendientes |
-| `prisma migrate status` | Cualquiera | Muestra qué migraciones están aplicadas y cuáles pendientes |
-| `prisma migrate reset` | Solo desarrollo | Elimina la BD, vuelve a crearla y aplica todas las migraciones desde cero |
-| `prisma generate` | Desarrollo | Regenera el cliente Prisma sin aplicar migraciones |
+| Comando                                                                              | Entorno                   | Descripción                                                               |
+| ------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------------------------------- |
+| `pnpm --filter @repo/api prisma:migrate`                                             | Desarrollo                | Genera la migración, la aplica y regenera el cliente                      |
+| `pnpm --filter @repo/api exec prisma migrate deploy --schema ./prisma/schema.prisma` | CI / Staging / Producción | Solo aplica las migraciones pendientes                                    |
+| `pnpm --filter @repo/api exec prisma migrate status --schema ./prisma/schema.prisma` | Cualquiera                | Muestra qué migraciones están aplicadas y cuáles pendientes               |
+| `pnpm --filter @repo/api exec prisma migrate reset --schema ./prisma/schema.prisma`  | Solo desarrollo           | Elimina la BD, vuelve a crearla y aplica todas las migraciones desde cero |
+| `pnpm --filter @repo/api prisma:generate`                                            | Desarrollo                | Regenera el cliente Prisma sin aplicar migraciones                        |
 
 > `prisma migrate reset` destruye todos los datos. Solo debe usarse en desarrollo local, nunca en staging ni producción.
 
@@ -541,6 +560,7 @@ Este comando es seguro para producción: es idempotente, consulta la tabla inter
 
 **Tests unitarios**
 Cubren servicios y lógica de negocio de forma aislada, con dependencias mockeadas (PrismaService, otros servicios). Casos prioritarios:
+
 - Cálculo de duración en horas y en días laborales (lunes a viernes).
 - Validación de límites anuales por tipo de ausencia.
 - Validación de antelación mínima (15 días naturales para ausencias retribuidas).
@@ -564,6 +584,7 @@ Vitest comparte el pipeline de transformación de módulos con Vite (esbuild), l
 
 **Tests de componentes (React Testing Library)**
 Filosofía centrada en el comportamiento del usuario, no en detalles de implementación. Los tests interactúan con los componentes como lo haría un usuario: buscando elementos por rol, label o texto, y disparando eventos de usuario. Flujos prioritarios:
+
 - Formulario de creación de ausencia: validaciones, selección de tipo, fechas, validadores.
 - Dashboard: renderizado de saldo restante y próximas ausencias.
 - Acciones de validación: aceptar y rechazar desde la vista de una ausencia.
@@ -588,6 +609,7 @@ La tarea `test` está definida en `turbo.json` con dependencia sobre `build` de 
 
 **ESLint**
 Reglas base definidas en `@repo/config/eslint-base.js` y extendidas en cada paquete:
+
 - Backend: reglas adicionales para NestJS (`@darraghor/eslint-plugin-nestjs-typed`).
 - Frontend: reglas de React (`eslint-plugin-react`, `eslint-plugin-react-hooks`) y accesibilidad (`eslint-plugin-jsx-a11y`).
 
@@ -602,13 +624,13 @@ Formato estándar de mensajes de commit (`feat:`, `fix:`, `chore:`, `docs:`, `te
 
 **Pipeline Turbo (`turbo.json`)**
 
-| Tarea | Depende de | Con caché |
-|---|---|---|
-| `build` | `build` de dependencias | Sí |
-| `typecheck` | `build` de dependencias | Sí |
-| `lint` | — | Sí |
-| `test` | `build` de dependencias | Sí |
-| `dev` | — | No |
+| Tarea       | Depende de              | Con caché |
+| ----------- | ----------------------- | --------- |
+| `build`     | `build` de dependencias | Sí        |
+| `typecheck` | `build` de dependencias | Sí        |
+| `lint`      | —                       | Sí        |
+| `test`      | `build` de dependencias | Sí        |
+| `dev`       | —                       | No        |
 
 ---
 
@@ -616,18 +638,18 @@ Formato estándar de mensajes de commit (`feat:`, `fix:`, `chore:`, `docs:`, `te
 
 Todas las variables de entorno del backend se validan al arranque mediante `@nestjs/config`. Si alguna variable obligatoria está ausente o tiene un formato incorrecto, la aplicación lanza un error descriptivo y no arranca, evitando comportamientos inesperados en tiempo de ejecución.
 
-| variable | descripción | obligatoria |
-|---|---|---|
-| `DATABASE_URL` | Cadena de conexión PostgreSQL en formato `postgresql://user:pass@host:port/db` | Sí |
-| `JWT_SECRET` | Secreto para firmar y verificar access tokens. Mínimo 32 caracteres aleatorios | Sí |
-| `JWT_REFRESH_SECRET` | Secreto para firmar y verificar refresh tokens. Debe ser distinto de `JWT_SECRET` | Sí |
-| `JWT_EXPIRES_IN` | Duración del access token en formato vercel/ms (ej. `15m`) | Sí |
-| `JWT_REFRESH_EXPIRES_IN` | Duración del refresh token en formato vercel/ms (ej. `7d`) | Sí |
-| `SMTP_HOST` | Hostname del servidor SMTP para el envío de emails | Sí |
-| `SMTP_PORT` | Puerto del servidor SMTP (habitualmente `465` para SSL o `587` para STARTTLS) | Sí |
-| `SMTP_SECURE` | `true` para SSL/TLS, `false` para STARTTLS | Sí |
-| `SMTP_USER` | Usuario de autenticación del servidor SMTP | Sí |
-| `SMTP_PASS` | Contraseña de autenticación del servidor SMTP | Sí |
-| `SMTP_FROM` | Dirección de email remitente (ej. `"Sistema de Ausencias" <no-reply@empresa.com>`) | Sí |
-| `CORS_ORIGIN` | URL del frontend permitida por la política CORS (ej. `http://localhost:5173`) | Sí |
-| `APP_PORT` | Puerto en el que escucha la API. Por defecto `3000` | No |
+| variable                 | descripción                                                                        | obligatoria |
+| ------------------------ | ---------------------------------------------------------------------------------- | ----------- |
+| `DATABASE_URL`           | Cadena de conexión PostgreSQL en formato `postgresql://user:pass@host:port/db`     | Sí          |
+| `JWT_SECRET`             | Secreto para firmar y verificar access tokens. Mínimo 32 caracteres aleatorios     | Sí          |
+| `JWT_REFRESH_SECRET`     | Secreto para firmar y verificar refresh tokens. Debe ser distinto de `JWT_SECRET`  | Sí          |
+| `JWT_EXPIRES_IN`         | Duración del access token en formato vercel/ms (ej. `15m`)                         | Sí          |
+| `JWT_REFRESH_EXPIRES_IN` | Duración del refresh token en formato vercel/ms (ej. `7d`)                         | Sí          |
+| `SMTP_HOST`              | Hostname del servidor SMTP para el envío de emails                                 | Sí          |
+| `SMTP_PORT`              | Puerto del servidor SMTP (habitualmente `465` para SSL o `587` para STARTTLS)      | Sí          |
+| `SMTP_SECURE`            | `true` para SSL/TLS, `false` para STARTTLS                                         | Sí          |
+| `SMTP_USER`              | Usuario de autenticación del servidor SMTP                                         | Sí          |
+| `SMTP_PASS`              | Contraseña de autenticación del servidor SMTP                                      | Sí          |
+| `SMTP_FROM`              | Dirección de email remitente (ej. `"Sistema de Ausencias" <no-reply@empresa.com>`) | Sí          |
+| `CORS_ORIGIN`            | URL del frontend permitida por la política CORS (ej. `http://localhost:5173`)      | Sí          |
+| `APP_PORT`               | Puerto en el que escucha la API. Por defecto `3000`                                | No          |
