@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { uuidv7 } from 'uuidv7';
+import { seedAbsenceTypes } from '../src/prisma/seed-absence-types';
 
 const BCRYPT_COST = 12;
 
@@ -21,26 +22,27 @@ async function seed(prisma: PrismaClient): Promise<void> {
 
   if (existing) {
     console.info(`Seed: admin user "${email}" already exists — skipping.`);
-    return;
+  } else {
+    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
+    const now = new Date();
+
+    await prisma.user.create({
+      data: {
+        id: uuidv7(),
+        email,
+        name,
+        password_hash: passwordHash,
+        role: 'admin',
+        is_active: true,
+        created_at: now,
+        updated_at: now,
+      },
+    });
+
+    console.info(`Seed: admin user "${email}" created successfully.`);
   }
 
-  const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
-  const now = new Date();
-
-  await prisma.user.create({
-    data: {
-      id: uuidv7(),
-      email,
-      name,
-      password_hash: passwordHash,
-      role: 'admin',
-      is_active: true,
-      created_at: now,
-      updated_at: now,
-    },
-  });
-
-  console.info(`Seed: admin user "${email}" created successfully.`);
+  await seedAbsenceTypes(prisma);
 }
 
 const prisma = new PrismaClient();
