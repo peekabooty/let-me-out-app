@@ -32,4 +32,16 @@ export class ObservationPrismaRepository implements ObservationRepositoryPort {
 
     return records.map((record) => this.mapper.toDomain(record));
   }
+
+  async findById(id: string): Promise<Observation | null> {
+    const record = await this.prisma.observation.findUnique({
+      where: { id },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return this.mapper.toDomain(record);
+  }
 }

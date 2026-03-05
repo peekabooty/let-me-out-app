@@ -174,6 +174,42 @@ export interface AbsenceRepositoryPort {
       createdAt: Date;
     }>
   >;
+
+  /**
+   * Finds all absences for a specific user, ordered by startAt DESC.
+   *
+   * @param userId - The ID of the user
+   * @returns Array of absences with absence type name
+   */
+  findByUserId(userId: string): Promise<
+    Array<{
+      id: string;
+      absenceTypeId: string;
+      absenceTypeName: string;
+      startAt: Date;
+      endAt: Date;
+      duration: number;
+      status: AbsenceStatus | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  >;
+
+  /**
+   * Gets the full status history for an absence, ordered by changedAt ASC (RF-53, RF-54).
+   *
+   * @param absenceId - The ID of the absence
+   * @returns Array of status history records
+   */
+  getStatusHistory(absenceId: string): Promise<
+    Array<{
+      id: string;
+      fromStatus: AbsenceStatus | null;
+      toStatus: AbsenceStatus;
+      changedBy: string;
+      changedAt: Date;
+    }>
+  >;
 }
 
 export const ABSENCE_REPOSITORY_PORT = Symbol('AbsenceRepositoryPort');

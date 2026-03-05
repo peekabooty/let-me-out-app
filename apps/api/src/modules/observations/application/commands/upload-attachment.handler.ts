@@ -14,11 +14,18 @@ import {
   ObservationRepositoryPort,
   OBSERVATION_REPOSITORY_PORT,
 } from '../../domain/ports/observation.repository.port';
+import {
+  AbsenceRepositoryPort,
+  ABSENCE_REPOSITORY_PORT,
+} from '../../../absences/domain/ports/absence.repository.port';
 import { AttachmentResponseDto } from '../dtos/attachment-response.dto';
 
 /**
  * Handler for UploadAttachmentCommand.
  * Validates the file, stores it to disk, and persists metadata to the database.
+ *
+ * Implements RF-59: Only involved users (creator + validators) can upload attachments.
+ * Implements RF-60/RF-61: File type and size validation.
  *
  * @implements {ICommandHandler<UploadAttachmentCommand>}
  */
@@ -31,6 +38,8 @@ export class UploadAttachmentHandler implements ICommandHandler<UploadAttachment
     private readonly fileStorage: FileStoragePort,
     @Inject(OBSERVATION_REPOSITORY_PORT)
     private readonly observationRepository: ObservationRepositoryPort,
+    @Inject(ABSENCE_REPOSITORY_PORT)
+    private readonly absenceRepository: AbsenceRepositoryPort,
     private readonly fileValidationService: FileValidationService,
     private readonly clockService: ClockService
   ) {}
@@ -41,21 +50,31 @@ export class UploadAttachmentHandler implements ICommandHandler<UploadAttachment
    * @param {UploadAttachmentCommand} command - The command containing upload data
    * @returns {Promise<AttachmentResponseDto>} The created attachment metadata
    * @throws {NotFoundException} If the observation does not exist
-   * @throws {ForbiddenException} If the user doesn't have access to the observation
+   * @throws {ForbiddenException} If the user is not the creator or an assigned validator
    * @throws {BadRequestException} If the file fails validation
    */
   async execute(command: UploadAttachmentCommand): Promise<AttachmentResponseDto> {
-    // Verify observation exists and user has access
-    const observations = await this.observationRepository.findByAbsenceId(command.observationId);
-    const observation = observations.find((obs) => obs.id === command.observationId);
+    // Verify observation exists
+    const observation = await this.observationRepository.findById(command.observationId);
 
     if (!observation) {
       throw new NotFoundException(`Observation with ID ${command.observationId} not found`);
     }
 
-    // For simplicity, we check if the user is the owner of the observation
-    // In a real scenario, we'd check if the user has access to the parent absence
-    if (observation.userId !== command.userId) {
+    // Verify the parent absence exists
+    const absence = await this.absenceRepository.findById(observation.absenceId);
+    if (!absence) {
+      throw new NotFoundException(`Absence with ID ${observation.absenceId} not found`);
+    }
+
+    // RF-59: Verify user is involved (absence creator or assigned validator)
+    const isCreator = absence.userId === command.userId;
+    const assignedValidators = await this.absenceRepository.getAssignedValidators(
+      observation.absenceId
+    );
+    const isValidator = assignedValidators.includes(command.userId);
+
+    if (!isCreator && !isValidator) {
       throw new ForbiddenException(
         'You do not have permission to upload attachments to this observation'
       );

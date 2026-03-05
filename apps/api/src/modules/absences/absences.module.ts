@@ -14,9 +14,14 @@ import { AbsenceStateMachineService } from './domain/services/absence-state-mach
 import { CreateAbsenceHandler } from './application/commands/create-absence.handler';
 import { ValidateAbsenceHandler } from './application/commands/validate-absence.handler';
 import { CancelAbsenceHandler } from './application/commands/cancel-absence.handler';
+import { ReconsiderAbsenceHandler } from './application/commands/reconsider-absence.handler';
+import { DiscardAbsenceHandler } from './application/commands/discard-absence.handler';
 import { GetCalendarAbsencesHandler } from './application/queries/get-calendar-absences.handler';
 import { GetDashboardHandler } from './application/queries/get-dashboard.handler';
 import { GetAuditAbsencesHandler } from './application/queries/get-audit-absences.handler';
+import { GetAbsenceDetailHandler } from './application/queries/get-absence-detail.handler';
+import { GetAbsenceStatusHistoryHandler } from './application/queries/get-absence-status-history.handler';
+import { ListUserAbsencesHandler } from './application/queries/list-user-absences.handler';
 import { ABSENCE_AUDIT_REPOSITORY_PORT } from './domain/ports/absence-audit.repository.port';
 import { AbsencesController } from './infrastructure/absences.controller';
 import { DashboardController } from './infrastructure/dashboard.controller';
@@ -24,8 +29,22 @@ import { AuditController } from './infrastructure/audit.controller';
 import { AuditPrismaRepository } from './infrastructure/audit.prisma.repository';
 import { AbsenceCsvExportService } from './application/services/absence-csv-export.service';
 
-const commandHandlers = [CreateAbsenceHandler, ValidateAbsenceHandler, CancelAbsenceHandler];
-const queryHandlers = [GetCalendarAbsencesHandler, GetDashboardHandler, GetAuditAbsencesHandler];
+const commandHandlers = [
+  CreateAbsenceHandler,
+  ValidateAbsenceHandler,
+  CancelAbsenceHandler,
+  ReconsiderAbsenceHandler,
+  DiscardAbsenceHandler,
+];
+
+const queryHandlers = [
+  GetCalendarAbsencesHandler,
+  GetDashboardHandler,
+  GetAuditAbsencesHandler,
+  GetAbsenceDetailHandler,
+  GetAbsenceStatusHistoryHandler,
+  ListUserAbsencesHandler,
+];
 
 @Module({
   imports: [CqrsModule, PrismaModule, AbsenceTypesModule],

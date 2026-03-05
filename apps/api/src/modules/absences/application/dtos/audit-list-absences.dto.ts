@@ -31,20 +31,20 @@ export class AuditListAbsencesQueryDto {
   endDate?: string;
 }
 
-export class AuditListAbsencesResponseDto {
-  items!: Array<{
-    id: string;
-    userId: string;
-    userName: string;
-    absenceTypeId: string;
-    absenceTypeName: string;
-    startAt: string;
-    endAt: string;
-    duration: number;
-    status: AbsenceStatus | null;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-
-  nextCursor!: string | null;
+export interface AuditAbsenceItemDto {
+  id: string;
+  userId: string;
+  userName: string;
+  absenceTypeId: string;
+  absenceTypeName: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  status: AbsenceStatus | null;
+  teamId: string | null;
+  teamName: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type AuditListAbsencesResponseDto = AuditAbsenceItemDto[];

@@ -39,11 +39,14 @@ export class CreateObservationHandler implements ICommandHandler<CreateObservati
       throw new NotFoundException(`Absence with ID ${command.absenceId} not found`);
     }
 
-    // RF-36: Verify user is involved (creator or validator)
-    // TODO: Add validator check when validation flow is implemented (phase 7)
+    // RF-36: Verify user is involved (creator or assigned validator)
     const isCreator = absence.userId === command.userId;
+    const assignedValidators = await this.absenceRepository.getAssignedValidators(
+      command.absenceId
+    );
+    const isValidator = assignedValidators.includes(command.userId);
 
-    if (!isCreator) {
+    if (!isCreator && !isValidator) {
       throw new ForbiddenException('Only involved users can create observations on this absence');
     }
 

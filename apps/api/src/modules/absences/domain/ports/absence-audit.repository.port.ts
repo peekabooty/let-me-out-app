@@ -10,6 +10,8 @@ export interface AuditAbsenceRecord {
   endAt: Date;
   duration: number;
   status: AbsenceStatus | null;
+  teamId: string | null;
+  teamName: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
