@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 
-import type { User, AbsenceType } from '@repo/types';
+import type { User, AbsenceType, Team } from '@repo/types';
 import { UserRole } from '@repo/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import { UserFormDialog } from '../../components/users/UserFormDialog';
 import { AbsenceTypeFormDialog } from '../../components/absence-types/AbsenceTypeFormDialog';
 import { AbsenceTypesTable } from '../../components/absence-types/AbsenceTypesTable';
 import { TeamFormDialog } from '../../components/teams/TeamFormDialog';
+import { TeamMembersDialog } from '../../components/teams/TeamMembersDialog';
 import { TeamsTable } from '../../components/teams/TeamsTable';
 import { teamsKeys } from '../../lib/query-keys/teams.keys';
 
@@ -47,6 +48,11 @@ export function AdminPage() {
   const [absenceTypeDeactivateError, setAbsenceTypeDeactivateError] = useState<string | null>(null);
 
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [managingMembersTeam, setManagingMembersTeam] = useState<Team | null>(null);
+
+  const handleManageMembers = (team: Team) => {
+    setManagingMembersTeam(team);
+  };
 
   const handleNewUser = () => {
     setEditingUser(undefined);
@@ -319,7 +325,9 @@ export function AdminPage() {
               </div>
             )}
 
-            {!teamsLoading && !teamsError && <TeamsTable teams={teams} />}
+            {!teamsLoading && !teamsError && (
+              <TeamsTable teams={teams} onManageMembers={handleManageMembers} />
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -343,6 +351,17 @@ export function AdminPage() {
         onOpenChange={setTeamDialogOpen}
         onSuccess={handleTeamDialogSuccess}
       />
+
+      {managingMembersTeam && (
+        <TeamMembersDialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setManagingMembersTeam(null);
+          }}
+          teamId={managingMembersTeam.id}
+          teamName={managingMembersTeam.name}
+        />
+      )}
     </div>
   );
 }

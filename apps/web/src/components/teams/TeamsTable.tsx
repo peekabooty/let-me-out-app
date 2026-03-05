@@ -1,7 +1,10 @@
 import type { Team } from '@repo/types';
 
+import { Button } from '@/components/ui/button';
+
 interface TeamsTableProps {
   teams: Team[];
+  onManageMembers?: (team: Team) => void;
 }
 
 function getContrastTextColor(hexColor: string): string {
@@ -14,7 +17,7 @@ function getContrastTextColor(hexColor: string): string {
   return luminance > 0.55 ? '#111827' : '#F9FAFB';
 }
 
-export function TeamsTable({ teams }: TeamsTableProps) {
+export function TeamsTable({ teams, onManageMembers }: TeamsTableProps) {
   if (teams.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">No hay equipos registrados.</p>
@@ -28,6 +31,7 @@ export function TeamsTable({ teams }: TeamsTableProps) {
           <tr className="border-b border-border bg-muted text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <th className="px-4 py-3">Nombre</th>
             <th className="px-4 py-3">Color</th>
+            {onManageMembers && <th className="px-4 py-3 text-right">Acciones</th>}
           </tr>
         </thead>
         <tbody>
@@ -53,6 +57,13 @@ export function TeamsTable({ teams }: TeamsTableProps) {
                   <span className="text-xs text-muted-foreground">Color del equipo</span>
                 </div>
               </td>
+              {onManageMembers && (
+                <td className="px-4 py-3 text-right">
+                  <Button variant="outline" size="sm" onClick={() => onManageMembers(team)}>
+                    Gestionar miembros
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

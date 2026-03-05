@@ -1,7 +1,20 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import type { Request } from 'express';
 import { UserRole } from '@repo/types';
 
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../common';
 import { AddTeamMemberCommand } from '../application/commands/add-team-member.command';
 import { CreateTeamCommand } from '../application/commands/create-team.command';
@@ -10,7 +23,10 @@ import { CreateTeamDto } from '../application/dtos/create-team.dto';
 import type { TeamResponseDto } from '../application/dtos/team-response.dto';
 import { UpdateTeamMembershipDto } from '../application/dtos/update-team-membership.dto';
 import { ListTeamsQuery } from '../application/queries/list-teams.query';
+import { GetTeamMembersQuery } from '../application/queries/get-team-members.query';
+import type { TeamMemberDto } from '../application/queries/get-team-members.handler';
 
+@UseGuards(JwtAuthGuard)
 @Controller('teams')
 export class TeamsController {
   constructor(
@@ -31,6 +47,27 @@ export class TeamsController {
   @Roles(UserRole.ADMIN, UserRole.VALIDATOR, UserRole.AUDITOR)
   async findAll(): Promise<TeamResponseDto[]> {
     return this.queryBus.execute<ListTeamsQuery, TeamResponseDto[]>(new ListTeamsQuery());
+  }
+
+  /**
+   * Gets all members of a team.
+   *
+   * GET /teams/:teamId/members
+   *
+   * RF-73: Auditor can view team members.
+   * RF-66: Admin and Validator can manage and view team members.
+   */
+  @Get(':teamId/members')
+  @Roles(UserRole.ADMIN, UserRole.VALIDATOR, UserRole.AUDITOR)
+  async getMembers(
+    @Param('teamId') teamId: string,
+    @Req() request: Request
+  ): Promise<TeamMemberDto[]> {
+    const user = request.user as { userId: string };
+
+    return this.queryBus.execute<GetTeamMembersQuery, TeamMemberDto[]>(
+      new GetTeamMembersQuery(teamId, user.userId)
+    );
   }
 
   @Post(':teamId/members')

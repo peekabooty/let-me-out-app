@@ -335,6 +335,18 @@ export async function removeTeamMember(teamId: string, userId: string): Promise<
   await apiClient.delete(`/teams/${teamId}/members/${userId}`);
 }
 
+export interface TeamMemberDto {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  joinedAt: string;
+}
+
+export async function listTeamMembers(teamId: string): Promise<TeamMemberDto[]> {
+  const response = await apiClient.get<TeamMemberDto[]>(`/teams/${teamId}/members`);
+  return response.data;
+}
+
 export interface AuditAbsence {
   id: string;
   userId: string;
@@ -373,4 +385,15 @@ export function getAuditExportCsvUrl(filters?: AuditFilters): string {
   if (filters?.endDate) params.append('endDate', filters.endDate);
   const query = params.toString();
   return `${apiClient.defaults.baseURL}/audit/export${query ? `?${query}` : ''}`;
+}
+
+/**
+ * Returns the URL for downloading the authenticated user's own absences as CSV.
+ *
+ * RF-57: Standard and validator users can export their own absences in CSV format.
+ * The browser navigates to this URL directly (no axios call needed) so the
+ * response stream is saved as a file download.
+ */
+export function getOwnExportCsvUrl(): string {
+  return `${apiClient.defaults.baseURL}/absences/export`;
 }

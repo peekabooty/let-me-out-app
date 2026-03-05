@@ -4,11 +4,15 @@ import type { Team } from '@repo/types';
 import {
   addTeamMember,
   createTeam,
+  listTeamMembers,
   listTeams,
   removeTeamMember,
   type CreateTeamPayload,
+  type TeamMemberDto,
 } from '../lib/api-client';
 import { teamsKeys } from '../lib/query-keys/teams.keys';
+
+export type { TeamMemberDto } from '../lib/api-client';
 
 export function useTeams() {
   const { data, isLoading, isError, error } = useQuery<Team[]>({
@@ -18,6 +22,17 @@ export function useTeams() {
   });
 
   return { teams: data ?? [], isLoading, isError, error };
+}
+
+export function useTeamMembers(teamId: string) {
+  const { data, isLoading, isError, error } = useQuery<TeamMemberDto[]>({
+    queryKey: teamsKeys.members(teamId),
+    queryFn: () => listTeamMembers(teamId),
+    staleTime: 30 * 1000,
+    enabled: teamId.length > 0,
+  });
+
+  return { members: data ?? [], isLoading, isError, error };
 }
 
 export function useCreateTeam() {

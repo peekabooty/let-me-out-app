@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { BalanceCard } from '../../components/dashboard/BalanceCard';
 import { UpcomingAbsencesList } from '../../components/dashboard/UpcomingAbsencesList';
 import { PendingValidationsList } from '../../components/dashboard/PendingValidationsList';
+import { getOwnExportCsvUrl } from '../../lib/api-client';
 
 /**
  * DashboardPage component (RF-55).
@@ -52,14 +53,25 @@ export function DashboardPage() {
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        {canRequestAbsence && (
-          <Link
-            to="/absences/new"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Solicitar ausencia
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {canRequestAbsence && (
+            <a
+              href={getOwnExportCsvUrl()}
+              download
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              Exportar CSV
+            </a>
+          )}
+          {canRequestAbsence && (
+            <Link
+              to="/absences/new"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Solicitar ausencia
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Balance section */}
