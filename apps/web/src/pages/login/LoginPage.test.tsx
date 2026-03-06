@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { axe, toHaveNoViolations } from 'jest-axe';
 
 import { UserRole } from '@repo/types';
 import { authRoute } from '../../routes/_auth';
@@ -13,6 +14,8 @@ import { publicRoute } from '../../routes/_public';
 import { loginRoute } from '../../routes/_public.login';
 import { rootRoute } from '../../routes/__root';
 import { useAuthStore } from '../../store/auth.store';
+
+expect.extend(toHaveNoViolations);
 
 const mockUser = {
   id: '01234567-89ab-7def-0123-456789abcdef',
@@ -48,12 +51,12 @@ function renderLogin() {
     defaultOptions: { queries: { retry: false } },
   });
   const router = buildRouter();
-  render(
+  const { container } = render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>
   );
-  return { router };
+  return { router, container };
 }
 
 describe('LoginPage', () => {
@@ -162,5 +165,16 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
     });
+  });
+
+  it('has no axe accessibility violations on the login form', async () => {
+    const { container } = renderLogin();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    });
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

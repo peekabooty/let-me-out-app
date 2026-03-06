@@ -11,10 +11,13 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { axe, toHaveNoViolations } from 'jest-axe';
 
 import { UserRole } from '@repo/types';
 import type { User } from '@repo/types';
 import { AdminPage } from './AdminPage';
+
+expect.extend(toHaveNoViolations);
 
 const mockUsers: User[] = [
   {
@@ -67,13 +70,13 @@ function renderAdminPage() {
     history: createMemoryHistory({ initialEntries: ['/admin'] }),
   });
 
-  render(
+  const { container } = render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>
   );
 
-  return { queryClient };
+  return { queryClient, container };
 }
 
 describe('AdminPage: listado de usuarios', () => {
@@ -589,5 +592,18 @@ describe('AdminPage: tipos de ausencia', () => {
     await waitFor(() => {
       expect(screen.getByText('Vacaciones Anuales')).toBeInTheDocument();
     });
+  });
+});
+
+describe('AdminPage: accessibility', () => {
+  it('has no axe accessibility violations on the users tab', async () => {
+    const { container } = renderAdminPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ana García')).toBeInTheDocument();
+    });
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
