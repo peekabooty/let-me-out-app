@@ -354,6 +354,10 @@ export interface TeamMemberDto {
   joinedAt: string;
 }
 
+export async function deleteTeam(teamId: string): Promise<void> {
+  await apiClient.delete(`/teams/${teamId}`);
+}
+
 export async function listTeamMembers(teamId: string): Promise<TeamMemberDto[]> {
   const response = await apiClient.get<TeamMemberDto[]>(`/teams/${teamId}/members`);
   return response.data;

@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../common';
 import { AddTeamMemberCommand } from '../application/commands/add-team-member.command';
 import { CreateTeamCommand } from '../application/commands/create-team.command';
+import { DeleteTeamCommand } from '../application/commands/delete-team.command';
 import { RemoveTeamMemberCommand } from '../application/commands/remove-team-member.command';
 import { CreateTeamDto } from '../application/dtos/create-team.dto';
 import type { TeamResponseDto } from '../application/dtos/team-response.dto';
@@ -92,5 +93,12 @@ export class TeamsController {
     await this.commandBus.execute<RemoveTeamMemberCommand, void>(
       new RemoveTeamMemberCommand(teamId, userId)
     );
+  }
+
+  @Delete(':teamId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.ADMIN, UserRole.VALIDATOR)
+  async deleteTeam(@Param('teamId') teamId: string): Promise<void> {
+    await this.commandBus.execute<DeleteTeamCommand, void>(new DeleteTeamCommand(teamId));
   }
 }

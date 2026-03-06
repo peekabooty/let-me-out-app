@@ -22,6 +22,13 @@ export class TeamPrismaRepository implements TeamRepositoryPort {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
+  async delete(teamId: string): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.team_member.deleteMany({ where: { team_id: teamId } }),
+      this.prisma.team.delete({ where: { id: teamId } }),
+    ]);
+  }
+
   async save(team: Team): Promise<void> {
     await this.prisma.team.create({
       data: {

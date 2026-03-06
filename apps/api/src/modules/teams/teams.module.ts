@@ -6,6 +6,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 import { AddTeamMemberHandler } from './application/commands/add-team-member.handler';
 import { CreateTeamHandler } from './application/commands/create-team.handler';
+import { DeleteTeamHandler } from './application/commands/delete-team.handler';
 import { RemoveTeamMemberHandler } from './application/commands/remove-team-member.handler';
 import { ListTeamsHandler } from './application/queries/list-teams.handler';
 import { GetTeamMembersHandler } from './application/queries/get-team-members.handler';
@@ -14,7 +15,12 @@ import { TeamMapper } from './infrastructure/team.mapper';
 import { TeamPrismaRepository } from './infrastructure/team.prisma.repository';
 import { TeamsController } from './infrastructure/teams.controller';
 
-const commandHandlers = [CreateTeamHandler, AddTeamMemberHandler, RemoveTeamMemberHandler];
+const commandHandlers = [
+  CreateTeamHandler,
+  AddTeamMemberHandler,
+  RemoveTeamMemberHandler,
+  DeleteTeamHandler,
+];
 const queryHandlers = [ListTeamsHandler, GetTeamMembersHandler];
 
 @Module({

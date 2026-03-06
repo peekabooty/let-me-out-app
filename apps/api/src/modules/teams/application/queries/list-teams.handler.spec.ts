@@ -7,6 +7,7 @@ const makeRepo = (overrides: Partial<TeamRepositoryPort> = {}): TeamRepositoryPo
   findById: jest.fn(),
   findAll: jest.fn().mockResolvedValue([]),
   save: jest.fn(),
+  delete: jest.fn(),
   addMember: jest.fn(),
   removeMember: jest.fn(),
   isMember: jest.fn(),
