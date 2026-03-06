@@ -234,8 +234,8 @@ describe('DashboardPage', () => {
       expect(screen.getByText('Próximas ausencias')).toBeInTheDocument();
     });
 
-    const absenceItems = screen.getAllByRole('button');
-    const firstUpcomingAbsence = absenceItems.find((item) =>
+    const absenceLinks = screen.getAllByRole('link');
+    const firstUpcomingAbsence = absenceLinks.find((item) =>
       item.textContent?.includes('Vacaciones')
     );
 

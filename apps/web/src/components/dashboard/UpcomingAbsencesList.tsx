@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import type { UpcomingAbsence } from '../../lib/api-client';
@@ -24,12 +24,6 @@ interface UpcomingAbsencesListProps {
  * Part of RF-55 (Dashboard view).
  */
 export function UpcomingAbsencesList({ absences }: UpcomingAbsencesListProps) {
-  const navigate = useNavigate();
-
-  const handleAbsenceClick = (absenceId: string) => {
-    void navigate({ to: `/absences/${absenceId}` });
-  };
-
   if (absences.length === 0) {
     return (
       <Card>
@@ -63,32 +57,27 @@ export function UpcomingAbsencesList({ absences }: UpcomingAbsencesListProps) {
                   : 'horas';
 
             return (
-              <li
-                key={absence.id}
-                className="flex flex-col space-y-1 rounded-lg border p-3 cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => handleAbsenceClick(absence.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleAbsenceClick(absence.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{absence.absenceTypeName}</span>
-                  {absence.status && (
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {absence.status}
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {startDate} - {endDate}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Duración: {absence.duration} {unitLabel}
-                </div>
+              <li key={absence.id}>
+                <Link
+                  to="/absences/$absenceId"
+                  params={{ absenceId: absence.id }}
+                  className="flex flex-col space-y-1 rounded-lg border p-3 hover:bg-accent transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{absence.absenceTypeName}</span>
+                    {absence.status && (
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {absence.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {startDate} - {endDate}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Duración: {absence.duration} {unitLabel}
+                  </div>
+                </Link>
               </li>
             );
           })}
