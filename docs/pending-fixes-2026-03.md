@@ -132,7 +132,459 @@ Añadir también `useDeactivateUser()` para sustituir la llamada directa a `api-
 
 ---
 
-## 3. Desplegable de tipo de ausencia vacío en el formulario de nueva ausencia
+## 3. Reenviar invitación a usuarios inactivos
+
+### Situación actual
+
+Cuando un administrador crea un nuevo usuario desde el panel de administración (`AdminPage.tsx`), el sistema envía automáticamente un email de activación con un token que expira en 48 horas. Si el usuario:
+
+- No recibe el email (por problemas de spam, correo incorrecto, etc.)
+- Deja pasar las 48 horas sin activar la cuenta
+
+…el administrador **no tiene forma de reenviar la invitación** desde la interfaz.
+
+El backend ya tiene la funcionalidad completa implementada:
+
+- Endpoint: `POST /users/:id/resend-activation` en `users.controller.ts:65-69`
+- Handler: `ResendActivationHandler` que valida que el usuario esté inactivo, genera un nuevo token de 48h, y envía el email de activación
+- Validación: lanza `BadRequestException` si el usuario ya está activo
+
+Sin embargo, el frontend no expone esta funcionalidad:
+
+- No existe botón "Reenviar invitación" en la tabla de usuarios
+- No existe `resendActivation()` en `api-client.ts`
+- No existe hook `useResendActivation()` en `use-users.ts`
+
+### Plan de implementación
+
+**Frontend — `apps/web/src/lib/api-client.ts`**
+
+Añadir una nueva función que llame al endpoint:
+
+```typescript
+export async function resendActivation(userId: string): Promise<void> {
+  await client.post(`/users/${userId}/resend-activation`).json();
+}
+```
+
+**Frontend — `apps/web/src/hooks/use-users.ts`**
+
+Añadir un hook de mutación siguiendo el mismo patrón que `useDeactivateUser` (que se debe implementar en issue #2):
+
+```typescript
+export function useResendActivation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => resendActivation(userId),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: usersKeys.list() }),
+  });
+}
+```
+
+**Frontend — `apps/web/src/pages/admin/AdminPage.tsx`**
+
+1. Importar el nuevo hook:
+
+   ```typescript
+   import { useUsers, useResendActivation } from '../../hooks/use-users';
+   ```
+
+2. Añadir estado para manejar el loading y errores del reenvío:
+
+   ```typescript
+   const [resendingUserId, setResendingUserId] = useState<string | null>(null);
+   const [userResendError, setUserResendError] = useState<string | null>(null);
+   ```
+
+3. Añadir el hook de mutación:
+
+   ```typescript
+   const { mutateAsync: resendActivation } = useResendActivation();
+   ```
+
+4. Añadir handler para reenviar invitación:
+
+   ```typescript
+   const handleResendActivation = async (user: User) => {
+     setResendingUserId(user.id);
+     setUserResendError(null);
+     try {
+       await resendActivation(user.id);
+       // Opcional: mostrar mensaje de éxito con toast o alert temporal
+     } catch (error) {
+       const message =
+         isAxiosError(error) && error.response?.status === 404
+           ? 'Usuario no encontrado.'
+           : isAxiosError(error) && error.response?.status === 400
+             ? 'El usuario ya ha activado su cuenta.'
+             : 'Error al reenviar la invitación. Inténtalo de nuevo.';
+       setUserResendError(message);
+     } finally {
+       setResendingUserId(null);
+     }
+   };
+   ```
+
+5. Añadir el botón con icono en la columna de Acciones de la tabla de usuarios (línea 233-253).
+   El botón debe mostrarse **solo para usuarios inactivos** (`!user.isActive`), junto al botón "Editar":
+
+   ```tsx
+   <td className="px-4 py-3 text-right">
+     <div className="flex justify-end gap-2">
+       <Button
+         variant="ghost"
+         size="sm"
+         onClick={() => handleEditUser(user)}
+         aria-label={`Editar usuario ${user.name}`}
+       >
+         <Pencil className="h-4 w-4" />
+       </Button>
+       {user.isActive ? (
+         <Button
+           variant="ghost"
+           size="sm"
+           disabled={deactivatingUserId === user.id}
+           onClick={() => void handleDeactivateUser(user)}
+           aria-label={`Desactivar usuario ${user.name}`}
+         >
+           <UserX className="h-4 w-4" />
+         </Button>
+       ) : (
+         <Button
+           variant="ghost"
+           size="sm"
+           disabled={resendingUserId === user.id}
+           onClick={() => void handleResendActivation(user)}
+           aria-label={`Reenviar invitación a ${user.name}`}
+         >
+           <RotateCw className="h-4 w-4" />
+         </Button>
+       )}
+     </div>
+   </td>
+   ```
+
+6. Añadir mensaje de error de reenvío en la sección de usuarios, debajo de `userDeactivateError` (línea 168-176):
+
+   ```tsx
+   {
+     userResendError && (
+       <div
+         role="alert"
+         aria-live="assertive"
+         className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+       >
+         {userResendError}
+       </div>
+     );
+   }
+   ```
+
+**Imports necesarios**
+
+Añadir al inicio de `AdminPage.tsx`:
+
+```typescript
+import { Pencil, UserX, RotateCw } from 'lucide-react';
+```
+
+**Tests**
+
+Añadir test en `AdminPage.test.tsx`:
+
+- Verificar que el botón con icono `RotateCw` aparece solo para usuarios inactivos
+- Verificar que el botón con icono `UserX` aparece solo para usuarios activos
+- Simular click en reenviar invitación y verificar que llama a `resendActivation()` con el ID correcto
+- Verificar el manejo de errores (404, 400, genérico)
+- Verificar el estado de loading (botón deshabilitado mientras `resendingUserId === user.id`)
+- Verificar que el `aria-label` contiene el nombre del usuario
+
+### Archivos a modificar
+
+- `apps/web/src/lib/api-client.ts` — añadir `resendActivation()`
+- `apps/web/src/hooks/use-users.ts` — añadir `useResendActivation()`
+- `apps/web/src/pages/admin/AdminPage.tsx` — añadir botón con icono y lógica de reenvío
+- `apps/web/src/pages/admin/AdminPage.test.tsx` — añadir tests
+
+### Dependencias
+
+Esta issue tiene **dependencia parcial** con la issue #2 (Borrar usuarios):
+
+- Issue #2 introduce el patrón de `useDeactivateUser()` que actualmente no existe
+- Sin embargo, esta issue puede implementarse de forma independiente si se crea `useDeactivateUser()` primero o en conjunto
+
+Esta issue tiene **dependencia total** con la issue #4 (Iconos en botones), ya que ambas modifican la misma columna de acciones en la tabla de usuarios. Se recomienda implementar ambas en la misma rama (`feat/admin-improvements`).
+
+---
+
+## 4. Reemplazar botones de texto por iconos en panel de administración
+
+### Situación actual
+
+Las tres pestañas del panel de administración (`AdminPage.tsx`) utilizan botones con texto para las acciones de cada fila:
+
+**Pestaña Usuarios (líneas 233-252):**
+
+- Botón "Editar" — permite editar nombre y rol
+- Botón "Desactivar" — marca usuario como inactivo (solo visible si `user.isActive === true`)
+
+**Pestaña Tipos de Ausencia (`AbsenceTypesTable.tsx`, líneas 80-100):**
+
+- Botón "Editar" — permite editar configuración del tipo
+- Botón "Desactivar" — marca tipo como inactivo (solo visible si `absenceType.isActive === true`)
+
+**Pestaña Equipos (`TeamsTable.tsx`, líneas 86-98):**
+
+- Botón "Gestionar miembros" — abre diálogo de asignación de usuarios al equipo
+- Botón "Eliminar" — borra el equipo (con confirmación previa)
+
+Estos botones ocupan considerable espacio horizontal en la columna "Acciones", especialmente en pantallas pequeñas o cuando hay muchas filas. Además, el texto "Gestionar miembros" es particularmente largo.
+
+### Lo que se quiere
+
+Reemplazar todos los botones de texto por **botones de solo icono** en las tres pestañas del panel de administración, manteniendo:
+
+- La funcionalidad actual sin cambios
+- Accesibilidad mediante atributos `aria-label` descriptivos
+- Variante `ghost` para un diseño más limpio
+- Los mismos estados de loading y disabled
+
+Esto reducirá el ancho de la columna "Acciones" y mejorará la densidad de información en las tablas.
+
+### Plan de implementación
+
+#### **Selección de iconos**
+
+La aplicación ya utiliza `lucide-react v0.575.0` como librería de iconos. Los iconos seleccionados son:
+
+| Acción                      | Icono | Componente lucide-react | Razón                                           |
+| --------------------------- | ----- | ----------------------- | ----------------------------------------------- |
+| Editar                      | ✏️    | `Pencil`                | Icono estándar de edición                       |
+| Desactivar usuario          | 👤❌  | `UserX`                 | Usuario con marca X (concepto de desactivación) |
+| Desactivar tipo de ausencia | 🚫    | `Ban`                   | Símbolo de prohibición (desactivar tipo)        |
+| Eliminar equipo             | 🗑️    | `Trash2`                | Icono estándar de eliminación                   |
+| Gestionar miembros          | 👥    | `Users`                 | Grupo de usuarios (gestión de equipo)           |
+| Reenviar invitación         | ↷     | `RotateCw`              | Flecha circular (renovar/reenviar)              |
+
+#### **Patrón de implementación**
+
+Todos los botones seguirán este patrón:
+
+```tsx
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={handleAction}
+  disabled={isLoading}
+  aria-label="Descripción clara de la acción con contexto (incluir nombre del item)"
+>
+  <IconoCorrespondiente className="h-4 w-4" />
+</Button>
+```
+
+**Consideraciones de accesibilidad:**
+
+- Cada botón debe tener un `aria-label` descriptivo que incluya:
+  - La acción ("Editar", "Eliminar", "Desactivar", etc.)
+  - El tipo de entidad ("usuario", "tipo de ausencia", "equipo")
+  - El nombre del item específico (ej. `${user.name}`, `${team.name}`)
+- Ejemplo: `aria-label="Editar usuario Juan Pérez"`
+- Los iconos deben tener `className="h-4 w-4"` (tamaño estándar del proyecto)
+- No usar `aria-hidden="true"` en los iconos, ya que son el único contenido visual del botón
+
+#### **Cambios por archivo**
+
+**1. `apps/web/src/pages/admin/AdminPage.tsx` (Pestaña Usuarios)**
+
+Importar iconos al inicio del archivo:
+
+```typescript
+import { Pencil, UserX, RotateCw } from 'lucide-react';
+```
+
+Reemplazar los botones en la columna de Acciones (líneas 233-252):
+
+```tsx
+<td className="px-4 py-3 text-right">
+  <div className="flex justify-end gap-2">
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => handleEditUser(user)}
+      aria-label={`Editar usuario ${user.name}`}
+    >
+      <Pencil className="h-4 w-4" />
+    </Button>
+    {user.isActive ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={deactivatingUserId === user.id}
+        onClick={() => void handleDeactivateUser(user)}
+        aria-label={`Desactivar usuario ${user.name}`}
+      >
+        <UserX className="h-4 w-4" />
+      </Button>
+    ) : (
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={resendingUserId === user.id}
+        onClick={() => void handleResendActivation(user)}
+        aria-label={`Reenviar invitación a ${user.name}`}
+      >
+        <RotateCw className="h-4 w-4" />
+      </Button>
+    )}
+  </div>
+</td>
+```
+
+**Nota:** El botón con icono `RotateCw` solo debe incluirse si la issue #3 se implementa primero o en conjunto. Si no, mantener solo `Pencil` y `UserX`.
+
+**2. `apps/web/src/components/admin/AbsenceTypesTable.tsx` (Pestaña Tipos de Ausencia)**
+
+Importar iconos al inicio del archivo:
+
+```typescript
+import { Pencil, Ban } from 'lucide-react';
+```
+
+Reemplazar los botones en la columna de Acciones (líneas 80-100):
+
+```tsx
+<td className="px-4 py-3 text-right">
+  <div className="flex justify-end gap-2">
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => onEdit(absenceType)}
+      aria-label={`Editar tipo de ausencia ${absenceType.name}`}
+    >
+      <Pencil className="h-4 w-4" />
+    </Button>
+    {absenceType.isActive && (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => onDeactivate(absenceType)}
+        disabled={deactivatingId === absenceType.id}
+        aria-label={`Desactivar tipo de ausencia ${absenceType.name}`}
+      >
+        <Ban className="h-4 w-4" />
+      </Button>
+    )}
+  </div>
+</td>
+```
+
+**3. `apps/web/src/components/admin/TeamsTable.tsx` (Pestaña Equipos)**
+
+Importar iconos al inicio del archivo:
+
+```typescript
+import { Users, Trash2 } from 'lucide-react';
+```
+
+Reemplazar los botones en la columna de Acciones (líneas 86-98):
+
+```tsx
+<td className="px-4 py-3 text-right">
+  <div className="flex justify-end gap-2">
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => onManageMembers(team)}
+      aria-label={`Gestionar miembros del equipo ${team.name}`}
+    >
+      <Users className="h-4 w-4" />
+    </Button>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => setTeamToDelete(team)}
+      aria-label={`Eliminar equipo ${team.name}`}
+    >
+      <Trash2 className="h-4 w-4" />
+    </Button>
+  </div>
+</td>
+```
+
+**Nota:** En `TeamsTable.tsx`, el botón de eliminar tiene un diálogo de confirmación que se activa con `setTeamToDelete(team)`. Este comportamiento se mantiene sin cambios.
+
+#### **Tests**
+
+**`AdminPage.test.tsx`:**
+
+- Verificar que los botones renderizen solo iconos (sin texto visible)
+- Verificar que cada botón tiene un `aria-label` correcto que incluye el nombre del usuario
+- Verificar que el icono `Pencil` está presente en todos los botones de editar
+- Verificar que el icono `UserX` está presente solo para usuarios activos
+- Verificar que el icono `RotateCw` está presente solo para usuarios inactivos (si issue #3 implementada)
+- Simular click y verificar que las funciones se llaman correctamente
+
+**`AbsenceTypesTable.test.tsx`:**
+
+- Verificar que los botones renderizen solo iconos
+- Verificar `aria-label` correctos con nombre del tipo de ausencia
+- Verificar iconos `Pencil` y `Ban` presentes
+- Verificar que `Ban` solo aparece para tipos activos
+
+**`TeamsTable.test.tsx`:**
+
+- Verificar que los botones renderizen solo iconos
+- Verificar `aria-label` correctos con nombre del equipo
+- Verificar iconos `Users` y `Trash2` presentes
+- Verificar que click en `Trash2` abre el diálogo de confirmación
+
+#### **Consideraciones adicionales**
+
+**Variante de botones:**
+
+- Se usa `variant="ghost"` en lugar de `variant="outline"` (actual) para reducir el ruido visual
+- Los botones ghost tienen menos peso visual, apropiado para acciones secundarias en tablas
+- Mantienen hover states y están claramente clickables
+
+**Ancho de columna:**
+
+- Con iconos, la columna "Acciones" será significativamente más estrecha
+- Se mantiene `text-right` para alineación a la derecha
+- El `gap-2` entre botones proporciona espacio suficiente para evitar clicks accidentales
+
+**Estados de loading:**
+
+- Los botones mantienen el atributo `disabled` cuando una acción está en progreso
+- El estado visual de `disabled` en la variante `ghost` reduce la opacidad del icono
+- No se muestra texto "Desactivando…" — el estado disabled es suficiente feedback visual
+
+**Compatibilidad con issue #3:**
+
+- Si la issue #3 (Reenviar invitación) se implementa primero o en conjunto, el botón con icono `RotateCw` debe incluirse
+- Si se implementa esta issue primero, dejar espacio para añadir `RotateCw` posteriormente
+
+### Archivos a modificar
+
+- `apps/web/src/pages/admin/AdminPage.tsx` — reemplazar botones de usuarios por iconos
+- `apps/web/src/components/admin/AbsenceTypesTable.tsx` — reemplazar botones de tipos de ausencia por iconos
+- `apps/web/src/components/admin/TeamsTable.tsx` — reemplazar botones de equipos por iconos
+- `apps/web/src/pages/admin/AdminPage.test.tsx` — actualizar tests
+- `apps/web/src/components/admin/AbsenceTypesTable.test.tsx` — actualizar tests
+- `apps/web/src/components/admin/TeamsTable.test.tsx` — actualizar tests
+
+### Dependencias
+
+Esta issue tiene **dependencia con la issue #3** (Reenviar invitación):
+
+- Ambas modifican la misma sección de código (columna de Acciones en la tabla de usuarios)
+- Se recomienda implementar ambas en la **misma rama** (`feat/admin-improvements`) para evitar conflictos
+- Alternativamente, implementar issue #4 primero y luego issue #3 añade el botón `RotateCw`
+
+---
+
+## 5. Desplegable de tipo de ausencia vacío en el formulario de nueva ausencia
 
 ### Situación actual
 
@@ -165,7 +617,7 @@ del guard.
 
 ---
 
-## 4. Textos en inglés en la vista de calendario
+## 6. Textos en inglés en la vista de calendario
 
 ### Situación actual
 
@@ -207,7 +659,7 @@ Esto cubre automáticamente nombres de días, meses, botones de toolbar y el tex
 
 ---
 
-## 5. Sidebar de navegación colapsable
+## 7. Sidebar de navegación colapsable
 
 ### Situación actual
 
@@ -315,12 +767,12 @@ misma función `getNavLinks` o en un mapa paralelo.
 
 ---
 
-## 6. Foto de perfil de usuario
+## 8. Foto de perfil de usuario
 
 ### Situación actual
 
 El modelo `user` no tiene ningún campo para foto de perfil
-(`apps/api/prisma/schema.prisma:10-28`). El sidebar (issue #5) mostrará el nombre del
+(`apps/api/prisma/schema.prisma:10-28`). El sidebar (issue #7) mostrará el nombre del
 usuario en el pie, pero sin imagen. El calendario renderiza ausencias como bloques de
 color sin ningún elemento visual del usuario (`CalendarView.tsx:93-113` — no hay
 `eventContent` ni `eventDidMount`; los eventos usan únicamente `eventDisplay="block"`).
@@ -342,7 +794,7 @@ Todo esto es reutilizable para la foto de perfil.
 1. **En la activación de cuenta** (`/activate`): tras introducir la contraseña, el
    usuario puede subir una foto de perfil o elegir una de 6 imágenes stock incluidas
    en el frontend. Este paso es opcional — si se omite se usa un avatar genérico.
-2. **Desde el sidebar** (issue #5): en cualquier momento, el usuario puede actualizar
+2. **Desde el sidebar** (issue #7): en cualquier momento, el usuario puede actualizar
    su foto de perfil clickando sobre su avatar en el pie del sidebar.
 3. **En el calendario**: los eventos de ausencia muestran la foto de perfil del usuario
    (thumbnail pequeño) dentro del bloque de evento.
@@ -438,7 +890,7 @@ Encapsular la UI en un componente
 `apps/web/src/components/profile/AvatarPicker.tsx` reutilizable (también se usará
 en el sidebar).
 
-**6. `AppSidebar.tsx` — actualización de avatar (depende de issue #5)**
+**6. `AppSidebar.tsx` — actualización de avatar (depende de issue #7)**
 
 En el pie del sidebar, el avatar del usuario es clickable y abre el componente
 `AvatarPicker` en un `<Dialog>`. Al confirmar, invalida la query del usuario actual
@@ -504,7 +956,7 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 
 ### Dependencias entre issues
 
-- La parte del sidebar (punto 6 arriba) **depende de la issue #5** (sidebar). Puede
+- La parte del sidebar (punto 6 arriba) **depende de la issue #7** (sidebar). Puede
   implementarse en la misma rama `feat/sidebar-nav` o en una rama posterior
   `feat/avatar` que se ramifique desde `feat/sidebar-nav`.
 - El backend (puntos 1–4) y el paso de activación (punto 5) no tienen dependencias
@@ -526,7 +978,7 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 - `apps/web/src/components/profile/AvatarPicker.tsx` (nuevo)
 - `apps/web/src/components/profile/AvatarPicker.test.tsx` (nuevo)
 - `apps/web/src/pages/activate/ActivatePage.tsx`
-- `apps/web/src/components/layout/AppSidebar.tsx` (depende de issue #5)
+- `apps/web/src/components/layout/AppSidebar.tsx` (depende de issue #7)
 - `apps/web/src/components/calendar/CalendarView.tsx`
 - `apps/web/src/lib/api-client.ts`
 
@@ -538,22 +990,22 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 
 ## Orden de implementación sugerido
 
-| #   | Issue                        | Complejidad | Rama sugerida            |
-| --- | ---------------------------- | ----------- | ------------------------ |
-| 1   | Calendario i18n              | XS          | `fix/calendar-i18n`      |
-| 2   | Tipo de ausencia en dropdown | XS          | `fix/absence-type-roles` |
-| 3   | Logout                       | S           | `feat/logout`            |
-| 4   | Borrar usuarios              | M           | `feat/delete-user`       |
-| 5   | Sidebar de navegación        | M           | `feat/sidebar-nav`       |
-| 6   | Foto de perfil               | L           | `feat/avatar`            |
+| #   | Issue                        | Complejidad | Rama sugerida             |
+| --- | ---------------------------- | ----------- | ------------------------- |
+| 1   | Logout                       | S           | `feat/logout`             |
+| 2   | Borrar usuarios              | M           | `feat/delete-user`        |
+| 3   | Reenviar invitación          | S           | `feat/admin-improvements` |
+| 4   | Iconos en botones            | M           | `feat/admin-improvements` |
+| 5   | Tipo de ausencia en dropdown | XS          | `fix/absence-type-roles`  |
+| 6   | Calendario i18n              | XS          | `fix/calendar-i18n`       |
+| 7   | Sidebar de navegación        | M           | `feat/sidebar-nav`        |
+| 8   | Foto de perfil               | L           | `feat/avatar`             |
 
-Los dos primeros son cambios de una sola línea cada uno y no tienen dependencias.
-El logout requiere un endpoint nuevo en backend + UI en frontend.
-El borrado de usuarios es el más extenso por implicar un nuevo comando CQRS, handler,
-endpoint, hook y UI.
-El sidebar requiere un componente nuevo y cambios en el layout principal; no tiene
-dependencias de backend.
-La foto de perfil es la tarea más amplia: implica migración de BD, nuevos endpoints,
-infraestructura de subida reutilizada del módulo de observations, un componente
-`AvatarPicker` reutilizable, cambios en activación, sidebar y calendario. La parte del
-sidebar del avatar depende de la issue #5.
+**Notas sobre implementación:**
+
+- **Issues #3 y #4** deben implementarse juntas en la misma rama (`feat/admin-improvements`) porque ambas modifican la columna de Acciones de la tabla de usuarios. Issue #4 reemplaza botones de texto por iconos en las tres pestañas del admin, e issue #3 añade el botón de reenviar invitación (con icono `RotateCw`) a usuarios inactivos.
+- **Issues #5 y #6** son cambios de una sola línea cada uno y no tienen dependencias. Pueden implementarse en cualquier orden.
+- **Issue #1** (logout) requiere un endpoint nuevo en backend + UI en frontend.
+- **Issue #2** (borrar usuarios) es extenso por implicar un nuevo comando CQRS, handler, endpoint, hook y UI.
+- **Issue #7** (sidebar) requiere un componente nuevo y cambios en el layout principal; no tiene dependencias de backend.
+- **Issue #8** (foto de perfil) es la tarea más amplia: implica migración de BD, nuevos endpoints, infraestructura de subida reutilizada del módulo de observations, un componente `AvatarPicker` reutilizable, cambios en activación, sidebar y calendario. La parte del sidebar del avatar depende de la issue #7.
