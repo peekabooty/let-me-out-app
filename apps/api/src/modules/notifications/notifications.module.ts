@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigModule } from '@nestjs/config';
 
@@ -10,6 +10,7 @@ import { MarkNotificationAsReadHandler } from './application/commands/mark-notif
 import { ListNotificationsHandler } from './application/queries/list-notifications.handler';
 import { AbsenceCreatedEventHandler } from './application/event-handlers/absence-created.event-handler';
 import { AbsenceStatusChangedEventHandler } from './application/event-handlers/absence-status-changed.event-handler';
+import { EmailTemplateService } from './domain/services/email-template.service';
 import { UsersModule } from '../users/users.module';
 import { AbsencesModule } from '../absences/absences.module';
 import { USER_REPOSITORY_PORT } from '../users/domain/ports/user.repository.port';
@@ -30,12 +31,13 @@ const EventHandlers = [AbsenceCreatedEventHandler, AbsenceStatusChangedEventHand
  * - Event-driven notification system
  */
 @Module({
-  imports: [CqrsModule, PrismaModule, ConfigModule, UsersModule, AbsencesModule],
+  imports: [CqrsModule, PrismaModule, ConfigModule, forwardRef(() => UsersModule), AbsencesModule],
   controllers: [NotificationsController],
   providers: [
     ...CommandHandlers,
     ...QueryHandlers,
     ...EventHandlers,
+    EmailTemplateService,
     {
       provide: 'NotificationRepositoryPort',
       useClass: NotificationPrismaRepository,
@@ -53,6 +55,6 @@ const EventHandlers = [AbsenceCreatedEventHandler, AbsenceStatusChangedEventHand
       useExisting: ABSENCE_REPOSITORY_PORT,
     },
   ],
-  exports: ['NotificationRepositoryPort'],
+  exports: ['NotificationRepositoryPort', 'EmailServicePort', EmailTemplateService],
 })
 export class NotificationsModule {}
