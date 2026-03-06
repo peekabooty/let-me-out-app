@@ -39,7 +39,7 @@ export function AuditPage() {
           </p>
         </div>
         <Button onClick={handleExportCsv} disabled={isLoading}>
-          <Download className="mr-2 h-4 w-4" />
+          <Download className="mr-2 h-4 w-4" aria-hidden="true" />
           Exportar CSV
         </Button>
       </div>
