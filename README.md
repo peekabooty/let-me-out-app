@@ -1,19 +1,19 @@
-# Let Me Out
+# 🏖️ Let Me Out
 
 Internal web application for employee absence management. Employees request absences (holidays, sick leave, personal days, etc.), designated validators approve or reject them, auditors have read-only visibility, and administrators manage users, absence types, and teams.
 
-## Features
+## ✨ Features
 
-- Role-based access: **Employee**, **Validator**, **Auditor**, **Administrator**
-- Full absence lifecycle: draft → pending → approved / rejected / cancelled
-- Validation history and audit trail on every status change
-- Observations and file attachments (JPEG, PNG, PDF — max 5 MB) on absences
-- Email notifications at each transition
-- Calendar view per employee and per team
-- CSV export for auditors
-- Team management with per-team auditor visibility
+- 👥 Role-based access: **Employee**, **Validator**, **Auditor**, **Administrator**
+- 🔄 Full absence lifecycle: draft → pending → approved / rejected / cancelled
+- 📋 Validation history and audit trail on every status change
+- 📎 Observations and file attachments (JPEG, PNG, PDF — max 5 MB) on absences
+- 🔔 Email notifications at each transition
+- 📅 Calendar view per employee and per team
+- 📤 CSV export for auditors
+- 🏢 Team management with per-team auditor visibility
 
-## Architecture & stack
+## 🏗️ Architecture & stack
 
 | Layer    | Technology                                                                              |
 | -------- | --------------------------------------------------------------------------------------- |
@@ -24,7 +24,7 @@ Internal web application for employee absence management. Employees request abse
 
 Hexagonal architecture with CQRS (`@nestjs/cqrs`) on the backend. JWT authentication stored exclusively in `httpOnly` cookies. UUID v7 as primary key on every table.
 
-## Repository structure
+## 📁 Repository structure
 
 ```
 apps/
@@ -36,13 +36,13 @@ packages/
 docs/         # Architecture, requirements and conventions
 ```
 
-## Requirements
+## 📋 Requirements
 
 - Node.js 24
 - pnpm 9.x
 - PostgreSQL 16
 
-## Quick start
+## 🚀 Quick start
 
 1. Copy the environment template and fill in the required values:
 
@@ -78,7 +78,7 @@ docs/         # Architecture, requirements and conventions
 
    The backend listens on the port defined by `APP_PORT` (default `3000`). The frontend is served at `http://localhost:5173`.
 
-## Environment variables
+## 🔧 Environment variables
 
 Full reference in `.env.example`. Key variables:
 
@@ -106,7 +106,7 @@ Full reference in `.env.example`. Key variables:
 
 > **`APP_URL` must point to the frontend origin, not the backend.** If this is misconfigured, activation email links will be broken.
 
-## Seed: initial data
+## 🌱 Seed: initial data
 
 The seed creates the first administrator user and the base absence types. It is **idempotent** — running it multiple times is safe.
 
@@ -123,7 +123,7 @@ The seed creates the first administrator user and the base absence types. It is 
 pnpm --filter @repo/api exec prisma db seed
 ```
 
-## Commands reference
+## 💻 Commands reference
 
 ### Monorepo root
 
@@ -167,7 +167,7 @@ Prisma scripts in `apps/api` automatically load the `.env` file from the repo ro
 | -------------------------------- | ---------------- |
 | `pnpm --filter @repo/types test` | Test Zod schemas |
 
-## Testing
+## 🧪 Testing
 
 ```bash
 # All packages
@@ -185,7 +185,7 @@ pnpm --filter @repo/types test
 
 Minimum coverage thresholds: **80%** lines and branches on the backend, **70%** on the frontend.
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 <details>
 <summary>Backend does not start after <code>pnpm dev</code></summary>
@@ -226,7 +226,7 @@ The `SEED_ADMIN_PASSWORD` value must satisfy the password policy: minimum 8 char
 
 </details>
 
-## Conventions
+## 📐 Conventions
 
 - TypeScript strict mode in every package — no exceptions.
 - All schema changes via Prisma migrations; never manual SQL.
@@ -235,7 +235,7 @@ The `SEED_ADMIN_PASSWORD` value must satisfy the password policy: minimum 8 char
 - Commit messages in English, Conventional Commits format. See [`docs/commit-conventions.md`](docs/commit-conventions.md).
 - Never push directly to `main`. Every task starts with a branch and a PR.
 
-## Documentation index
+## 📚 Documentation index
 
 | Document                                                                     | Contents                                                                                                  |
 | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
