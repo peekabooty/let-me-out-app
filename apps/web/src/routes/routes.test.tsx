@@ -17,6 +17,7 @@ import { dashboardRoute } from '../routes/_auth.index';
 import { publicRoute } from '../routes/_public';
 import { loginRoute } from '../routes/_public.login';
 import { rootRoute } from '../routes/__root';
+import { activateRoute } from '../routes/activate';
 import { unauthorizedRoute } from '../routes/unauthorized';
 import { useAuthStore } from '../store/auth.store';
 
@@ -70,6 +71,7 @@ function buildRouter(initialPath: string) {
       adminRoute.addChildren([adminIndexRoute]),
     ]),
     unauthorizedRoute,
+    activateRoute,
   ]);
 
   return createRouter({
