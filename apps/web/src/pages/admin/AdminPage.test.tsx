@@ -1,4 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
@@ -54,9 +61,15 @@ function renderAdminPage() {
     defaultOptions: { queries: { retry: false } },
   });
 
+  const rootRoute = createRootRoute({ component: () => <AdminPage /> });
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: ['/admin'] }),
+  });
+
   render(
     <QueryClientProvider client={queryClient}>
-      <AdminPage />
+      <RouterProvider router={router} />
     </QueryClientProvider>
   );
 
@@ -67,20 +80,26 @@ describe('AdminPage: listado de usuarios', () => {
   it('muestra el título y la descripción de la página', async () => {
     renderAdminPage();
 
-    expect(screen.getByRole('heading', { name: 'Usuarios' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Usuarios' })).toBeInTheDocument();
+    });
     expect(screen.getByText('Gestión de usuarios del sistema.')).toBeInTheDocument();
   });
 
   it('muestra el botón para crear nuevo usuario', async () => {
     renderAdminPage();
 
-    expect(screen.getByRole('button', { name: 'Nuevo usuario' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Nuevo usuario' })).toBeInTheDocument();
+    });
   });
 
-  it('muestra estado de carga mientras se obtienen los usuarios', () => {
+  it('muestra estado de carga mientras se obtienen los usuarios', async () => {
     renderAdminPage();
 
-    expect(screen.getByText('Cargando usuarios…')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Cargando usuarios…')).toBeInTheDocument();
+    });
   });
 
   it('muestra la lista de usuarios después de cargar', async () => {
@@ -242,7 +261,7 @@ describe('AdminPage: equipos', () => {
 
     renderAdminPage();
 
-    await user.click(screen.getByRole('tab', { name: 'Equipos' }));
+    await user.click(await screen.findByRole('tab', { name: 'Equipos' }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Equipos' })).toBeInTheDocument();
@@ -279,7 +298,7 @@ describe('AdminPage: equipos', () => {
 
     renderAdminPage();
 
-    await user.click(screen.getByRole('tab', { name: 'Equipos' }));
+    await user.click(await screen.findByRole('tab', { name: 'Equipos' }));
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Nuevo equipo' })).toBeInTheDocument();
@@ -448,6 +467,127 @@ describe('AdminPage: desactivación de usuario', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Usuario no encontrado.')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('AdminPage: navegación', () => {
+  it('muestra el enlace de volver al inicio', async () => {
+    renderAdminPage();
+
+    const link = await screen.findByRole('link', { name: /volver al inicio/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/');
+  });
+});
+
+describe('AdminPage: tipos de ausencia', () => {
+  it('muestra el tab de tipos de ausencia y la tabla', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get('*/absence-types', () =>
+        HttpResponse.json([
+          {
+            id: '01930000-0000-7000-8000-000000000101',
+            name: 'Vacaciones',
+            unit: 'DAYS',
+            maxPerYear: 30,
+            minDuration: 1,
+            maxDuration: 15,
+            requiresValidation: true,
+            allowPastDates: false,
+            minDaysInAdvance: 7,
+            isActive: true,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+          },
+        ])
+      )
+    );
+
+    renderAdminPage();
+
+    await user.click(await screen.findByRole('tab', { name: 'Tipos de Ausencia' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Vacaciones')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole('button', { name: /Editar tipo de ausencia Vacaciones/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Desactivar tipo de ausencia Vacaciones/i })
+    ).toBeInTheDocument();
+  });
+
+  it('refresca la lista de tipos de ausencia tras editar', async () => {
+    const user = userEvent.setup();
+    const updatedAbsenceTypes = [
+      {
+        id: '01930000-0000-7000-8000-000000000101',
+        name: 'Vacaciones Anuales',
+        unit: 'DAYS',
+        maxPerYear: 30,
+        minDuration: 1,
+        maxDuration: 15,
+        requiresValidation: true,
+        allowPastDates: false,
+        minDaysInAdvance: 7,
+        isActive: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+    ];
+
+    server.use(
+      http.get('*/absence-types', () =>
+        HttpResponse.json([
+          {
+            id: '01930000-0000-7000-8000-000000000101',
+            name: 'Vacaciones',
+            unit: 'DAYS',
+            maxPerYear: 30,
+            minDuration: 1,
+            maxDuration: 15,
+            requiresValidation: true,
+            allowPastDates: false,
+            minDaysInAdvance: 7,
+            isActive: true,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+          },
+        ])
+      )
+    );
+
+    renderAdminPage();
+
+    await user.click(await screen.findByRole('tab', { name: 'Tipos de Ausencia' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Vacaciones')).toBeInTheDocument();
+    });
+
+    const editButton = screen.getByRole('button', { name: /Editar tipo de ausencia Vacaciones/i });
+    await user.click(editButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Editar tipo de ausencia' })).toBeInTheDocument();
+    });
+
+    server.use(
+      http.patch('*/absence-types/*', () => new HttpResponse(null, { status: 200 })),
+      http.get('*/absence-types', () => HttpResponse.json(updatedAbsenceTypes))
+    );
+
+    const nameInput = screen.getByLabelText('Nombre');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Vacaciones Anuales');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Vacaciones Anuales')).toBeInTheDocument();
     });
   });
 });

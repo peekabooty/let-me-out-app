@@ -1,6 +1,8 @@
 import type { AbsenceType } from '@repo/types';
 import { AbsenceUnit } from '@repo/types';
 
+import { Button } from '@/components/ui/button';
+
 const UNIT_LABELS: Record<AbsenceUnit, string> = {
   [AbsenceUnit.HOURS]: 'Horas',
   [AbsenceUnit.DAYS]: 'Días',
@@ -75,24 +77,26 @@ export function AbsenceTypesTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => onEdit(absenceType)}
-                    className="text-xs font-medium text-primary hover:underline"
                     aria-label={`Editar tipo de ausencia ${absenceType.name}`}
                   >
                     Editar
-                  </button>
+                  </Button>
                   {absenceType.isActive && (
-                    <button
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="sm"
                       onClick={() => onDeactivate(absenceType)}
                       disabled={deactivatingId === absenceType.id}
-                      className="text-xs font-medium text-destructive hover:underline disabled:opacity-50"
                       aria-label={`Desactivar tipo de ausencia ${absenceType.name}`}
                     >
                       {deactivatingId === absenceType.id ? 'Desactivando…' : 'Desactivar'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </td>
