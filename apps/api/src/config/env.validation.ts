@@ -13,6 +13,7 @@ export const envValidationSchema = Joi.object({
   SMTP_PASS: Joi.string().required(),
   SMTP_FROM: Joi.string().required(),
   CORS_ORIGIN: Joi.string().required(),
+  APP_URL: Joi.string().uri().required(),
   APP_PORT: Joi.number().port().optional(),
   COOKIE_SAMESITE: Joi.string().valid('none', 'strict').required(),
   COOKIE_SECURE: Joi.boolean().required(),
