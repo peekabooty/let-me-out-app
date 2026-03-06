@@ -12,7 +12,7 @@ import { usersKeys } from '../../lib/query-keys/users.keys';
 import { absenceTypesKeys } from '../../lib/query-keys/absence-types.keys';
 import { useUsers } from '../../hooks/use-users';
 import { useAbsenceTypes } from '../../hooks/use-absence-types';
-import { useTeams } from '../../hooks/use-teams';
+import { useTeams, useDeleteTeam } from '../../hooks/use-teams';
 import { UserFormDialog } from '../../components/users/UserFormDialog';
 import { AbsenceTypeFormDialog } from '../../components/absence-types/AbsenceTypeFormDialog';
 import { AbsenceTypesTable } from '../../components/absence-types/AbsenceTypesTable';
@@ -36,6 +36,7 @@ export function AdminPage() {
     isError: absenceTypesError,
   } = useAbsenceTypes();
   const { teams, isLoading: teamsLoading, isError: teamsError } = useTeams();
+  const deleteTeamMutation = useDeleteTeam();
   const queryClient = useQueryClient();
 
   const [userDialogOpen, setUserDialogOpen] = useState(false);
@@ -50,6 +51,16 @@ export function AdminPage() {
 
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [managingMembersTeam, setManagingMembersTeam] = useState<Team | null>(null);
+  const [teamDeleteError, setTeamDeleteError] = useState<string | null>(null);
+
+  const handleDeleteTeam = async (team: Team) => {
+    setTeamDeleteError(null);
+    try {
+      await deleteTeamMutation.mutateAsync(team.id);
+    } catch {
+      setTeamDeleteError('Error al eliminar el equipo. Inténtalo de nuevo.');
+    }
+  };
 
   const handleManageMembers = (team: Team) => {
     setManagingMembersTeam(team);
@@ -333,8 +344,22 @@ export function AdminPage() {
               </div>
             )}
 
+            {teamDeleteError && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                {teamDeleteError}
+              </div>
+            )}
+
             {!teamsLoading && !teamsError && (
-              <TeamsTable teams={teams} onManageMembers={handleManageMembers} />
+              <TeamsTable
+                teams={teams}
+                onManageMembers={handleManageMembers}
+                onDelete={(team) => void handleDeleteTeam(team)}
+              />
             )}
           </div>
         </TabsContent>
