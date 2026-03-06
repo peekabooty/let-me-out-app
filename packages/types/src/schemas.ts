@@ -2,6 +2,39 @@ import { z } from 'zod';
 
 import { AbsenceUnit, UserRole } from './enums';
 
+export const PASSWORD_POLICY = {
+  minLength: 12,
+  requiresUppercase: true,
+  requiresLowercase: true,
+  requiresNumber: true,
+  requiresSymbol: true,
+  symbols: '!@#$%^&*()_+-=[]{}|;\':",.<>?/',
+} as const;
+
+export const PasswordSchema = z
+  .string()
+  .min(
+    PASSWORD_POLICY.minLength,
+    `La contraseña debe tener al menos ${PASSWORD_POLICY.minLength} caracteres.`
+  )
+  .refine((val) => /[A-Z]/.test(val), {
+    message: 'La contraseña debe contener al menos una letra mayúscula.',
+  })
+  .refine((val) => /[a-z]/.test(val), {
+    message: 'La contraseña debe contener al menos una letra minúscula.',
+  })
+  .refine((val) => /[0-9]/.test(val), {
+    message: 'La contraseña debe contener al menos un número.',
+  })
+  .refine((val) => /[!@#$%^&*()_+\-=[\]{}|;':",.<>?/]/.test(val), {
+    message: 'La contraseña debe contener al menos un símbolo.',
+  });
+
+export const ActivateAccountSchema = z.object({
+  token: z.string().min(1),
+  password: PasswordSchema,
+});
+
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),

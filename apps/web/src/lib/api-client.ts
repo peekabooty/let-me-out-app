@@ -74,6 +74,19 @@ export async function login(credentials: LoginCredentials): Promise<void> {
   await apiClient.post<{ success: boolean }>('/auth/login', credentials);
 }
 
+export async function logout(): Promise<void> {
+  await apiClient.post('/auth/logout');
+}
+
+export interface ActivateAccountPayload {
+  token: string;
+  password: string;
+}
+
+export async function activateAccount(payload: ActivateAccountPayload): Promise<void> {
+  await apiClient.post('/auth/activate', payload);
+}
+
 export async function listUsers(): Promise<User[]> {
   const response = await apiClient.get<User[]>('/users');
   return response.data;
