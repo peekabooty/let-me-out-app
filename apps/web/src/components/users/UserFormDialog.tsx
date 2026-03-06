@@ -187,7 +187,7 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
                   <SelectTrigger id="create-role" aria-invalid={errors.role ? 'true' : undefined}>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" sideOffset={4}>
                     {ROLE_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
@@ -292,7 +292,7 @@ function EditDialog({ open, onOpenChange, user, onSuccess }: EditDialogProps) {
                   <SelectTrigger id="edit-role" aria-invalid={errors.role ? 'true' : undefined}>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" sideOffset={4}>
                     {ROLE_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}

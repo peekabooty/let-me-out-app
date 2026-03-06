@@ -221,7 +221,7 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
                   <SelectTrigger id="create-unit" aria-invalid={errors.unit ? 'true' : undefined}>
                     <SelectValue placeholder="Selecciona una unidad" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" sideOffset={4}>
                     {UNIT_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
