@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
+import { Link } from '@tanstack/react-router';
 
 import type { User, AbsenceType, Team } from '@repo/types';
 import { UserRole } from '@repo/types';
@@ -96,7 +97,7 @@ export function AdminPage() {
   };
 
   const handleAbsenceTypeDialogSuccess = () => {
-    void queryClient.invalidateQueries({ queryKey: absenceTypesKeys.list() });
+    void queryClient.invalidateQueries({ queryKey: absenceTypesKeys.all });
   };
 
   const handleTeamDialogSuccess = () => {
@@ -108,7 +109,7 @@ export function AdminPage() {
     setAbsenceTypeDeactivateError(null);
     try {
       await deactivateAbsenceType(absenceType.id);
-      void queryClient.invalidateQueries({ queryKey: absenceTypesKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: absenceTypesKeys.all });
     } catch (error) {
       const message =
         isAxiosError(error) && error.response?.status === 404
@@ -123,6 +124,13 @@ export function AdminPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
+        <Link
+          to="/"
+          className="mb-2 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          aria-label="Volver al inicio"
+        >
+          ← Volver al inicio
+        </Link>
         <h1 className="text-2xl font-semibold tracking-tight">Administración</h1>
         <p className="text-sm text-muted-foreground">
           Gestión de usuarios y tipos de ausencia del sistema.
