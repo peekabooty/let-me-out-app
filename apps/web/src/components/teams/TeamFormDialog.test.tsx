@@ -36,6 +36,7 @@ describe('TeamFormDialog', () => {
 
     expect(screen.getByRole('heading', { name: 'Nuevo equipo' })).toBeInTheDocument();
     expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
+    expect(screen.getByLabelText('Selector de color')).toBeInTheDocument();
     expect(screen.getByLabelText('Color (HEX)')).toBeInTheDocument();
     expect(screen.getByText('Vista previa')).toBeInTheDocument();
   });
@@ -45,8 +46,9 @@ describe('TeamFormDialog', () => {
     renderDialog();
 
     await user.type(screen.getByLabelText('Nombre'), 'A');
-    await user.clear(screen.getByLabelText('Color (HEX)'));
-    await user.type(screen.getByLabelText('Color (HEX)'), '#12');
+    const hexInput = screen.getByLabelText('Color (HEX)');
+    await user.clear(hexInput);
+    await user.type(hexInput, '#12');
     await user.click(screen.getByRole('button', { name: 'Crear equipo' }));
 
     await waitFor(() => {
@@ -73,8 +75,9 @@ describe('TeamFormDialog', () => {
     renderDialog(true, onSuccess);
 
     await user.type(screen.getByLabelText('Nombre'), 'Plataforma');
-    await user.clear(screen.getByLabelText('Color (HEX)'));
-    await user.type(screen.getByLabelText('Color (HEX)'), '#0EA5E9');
+    const hexInput = screen.getByLabelText('Color (HEX)');
+    await user.clear(hexInput);
+    await user.type(hexInput, '#0EA5E9');
     await user.click(screen.getByRole('button', { name: 'Crear equipo' }));
 
     await waitFor(() => {
@@ -82,5 +85,31 @@ describe('TeamFormDialog', () => {
     });
 
     expect(requestBody).toEqual({ name: 'Plataforma', color: '#0EA5E9' });
+  });
+
+  it('shows contrast warning for a low-contrast color', async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    const hexInput = screen.getByLabelText('Color (HEX)');
+    await user.clear(hexInput);
+    await user.type(hexInput, '#FFFF00');
+
+    await waitFor(() => {
+      expect(screen.getByText(/no supera el contraste mínimo WCAG AA/i)).toBeInTheDocument();
+    });
+  });
+
+  it('does not show contrast warning for a high-contrast color', async () => {
+    renderDialog();
+
+    expect(screen.queryByText(/no supera el contraste mínimo WCAG AA/i)).not.toBeInTheDocument();
+  });
+
+  it('color picker input has type color', () => {
+    renderDialog();
+
+    const picker = screen.getByLabelText('Selector de color');
+    expect(picker).toHaveAttribute('type', 'color');
   });
 });

@@ -31,15 +31,46 @@ interface TeamFormDialogProps {
   onSuccess: () => void;
 }
 
+/** Converts an 8-bit sRGB channel value to linear light. */
+function toLinear(channel: number): number {
+  const c = channel / 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+/** Returns relative luminance of a hex color per WCAG 2.x formula. */
+function getRelativeLuminance(hex: string): number {
+  const color = hex.replace('#', '');
+  const r = toLinear(Number.parseInt(color.slice(0, 2), 16));
+  const g = toLinear(Number.parseInt(color.slice(2, 4), 16));
+  const b = toLinear(Number.parseInt(color.slice(4, 6), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Returns WCAG contrast ratio between two hex colors. */
+function getContrastRatio(hex1: string, hex2: string): number {
+  const l1 = getRelativeLuminance(hex1);
+  const l2 = getRelativeLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** Returns a text color (#111827 or #F9FAFB) that contrasts well against the given background. */
 function getContrastTextColor(hexColor: string): string {
-  const color = hexColor.replace('#', '');
-  const red = Number.parseInt(color.slice(0, 2), 16);
-  const green = Number.parseInt(color.slice(2, 4), 16);
-  const blue = Number.parseInt(color.slice(4, 6), 16);
+  const contrastWithDark = getContrastRatio(hexColor, '#111827');
+  const contrastWithLight = getContrastRatio(hexColor, '#F9FAFB');
+  return contrastWithDark >= contrastWithLight ? '#111827' : '#F9FAFB';
+}
 
-  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+/** Returns true if the color meets WCAG AA minimum contrast (4.5:1) against white. */
+function meetsWcagAA(hexColor: string): boolean {
+  return getContrastRatio(hexColor, '#FFFFFF') >= 4.5;
+}
 
-  return luminance > 0.55 ? '#111827' : '#F9FAFB';
+/** Converts a hex color to a valid <input type="color"> value (lowercase, 6-digit). */
+function normalizeHex(hex: string): string {
+  const match = /^#[0-9A-Fa-f]{6}$/.exec(hex);
+  return match ? hex.toLowerCase() : '#1d4ed8';
 }
 
 export function TeamFormDialog({ open, onOpenChange, onSuccess }: TeamFormDialogProps) {
@@ -49,6 +80,7 @@ export function TeamFormDialog({ open, onOpenChange, onSuccess }: TeamFormDialog
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
     setError,
   } = useForm<TeamFormValues>({
@@ -60,7 +92,12 @@ export function TeamFormDialog({ open, onOpenChange, onSuccess }: TeamFormDialog
   });
 
   const color = watch('color') || '#1D4ED8';
-  const contrastTextColor = useMemo(() => getContrastTextColor(color), [color]);
+  const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(color);
+  const contrastTextColor = useMemo(
+    () => (isValidHex ? getContrastTextColor(color) : '#111827'),
+    [color, isValidHex]
+  );
+  const hasLowContrast = useMemo(() => isValidHex && !meetsWcagAA(color), [color, isValidHex]);
 
   const onSubmit = async (values: TeamFormValues) => {
     try {
@@ -102,31 +139,60 @@ export function TeamFormDialog({ open, onOpenChange, onSuccess }: TeamFormDialog
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="team-color">Color (HEX)</Label>
+            <Label htmlFor="team-color-picker">Color</Label>
             <div className="flex items-center gap-3">
+              <input
+                id="team-color-picker"
+                type="color"
+                value={normalizeHex(color)}
+                onChange={(e) => {
+                  setValue('color', e.target.value.toUpperCase(), {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                }}
+                className="h-10 w-12 cursor-pointer rounded-md border border-input p-1"
+                aria-label="Selector de color"
+              />
               <Input
                 id="team-color"
                 type="text"
                 aria-invalid={errors.color ? 'true' : undefined}
-                aria-describedby={errors.color ? 'team-color-error' : undefined}
+                aria-describedby={
+                  errors.color
+                    ? 'team-color-error'
+                    : hasLowContrast
+                      ? 'team-color-contrast-warning'
+                      : undefined
+                }
+                aria-label="Color (HEX)"
                 {...register('color')}
               />
-              <div
-                className="h-10 min-w-24 rounded-md border border-border px-2 text-xs font-semibold"
-                style={{
-                  backgroundColor: color,
-                  color: contrastTextColor,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                Vista previa
-              </div>
+              {isValidHex && (
+                <div
+                  className="h-10 min-w-24 rounded-md border border-border px-2 text-xs font-semibold"
+                  style={{
+                    backgroundColor: color,
+                    color: contrastTextColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  aria-hidden="true"
+                >
+                  Vista previa
+                </div>
+              )}
             </div>
             {errors.color && (
               <p id="team-color-error" role="alert" className="text-sm text-destructive">
                 {errors.color.message}
+              </p>
+            )}
+            {!errors.color && hasLowContrast && (
+              <p id="team-color-contrast-warning" role="alert" className="text-sm text-amber-600">
+                Este color no supera el contraste mínimo WCAG AA (4.5:1) sobre fondo blanco. Es
+                posible que no sea legible en el calendario.
               </p>
             )}
           </div>
