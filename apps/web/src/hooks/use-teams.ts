@@ -4,6 +4,7 @@ import type { Team } from '@repo/types';
 import {
   addTeamMember,
   createTeam,
+  deleteTeam,
   listTeamMembers,
   listTeams,
   removeTeamMember,
@@ -68,6 +69,17 @@ export function useRemoveTeamMember() {
     onSuccess: (_, { teamId }) => {
       void queryClient.invalidateQueries({ queryKey: teamsKeys.all });
       void queryClient.invalidateQueries({ queryKey: teamsKeys.members(teamId) });
+    },
+  });
+}
+
+export function useDeleteTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (teamId: string) => deleteTeam(teamId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: teamsKeys.all });
     },
   });
 }

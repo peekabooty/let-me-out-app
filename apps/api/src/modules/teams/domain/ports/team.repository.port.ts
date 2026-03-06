@@ -13,6 +13,7 @@ export interface TeamRepositoryPort {
   findById(id: string): Promise<Team | null>;
   findAll(): Promise<Team[]>;
   save(team: Team): Promise<void>;
+  delete(teamId: string): Promise<void>;
   addMember(teamId: string, userId: string, joinedAt: Date): Promise<void>;
   removeMember(teamId: string, userId: string): Promise<void>;
   isMember(teamId: string, userId: string): Promise<boolean>;
