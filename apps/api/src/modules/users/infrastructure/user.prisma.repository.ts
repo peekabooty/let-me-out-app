@@ -22,6 +22,13 @@ export class UserPrismaRepository implements UserRepositoryPort {
     return record ? this.mapper.toDomain(record) : null;
   }
 
+  async findByActivationTokenHash(hash: string): Promise<User | null> {
+    const record = await this.prisma.user.findFirst({
+      where: { activation_token_hash: hash },
+    });
+    return record ? this.mapper.toDomain(record) : null;
+  }
+
   async findAll(): Promise<User[]> {
     const records = await this.prisma.user.findMany({
       orderBy: { created_at: 'asc' },
@@ -38,6 +45,8 @@ export class UserPrismaRepository implements UserRepositoryPort {
         password_hash: user.passwordHash,
         role: user.role,
         is_active: user.isActive,
+        activation_token_hash: user.activationTokenHash,
+        activation_token_expires_at: user.activationTokenExpiresAt,
         created_at: user.createdAt,
         updated_at: user.updatedAt,
       },
@@ -53,6 +62,8 @@ export class UserPrismaRepository implements UserRepositoryPort {
         password_hash: user.passwordHash,
         role: user.role,
         is_active: user.isActive,
+        activation_token_hash: user.activationTokenHash,
+        activation_token_expires_at: user.activationTokenExpiresAt,
         updated_at: user.updatedAt,
       },
     });
