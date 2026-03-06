@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import type { PendingValidation } from '../../lib/api-client';
@@ -25,12 +25,6 @@ interface PendingValidationsListProps {
  * Part of RF-55 (Dashboard view).
  */
 export function PendingValidationsList({ validations }: PendingValidationsListProps) {
-  const navigate = useNavigate();
-
-  const handleValidationClick = (absenceId: string) => {
-    void navigate({ to: `/absences/${absenceId}` });
-  };
-
   if (validations.length === 0) {
     return (
       <Card>
@@ -67,29 +61,24 @@ export function PendingValidationsList({ validations }: PendingValidationsListPr
                   : 'horas';
 
             return (
-              <li
-                key={validation.id}
-                className="flex flex-col space-y-1 rounded-lg border p-3 cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => handleValidationClick(validation.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleValidationClick(validation.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{validation.userName}</span>
-                  <span className="text-xs text-muted-foreground">Solicitado: {createdDate}</span>
-                </div>
-                <div className="text-sm text-muted-foreground">{validation.absenceTypeName}</div>
-                <div className="text-xs text-muted-foreground">
-                  {startDate} - {endDate}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Duración: {validation.duration} {unitLabel}
-                </div>
+              <li key={validation.id}>
+                <Link
+                  to="/absences/$absenceId"
+                  params={{ absenceId: validation.id }}
+                  className="flex flex-col space-y-1 rounded-lg border p-3 hover:bg-accent transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{validation.userName}</span>
+                    <span className="text-xs text-muted-foreground">Solicitado: {createdDate}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">{validation.absenceTypeName}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {startDate} - {endDate}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Duración: {validation.duration} {unitLabel}
+                  </div>
+                </Link>
               </li>
             );
           })}

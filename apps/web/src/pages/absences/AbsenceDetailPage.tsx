@@ -51,7 +51,9 @@ export function AbsenceDetailPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <p className="text-sm text-muted-foreground">Cargando ausencia…</p>
+        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+          Cargando ausencia…
+        </p>
       </div>
     );
   }
