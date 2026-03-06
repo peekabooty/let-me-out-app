@@ -1,12 +1,81 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ActivateAccountSchema,
   AddObservationSchema,
   CreateAbsenceSchema,
   CreateAbsenceTypeSchema,
   CreateUserSchema,
   LoginSchema,
+  PasswordSchema,
 } from './schemas';
+
+describe('PasswordSchema', () => {
+  it('accepts a valid password meeting all criteria', () => {
+    const result = PasswordSchema.safeParse('SecurePass1!');
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a password shorter than 12 characters', () => {
+    const result = PasswordSchema.safeParse('Short1!');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password without uppercase letters', () => {
+    const result = PasswordSchema.safeParse('nouppercase1!');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password without lowercase letters', () => {
+    const result = PasswordSchema.safeParse('NOLOWERCASE1!');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password without numbers', () => {
+    const result = PasswordSchema.safeParse('NoNumberHere!');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password without symbols', () => {
+    const result = PasswordSchema.safeParse('NoSymbolHere1');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password with leading spaces even if otherwise valid', () => {
+    const result = PasswordSchema.safeParse('  SecurePass1!');
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a password with trailing spaces even if otherwise valid', () => {
+    const result = PasswordSchema.safeParse('SecurePass1!  ');
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('ActivateAccountSchema', () => {
+  it('accepts valid token and password', () => {
+    const result = ActivateAccountSchema.safeParse({
+      token: 'abc123token',
+      password: 'ValidPassword1!',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects missing token', () => {
+    const result = ActivateAccountSchema.safeParse({
+      password: 'ValidPass1!',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects password that does not meet policy', () => {
+    const result = ActivateAccountSchema.safeParse({
+      token: 'abc123token',
+      password: 'weak',
+    });
+    expect(result.success).toBe(false);
+  });
+});
 
 describe('LoginSchema', () => {
   it('accepts valid credentials', () => {
