@@ -40,7 +40,7 @@
     "uuidv7": "^0.6.3"
   },
   "prisma": {
-    "seed": "node --env-file=../../.env --import tsx/cjs prisma/seed.ts"
+    "seed": "tsx --env-file=../../.env prisma/seed.ts"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
