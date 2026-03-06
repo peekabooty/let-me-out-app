@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { uuidv7 } from 'uuidv7';
-import { seedAbsenceTypes } from '../src/prisma/seed-absence-types';
+import { seedAbsenceTypes } from './seed-absence-types';
 
 const BCRYPT_COST = 12;
 

@@ -207,8 +207,6 @@ Esto cubre automáticamente nombres de días, meses, botones de toolbar y el tex
 
 ---
 
----
-
 ## 5. Sidebar de navegación colapsable
 
 ### Situación actual
@@ -315,6 +313,229 @@ misma función `getNavLinks` o en un mapa paralelo.
 
 ---
 
+---
+
+## 6. Foto de perfil de usuario
+
+### Situación actual
+
+El modelo `user` no tiene ningún campo para foto de perfil
+(`apps/api/prisma/schema.prisma:10-28`). El sidebar (issue #5) mostrará el nombre del
+usuario en el pie, pero sin imagen. El calendario renderiza ausencias como bloques de
+color sin ningún elemento visual del usuario (`CalendarView.tsx:93-113` — no hay
+`eventContent` ni `eventDidMount`; los eventos usan únicamente `eventDisplay="block"`).
+
+La infraestructura de subida de ficheros ya existe y está completamente implementada en
+el módulo `observations`:
+
+- `FileInterceptor` + `ParseFilePipe` con `MaxFileSizeValidator` (5 MB) y
+  `FileTypeValidator` en `observation-attachments.controller.ts:47-58`.
+- Validación por magic bytes con `file-type` en
+  `file-validation.service.ts:19`.
+- `LocalFileStorageService` (`local-file-storage.service.ts`) con `saveFile`,
+  `getFile` y `deleteFile`, configurado vía `UPLOADS_DIR` en `ConfigService`.
+
+Todo esto es reutilizable para la foto de perfil.
+
+### Lo que se quiere
+
+1. **En la activación de cuenta** (`/activate`): tras introducir la contraseña, el
+   usuario puede subir una foto de perfil o elegir una de 6 imágenes stock incluidas
+   en el frontend. Este paso es opcional — si se omite se usa un avatar genérico.
+2. **Desde el sidebar** (issue #5): en cualquier momento, el usuario puede actualizar
+   su foto de perfil clickando sobre su avatar en el pie del sidebar.
+3. **En el calendario**: los eventos de ausencia muestran la foto de perfil del usuario
+   (thumbnail pequeño) dentro del bloque de evento.
+
+### Imágenes stock
+
+Incluir 6 imágenes en `apps/web/public/avatars/` (p. ej. `avatar-1.png` …
+`avatar-6.png`). El usuario puede elegir una de ellas como alternativa a subir una foto.
+Cuando se selecciona una imagen stock, el frontend la envía al backend como un upload
+normal (fetch de la URL pública → Blob → FormData), de modo que el backend no necesita
+distinguir entre foto propia e imagen stock.
+
+### Plan de implementación
+
+#### Backend
+
+**1. Migración de base de datos**
+
+Añadir el campo `avatar_url` al modelo `user` en
+`apps/api/prisma/schema.prisma`:
+
+```prisma
+avatar_url String? @db.VarChar(500)
+```
+
+Generar y aplicar la migración:
+
+```bash
+pnpm --filter @repo/api prisma:migrate
+```
+
+**2. Endpoint de subida — `PATCH /users/me/avatar`**
+
+Añadir un nuevo controlador o endpoint en
+`apps/api/src/modules/users/infrastructure/users.controller.ts` (o un controlador
+dedicado `user-avatar.controller.ts`):
+
+```
+@Patch('me/avatar')
+@UseInterceptors(FileInterceptor('file'))
+@HttpCode(HttpStatus.OK)
+async uploadAvatar(
+  @CurrentUser() user: JwtPayload,
+  @UploadedFile(new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+      new FileTypeValidator({ fileType: /image\/(jpeg|png)/ }),
+    ],
+  }))
+  file: Express.Multer.File,
+): Promise<{ avatarUrl: string }>
+```
+
+Solo se permiten JPEG y PNG (no PDF). Validación adicional por magic bytes reutilizando
+`FileValidationService`. El handler:
+
+1. Valida magic bytes.
+2. Genera nombre `uuidv7() + ext` con `LocalFileStorageService.saveFile()`.
+3. Si el usuario ya tenía `avatar_url`, borra el fichero anterior con `deleteFile()`.
+4. Persiste la nueva `avatar_url` en la tabla `user` (ruta relativa, p. ej.
+   `/users/me/avatar/serve`).
+5. Devuelve `{ avatarUrl: string }`.
+
+**3. Endpoint de descarga — `GET /users/:id/avatar`**
+
+Sirve el fichero desde disco con el `Content-Type` correcto. Autenticado pero accesible
+para cualquier rol (necesario para que el calendario pueda mostrar avatares de otros
+usuarios). Similar a
+`attachments.controller.ts:28` (`GET /observations/attachments/:id/download`).
+
+**4. Comando CQRS**
+
+- `UpdateUserAvatarCommand` + `UpdateUserAvatarHandler` en
+  `apps/api/src/modules/users/application/commands/`.
+- El handler usa `UserRepository` para actualizar `avatar_url` y
+  `LocalFileStorageService` para guardar/borrar ficheros.
+- Registrar en `users.module.ts`.
+
+#### Frontend
+
+**5. `ActivatePage.tsx` — paso opcional de foto de perfil**
+
+Después de que el formulario de contraseña sea enviado con éxito (actualmente en
+`ActivatePage.tsx:75-162`), mostrar un segundo paso (o sección inferior) con:
+
+- Grid de 6 imágenes stock (`/avatars/avatar-1.png` … `/avatars/avatar-6.png`)
+  seleccionables.
+- Botón "Subir foto" que abre un `<input type="file" accept="image/jpeg,image/png">`.
+- Botón "Omitir" para saltarse el paso.
+- Al confirmar la selección, llama a `PATCH /users/me/avatar` con un `FormData`.
+
+Encapsular la UI en un componente
+`apps/web/src/components/profile/AvatarPicker.tsx` reutilizable (también se usará
+en el sidebar).
+
+**6. `AppSidebar.tsx` — actualización de avatar (depende de issue #5)**
+
+En el pie del sidebar, el avatar del usuario es clickable y abre el componente
+`AvatarPicker` en un `<Dialog>`. Al confirmar, invalida la query del usuario actual
+para que el avatar se refresque en el sidebar y en el calendario.
+
+El avatar se obtiene del endpoint `GET /users/me/avatar` (o de la `avatar_url` devuelta
+por `GET /auth/me`). Si `avatar_url` es `null`, mostrar un avatar genérico con las
+iniciales del usuario (usando `shadcn/ui Avatar` + `AvatarFallback`).
+
+**7. `CalendarView.tsx` — foto en eventos de ausencia**
+
+Usar el render prop `eventContent` de FullCalendar para personalizar el contenido de
+cada evento:
+
+```tsx
+eventContent={(arg) => (
+  <div className="flex items-center gap-1 px-1 truncate">
+    <img
+      src={arg.event.extendedProps.avatarUrl}
+      alt=""
+      aria-hidden="true"
+      className="w-4 h-4 rounded-full object-cover shrink-0"
+    />
+    <span className="truncate text-xs">{arg.event.title}</span>
+  </div>
+)}
+```
+
+La `avatarUrl` debe incluirse en `extendedProps` dentro de `mapAbsenceToEvent()`
+(`CalendarView.tsx:23-42`). El endpoint `GET /calendar/absences` (o el que corresponda)
+debe devolver la `avatar_url` de cada ausencia junto con los datos actuales.
+
+Si `avatarUrl` es `null`, mostrar solo el título (o las iniciales como fallback inline).
+
+**8. `api-client.ts`**
+
+Añadir:
+
+```typescript
+export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  return client.patch('/users/me/avatar', form).json();
+}
+
+export async function getAvatarUrl(userId: string): string {
+  return `${API_BASE_URL}/users/${userId}/avatar`;
+}
+```
+
+**9. `@repo/types`**
+
+Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod correspondiente.
+
+#### Tests
+
+- `UpdateUserAvatarHandler` — tests unitarios con mock de `UserRepository` y
+  `LocalFileStorageService`.
+- `AvatarPicker.test.tsx` — verifica selección de stock, selección de fichero, y llamada
+  a `uploadAvatar`.
+- `CalendarView.test.tsx` — verificar que `eventContent` renderiza el thumbnail cuando
+  `avatarUrl` está presente.
+
+### Dependencias entre issues
+
+- La parte del sidebar (punto 6 arriba) **depende de la issue #5** (sidebar). Puede
+  implementarse en la misma rama `feat/sidebar-nav` o en una rama posterior
+  `feat/avatar` que se ramifique desde `feat/sidebar-nav`.
+- El backend (puntos 1–4) y el paso de activación (punto 5) no tienen dependencias
+  con el sidebar y pueden implementarse en paralelo.
+
+### Archivos a modificar/crear
+
+**Backend**
+
+- `apps/api/prisma/schema.prisma` — añadir `avatar_url`
+- `apps/api/src/modules/users/application/commands/update-user-avatar.command.ts` (nuevo)
+- `apps/api/src/modules/users/application/commands/update-user-avatar.handler.ts` (nuevo)
+- `apps/api/src/modules/users/infrastructure/users.controller.ts` — añadir endpoints
+- `apps/api/src/modules/users/users.module.ts` — registrar handler
+
+**Frontend**
+
+- `apps/web/public/avatars/` — añadir 6 imágenes stock (nuevo directorio)
+- `apps/web/src/components/profile/AvatarPicker.tsx` (nuevo)
+- `apps/web/src/components/profile/AvatarPicker.test.tsx` (nuevo)
+- `apps/web/src/pages/activate/ActivatePage.tsx`
+- `apps/web/src/components/layout/AppSidebar.tsx` (depende de issue #5)
+- `apps/web/src/components/calendar/CalendarView.tsx`
+- `apps/web/src/lib/api-client.ts`
+
+**Compartido**
+
+- `packages/types/src/` — añadir `avatar_url` a la interfaz `User`
+
+---
+
 ## Orden de implementación sugerido
 
 | #   | Issue                        | Complejidad | Rama sugerida            |
@@ -324,6 +545,7 @@ misma función `getNavLinks` o en un mapa paralelo.
 | 3   | Logout                       | S           | `feat/logout`            |
 | 4   | Borrar usuarios              | M           | `feat/delete-user`       |
 | 5   | Sidebar de navegación        | M           | `feat/sidebar-nav`       |
+| 6   | Foto de perfil               | L           | `feat/avatar`            |
 
 Los dos primeros son cambios de una sola línea cada uno y no tienen dependencias.
 El logout requiere un endpoint nuevo en backend + UI en frontend.
@@ -331,3 +553,7 @@ El borrado de usuarios es el más extenso por implicar un nuevo comando CQRS, ha
 endpoint, hook y UI.
 El sidebar requiere un componente nuevo y cambios en el layout principal; no tiene
 dependencias de backend.
+La foto de perfil es la tarea más amplia: implica migración de BD, nuevos endpoints,
+infraestructura de subida reutilizada del módulo de observations, un componente
+`AvatarPicker` reutilizable, cambios en activación, sidebar y calendario. La parte del
+sidebar del avatar depende de la issue #5.
