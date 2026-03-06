@@ -95,7 +95,6 @@ export async function listUsers(): Promise<User[]> {
 export interface CreateUserPayload {
   email: string;
   name: string;
-  password: string;
   role: User['role'];
 }
 

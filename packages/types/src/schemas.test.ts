@@ -8,6 +8,7 @@ import {
   CreateUserSchema,
   LoginSchema,
   PasswordSchema,
+  ResendActivationSchema,
 } from './schemas';
 
 describe('PasswordSchema', () => {
@@ -98,23 +99,65 @@ describe('LoginSchema', () => {
 });
 
 describe('CreateUserSchema', () => {
-  it('accepts valid payload', () => {
+  it('accepts valid payload without password', () => {
     const result = CreateUserSchema.safeParse({
       email: 'user@example.com',
       name: 'User Name',
-      password: 'secret',
       role: 'standard',
     });
 
     expect(result.success).toBe(true);
   });
 
+  it('rejects payload with invalid email', () => {
+    const result = CreateUserSchema.safeParse({
+      email: 'not-an-email',
+      name: 'User Name',
+      role: 'standard',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it('rejects missing name', () => {
     const result = CreateUserSchema.safeParse({
       email: 'user@example.com',
-      password: 'secret',
       role: 'standard',
     });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid role', () => {
+    const result = CreateUserSchema.safeParse({
+      email: 'user@example.com',
+      name: 'User Name',
+      role: 'superadmin',
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('ResendActivationSchema', () => {
+  it('accepts a valid email', () => {
+    const result = ResendActivationSchema.safeParse({
+      email: 'user@example.com',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an invalid email format', () => {
+    const result = ResendActivationSchema.safeParse({
+      email: 'not-an-email',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing email', () => {
+    const result = ResendActivationSchema.safeParse({});
 
     expect(result.success).toBe(false);
   });

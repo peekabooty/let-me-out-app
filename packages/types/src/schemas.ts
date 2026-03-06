@@ -41,11 +41,13 @@ export const LoginSchema = z.object({
 });
 
 export const CreateUserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1),
-  password: z.string().min(1),
-  role: z.nativeEnum(UserRole),
-  isActive: z.boolean().optional(),
+  email: z.string().email('El correo electrónico no es válido.'),
+  name: z.string().min(1, 'El nombre es obligatorio.'),
+  role: z.nativeEnum(UserRole, { message: 'El rol no es válido.' }),
+});
+
+export const ResendActivationSchema = z.object({
+  email: z.string().email('El correo electrónico no es válido.'),
 });
 
 export const CreateAbsenceTypeSchema = z

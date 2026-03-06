@@ -52,7 +52,7 @@ describe('UserFormDialog: modo crear', () => {
     expect(screen.getByRole('heading', { name: 'Nuevo usuario' })).toBeInTheDocument();
     expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
-    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Crear usuario' })).toBeInTheDocument();
   });
 
@@ -73,7 +73,6 @@ describe('UserFormDialog: modo crear', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Test User');
     await user.type(screen.getByLabelText('Correo electrónico'), 'not-an-email');
-    await user.type(screen.getByLabelText('Contraseña'), 'secret123');
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
@@ -89,7 +88,6 @@ describe('UserFormDialog: modo crear', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Nuevo Usuario');
     await user.type(screen.getByLabelText('Correo electrónico'), 'nuevo@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
@@ -106,7 +104,6 @@ describe('UserFormDialog: modo crear', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Otro Usuario');
     await user.type(screen.getByLabelText('Correo electrónico'), 'duplicado@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
@@ -124,7 +121,6 @@ describe('UserFormDialog: modo crear', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Otro Usuario');
     await user.type(screen.getByLabelText('Correo electrónico'), 'otro@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
