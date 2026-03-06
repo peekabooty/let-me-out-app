@@ -210,6 +210,12 @@ describe('AdminPage: creación de usuario', () => {
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Usuario creado' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+
+    await waitFor(() => {
       expect(screen.getByText('Carlos Ruiz')).toBeInTheDocument();
     });
 
