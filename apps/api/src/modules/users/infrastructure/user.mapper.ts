@@ -16,6 +16,8 @@ export class UserMapper {
       passwordHash: prismaUser.password_hash,
       role: prismaUser.role as UserRole,
       isActive: prismaUser.is_active,
+      activationTokenHash: prismaUser.activation_token_hash,
+      activationTokenExpiresAt: prismaUser.activation_token_expires_at,
       createdAt: prismaUser.created_at,
       updatedAt: prismaUser.updated_at,
     });

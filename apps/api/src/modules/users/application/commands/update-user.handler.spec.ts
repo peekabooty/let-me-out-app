@@ -26,6 +26,7 @@ const makeUser = (overrides: Partial<ConstructorParameters<typeof User>[0]> = {}
 const makeRepo = (user: User | null): UserRepositoryPort => ({
   findById: jest.fn().mockResolvedValue(user),
   findByEmail: jest.fn(),
+  findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn(),
   update: jest.fn().mockResolvedValue(null),

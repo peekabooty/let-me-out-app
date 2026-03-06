@@ -24,6 +24,7 @@ const makeUser = (): User =>
 const makeRepo = (user: User | null): UserRepositoryPort => ({
   findById: jest.fn().mockResolvedValue(user),
   findByEmail: jest.fn(),
+  findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),

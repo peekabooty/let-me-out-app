@@ -1,9 +1,12 @@
 import { ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@repo/types';
 
 import { ClockService } from '../../../../common';
 import { User } from '../../domain/user.entity';
 import type { UserRepositoryPort } from '../../domain/ports/user.repository.port';
+import type { EmailServicePort } from '../../../notifications/domain/ports/email-service.port';
+import { EmailTemplateService } from '../../../notifications/domain/services/email-template.service';
 import { CreateUserCommand } from './create-user.command';
 import { CreateUserHandler } from './create-user.handler';
 
@@ -14,22 +17,38 @@ const mockClock: ClockService = { now: () => NOW } as ClockService;
 const makeRepo = (overrides: Partial<UserRepositoryPort> = {}): UserRepositoryPort => ({
   findById: jest.fn(),
   findByEmail: jest.fn().mockResolvedValue(null),
+  findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn().mockResolvedValue(null),
   update: jest.fn(),
   ...overrides,
 });
 
+const mockEmailService: EmailServicePort = {
+  sendEmail: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockConfigService = {
+  getOrThrow: jest.fn().mockReturnValue('http://localhost:3000'),
+} as unknown as ConfigService;
+
+const emailTemplateService = new EmailTemplateService();
+
 describe('CreateUserHandler', () => {
-  it('creates a user and returns its id', async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('creates an inactive user with activation token and sends invitation email', async () => {
     const repo = makeRepo();
-    const handler = new CreateUserHandler(repo, mockClock);
-    const command = new CreateUserCommand(
-      'user@test.com',
-      'Test User',
-      'password123',
-      UserRole.STANDARD
+    const handler = new CreateUserHandler(
+      repo,
+      mockEmailService,
+      mockClock,
+      mockConfigService,
+      emailTemplateService
     );
+    const command = new CreateUserCommand('user@test.com', 'Test User', UserRole.STANDARD);
 
     const id = await handler.execute(command);
 
@@ -40,7 +59,12 @@ describe('CreateUserHandler', () => {
     expect(saved.email).toBe('user@test.com');
     expect(saved.name).toBe('Test User');
     expect(saved.role).toBe(UserRole.STANDARD);
-    expect(saved.isActive).toBe(true);
+    expect(saved.isActive).toBe(false);
+    expect(saved.passwordHash).toBeNull();
+    expect(saved.activationTokenHash).not.toBeNull();
+    expect(saved.activationTokenExpiresAt).not.toBeNull();
+    expect(mockEmailService.sendEmail).toHaveBeenCalledTimes(1);
+    expect((mockEmailService.sendEmail as jest.Mock).mock.calls[0][0]).toBe('user@test.com');
   });
 
   it('throws ConflictException if email already exists', async () => {
@@ -55,15 +79,17 @@ describe('CreateUserHandler', () => {
       updatedAt: NOW,
     });
     const repo = makeRepo({ findByEmail: jest.fn().mockResolvedValue(existingUser) });
-    const handler = new CreateUserHandler(repo, mockClock);
-    const command = new CreateUserCommand(
-      'user@test.com',
-      'Test User',
-      'password123',
-      UserRole.STANDARD
+    const handler = new CreateUserHandler(
+      repo,
+      mockEmailService,
+      mockClock,
+      mockConfigService,
+      emailTemplateService
     );
+    const command = new CreateUserCommand('user@test.com', 'Test User', UserRole.STANDARD);
 
     await expect(handler.execute(command)).rejects.toBeInstanceOf(ConflictException);
     expect(repo.save).not.toHaveBeenCalled();
+    expect(mockEmailService.sendEmail).not.toHaveBeenCalled();
   });
 });

@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   async validateUser(email: string, password: string): Promise<AuthUser> {
@@ -30,7 +30,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid =
+      user.password_hash !== null && (await bcrypt.compare(password, user.password_hash));
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -56,7 +57,7 @@ export class AuthService {
       {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
         expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
-      },
+      }
     );
 
     return { accessToken, refreshToken };
@@ -87,7 +88,7 @@ export class AuthService {
   }
 
   async getProfile(
-    userId: string,
+    userId: string
   ): Promise<{ id: string; email: string; name: string; role: string; is_active: boolean }> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },

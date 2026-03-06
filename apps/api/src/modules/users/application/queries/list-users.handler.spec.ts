@@ -23,6 +23,7 @@ const makeRepo = (users: User[]): UserRepositoryPort => ({
   findAll: jest.fn().mockResolvedValue(users),
   findById: jest.fn(),
   findByEmail: jest.fn(),
+  findByActivationTokenHash: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
 });

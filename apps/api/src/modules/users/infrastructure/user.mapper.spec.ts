@@ -13,6 +13,8 @@ const PRISMA_USER: PrismaUser = {
   password_hash: '$2b$12$hashedpassword',
   role: 'standard',
   is_active: true,
+  activation_token_hash: null,
+  activation_token_expires_at: null,
   created_at: BASE_DATE,
   updated_at: BASE_DATE,
 };
@@ -41,8 +43,21 @@ describe('UserMapper', () => {
       expect(user.passwordHash).toBe(PRISMA_USER.password_hash);
       expect(user.role).toBe(UserRole.STANDARD);
       expect(user.isActive).toBe(PRISMA_USER.is_active);
+      expect(user.activationTokenHash).toBeNull();
+      expect(user.activationTokenExpiresAt).toBeNull();
       expect(user.createdAt).toBe(BASE_DATE);
       expect(user.updatedAt).toBe(BASE_DATE);
+    });
+
+    it('maps activation token fields when present', () => {
+      const tokenDate = new Date('2026-02-01T10:00:00.000Z');
+      const user = mapper.toDomain({
+        ...PRISMA_USER,
+        activation_token_hash: 'abc123hash',
+        activation_token_expires_at: tokenDate,
+      });
+      expect(user.activationTokenHash).toBe('abc123hash');
+      expect(user.activationTokenExpiresAt).toBe(tokenDate);
     });
 
     it('maps admin role correctly', () => {

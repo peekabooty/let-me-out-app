@@ -50,6 +50,7 @@ const makeTeamRepo = (overrides: Partial<TeamRepositoryPort> = {}): TeamReposito
 const makeUserRepo = (overrides: Partial<UserRepositoryPort> = {}): UserRepositoryPort => ({
   findById: jest.fn().mockResolvedValue(makeUser(UserRole.STANDARD)),
   findByEmail: jest.fn(),
+  findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),

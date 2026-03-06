@@ -8,7 +8,6 @@ import { CreateUserDto } from './create-user.dto';
 const validPayload = {
   email: 'admin@test.com',
   name: 'Test User',
-  password: 'securepass',
   role: UserRole.STANDARD,
 };
 
@@ -31,12 +30,6 @@ describe('CreateUserDto', () => {
     expect(errors.some((e) => e.property === 'name')).toBe(true);
   });
 
-  it('fails with password shorter than 8 chars', async () => {
-    const dto = plainToInstance(CreateUserDto, { ...validPayload, password: 'short' });
-    const errors = await validate(dto);
-    expect(errors.some((e) => e.property === 'password')).toBe(true);
-  });
-
   it('fails with invalid role', async () => {
     const dto = plainToInstance(CreateUserDto, { ...validPayload, role: 'superadmin' });
     const errors = await validate(dto);
@@ -47,6 +40,6 @@ describe('CreateUserDto', () => {
     const dto = plainToInstance(CreateUserDto, {});
     const errors = await validate(dto);
     const fields = errors.map((e) => e.property);
-    expect(fields).toEqual(expect.arrayContaining(['email', 'name', 'password', 'role']));
+    expect(fields).toEqual(expect.arrayContaining(['email', 'name', 'role']));
   });
 });
