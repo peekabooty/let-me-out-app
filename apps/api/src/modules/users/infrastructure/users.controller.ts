@@ -33,7 +33,7 @@ export class UsersController {
   @Post()
   async create(@Body() dto: CreateUserDto): Promise<{ id: string }> {
     const id = await this.commandBus.execute<CreateUserCommand, string>(
-      new CreateUserCommand(dto.email, dto.name, dto.password, dto.role)
+      new CreateUserCommand(dto.email, dto.name, dto.role)
     );
     return { id };
   }
