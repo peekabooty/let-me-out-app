@@ -19,6 +19,7 @@ import { UpdateUserDto } from '../application/dtos/update-user.dto';
 import { CreateUserCommand } from '../application/commands/create-user.command';
 import { UpdateUserCommand } from '../application/commands/update-user.command';
 import { DeactivateUserCommand } from '../application/commands/deactivate-user.command';
+import { ResendActivationCommand } from '../application/commands/resend-activation.command';
 import { ListUsersQuery } from '../application/queries/list-users.query';
 import { GetUserQuery } from '../application/queries/get-user.query';
 
@@ -59,5 +60,11 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deactivate(@Param('id') id: string): Promise<void> {
     await this.commandBus.execute<DeactivateUserCommand, void>(new DeactivateUserCommand(id));
+  }
+
+  @Post(':id/resend-activation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendActivation(@Param('id') id: string): Promise<void> {
+    await this.commandBus.execute<ResendActivationCommand, void>(new ResendActivationCommand(id));
   }
 }
