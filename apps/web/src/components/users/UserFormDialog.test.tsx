@@ -80,11 +80,11 @@ describe('UserFormDialog: modo crear', () => {
     });
   });
 
-  it('llama a onSuccess y cierra el diálogo al crear usuario correctamente', async () => {
+  it('muestra mensaje de confirmación con el email tras crear el usuario', async () => {
     const user = userEvent.setup();
     server.use(http.post('*/users', () => HttpResponse.json({ id: 'new-id' }, { status: 201 })));
 
-    const { onSuccess, onOpenChange } = renderDialog();
+    const { onSuccess } = renderDialog();
 
     await user.type(screen.getByLabelText('Nombre'), 'Nuevo Usuario');
     await user.type(screen.getByLabelText('Correo electrónico'), 'nuevo@example.com');
@@ -92,6 +92,30 @@ describe('UserFormDialog: modo crear', () => {
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/Se ha enviado un email de activación a/)).toBeInTheDocument();
+      expect(screen.getByText('nuevo@example.com')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
+  });
+
+  it('cierra el diálogo al pulsar Cerrar tras crear el usuario', async () => {
+    const user = userEvent.setup();
+    server.use(http.post('*/users', () => HttpResponse.json({ id: 'new-id' }, { status: 201 })));
+
+    const { onOpenChange } = renderDialog();
+
+    await user.type(screen.getByLabelText('Nombre'), 'Nuevo Usuario');
+    await user.type(screen.getByLabelText('Correo electrónico'), 'nuevo@example.com');
+    await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+
+    await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
   });

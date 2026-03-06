@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -68,6 +69,8 @@ interface CreateDialogProps {
 }
 
 function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
+  const [createdEmail, setCreatedEmail] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -87,9 +90,8 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
         name: data.name,
         role: data.role,
       });
-      reset();
+      setCreatedEmail(data.email);
       onSuccess();
-      onOpenChange(false);
     } catch (error) {
       const message =
         isAxiosError(error) && error.response?.status === 409
@@ -98,6 +100,40 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
       setError('root', { message });
     }
   };
+
+  const handleClose = () => {
+    reset();
+    setCreatedEmail(null);
+    onOpenChange(false);
+  };
+
+  if (createdEmail !== null) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Usuario creado</DialogTitle>
+          </DialogHeader>
+
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+          >
+            Se ha enviado un email de activación a{' '}
+            <span className="font-medium">{createdEmail}</span>. El usuario deberá seguir el enlace
+            para establecer su contraseña y activar su cuenta.
+          </div>
+
+          <DialogFooter>
+            <Button type="button" onClick={handleClose}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
