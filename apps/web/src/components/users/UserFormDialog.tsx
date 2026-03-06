@@ -77,7 +77,7 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
     setError,
   } = useForm<CreateFormValues>({
     resolver: zodResolver(CreateUserSchema),
-    defaultValues: { role: UserRole.STANDARD, isActive: true },
+    defaultValues: { role: UserRole.STANDARD },
   });
 
   const onSubmit = async (data: CreateFormValues) => {
@@ -85,7 +85,6 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
       await createUser({
         email: data.email,
         name: data.name,
-        password: data.password,
         role: data.role,
       });
       reset();
@@ -138,23 +137,6 @@ function CreateDialog({ open, onOpenChange, onSuccess }: CreateDialogProps) {
             {errors.email && (
               <p id="create-email-error" role="alert" className="text-sm text-destructive">
                 {errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="create-password">Contraseña</Label>
-            <Input
-              id="create-password"
-              type="password"
-              autoComplete="new-password"
-              aria-invalid={errors.password ? 'true' : undefined}
-              aria-describedby={errors.password ? 'create-password-error' : undefined}
-              {...register('password')}
-            />
-            {errors.password && (
-              <p id="create-password-error" role="alert" className="text-sm text-destructive">
-                {errors.password.message}
               </p>
             )}
           </div>

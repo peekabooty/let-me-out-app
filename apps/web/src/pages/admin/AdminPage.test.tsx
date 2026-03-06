@@ -177,7 +177,7 @@ describe('AdminPage: creación de usuario', () => {
     expect(screen.getByRole('heading', { name: 'Nuevo usuario' })).toBeInTheDocument();
     expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
-    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument();
   });
 
   it('crea un nuevo usuario y actualiza la lista', async () => {
@@ -207,7 +207,6 @@ describe('AdminPage: creación de usuario', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Carlos Ruiz');
     await user.type(screen.getByLabelText('Correo electrónico'), 'carlos@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }));
 
     await waitFor(() => {
