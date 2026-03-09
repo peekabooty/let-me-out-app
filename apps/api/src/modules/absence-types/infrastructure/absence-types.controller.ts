@@ -23,7 +23,6 @@ import { DeactivateAbsenceTypeCommand } from '../application/commands/deactivate
 import { ListAbsenceTypesQuery } from '../application/queries/list-absence-types.query';
 import { GetAbsenceTypeQuery } from '../application/queries/get-absence-type.query';
 
-@Roles(UserRole.ADMIN)
 @Controller('absence-types')
 export class AbsenceTypesController {
   constructor(
@@ -31,6 +30,7 @@ export class AbsenceTypesController {
     private readonly queryBus: QueryBus
   ) {}
 
+  @Roles(UserRole.ADMIN)
   @Post()
   async create(@Body() dto: CreateAbsenceTypeDto): Promise<{ id: string }> {
     const id = await this.commandBus.execute<CreateAbsenceTypeCommand, string>(
@@ -63,6 +63,7 @@ export class AbsenceTypesController {
     );
   }
 
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateAbsenceTypeDto): Promise<void> {
     await this.commandBus.execute<UpdateAbsenceTypeCommand, void>(
@@ -79,6 +80,7 @@ export class AbsenceTypesController {
     );
   }
 
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deactivate(@Param('id') id: string): Promise<void> {
