@@ -13,6 +13,7 @@ import { publicRoute } from './routes/_public';
 import { loginRoute } from './routes/_public.login';
 import { rootRoute } from './routes/__root';
 import { unauthorizedRoute } from './routes/unauthorized';
+import { activateRoute } from './routes/activate';
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([loginRoute]),
@@ -25,6 +26,7 @@ const routeTree = rootRoute.addChildren([
     auditRoute.addChildren([auditIndexRoute]),
   ]),
   unauthorizedRoute,
+  activateRoute,
 ]);
 
 export const router = createRouter({ routeTree });
