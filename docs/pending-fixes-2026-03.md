@@ -584,40 +584,7 @@ Esta issue tiene **dependencia con la issue #3** (Reenviar invitación):
 
 ---
 
-## 5. Desplegable de tipo de ausencia vacío en el formulario de nueva ausencia
-
-### Situación actual
-
-Cuando un usuario con rol `STANDARD` o `VALIDATOR` abre el formulario de nueva ausencia
-(`AbsenceFormDialog.tsx:37`), este llama a `useAbsenceTypes(true)` → `GET /absence-types?onlyActive=true`.
-
-El endpoint `GET /absence-types` en `absence-types.controller.ts:26` está decorado con
-`@Roles(UserRole.ADMIN)` a nivel de controlador, lo que hace que el guard devuelva `403 Forbidden`
-para cualquier usuario que no sea administrador. El hook recibe el error, `absenceTypes` queda
-vacío, y el `<Select>` no muestra ninguna opción.
-
-### Plan de implementación
-
-**Backend — `apps/api/src/modules/absence-types/infrastructure/absence-types.controller.ts`**
-
-El decorador `@Roles(UserRole.ADMIN)` está aplicado a nivel de clase, afectando a todos los
-endpoints. La operación de lectura (`GET /absence-types`) debe estar disponible para todos los
-usuarios autenticados, no solo para admins.
-
-Mover el decorador `@Roles(UserRole.ADMIN)` de la clase a los métodos de escritura
-(`@Post`, `@Patch`, `@Delete`) individualmente. Los métodos `@Get()` y `@Get(':id')` solo
-necesitan estar autenticados (el guard JWT global ya lo garantiza), sin restricción de rol.
-
-Cambio mínimo y no invasivo: no se toca ninguna lógica de negocio, solo la configuración
-del guard.
-
-**Archivos a modificar:**
-
-- `apps/api/src/modules/absence-types/infrastructure/absence-types.controller.ts`
-
----
-
-## 6. Textos en inglés en la vista de calendario
+## 5. Textos en inglés en la vista de calendario
 
 ### Situación actual
 
@@ -659,7 +626,7 @@ Esto cubre automáticamente nombres de días, meses, botones de toolbar y el tex
 
 ---
 
-## 7. Sidebar de navegación colapsable
+## 6. Sidebar de navegación colapsable
 
 ### Situación actual
 
@@ -767,12 +734,12 @@ misma función `getNavLinks` o en un mapa paralelo.
 
 ---
 
-## 8. Foto de perfil de usuario
+## 7. Foto de perfil de usuario
 
 ### Situación actual
 
 El modelo `user` no tiene ningún campo para foto de perfil
-(`apps/api/prisma/schema.prisma:10-28`). El sidebar (issue #7) mostrará el nombre del
+(`apps/api/prisma/schema.prisma:10-28`). El sidebar (issue #6) mostrará el nombre del
 usuario en el pie, pero sin imagen. El calendario renderiza ausencias como bloques de
 color sin ningún elemento visual del usuario (`CalendarView.tsx:93-113` — no hay
 `eventContent` ni `eventDidMount`; los eventos usan únicamente `eventDisplay="block"`).
@@ -794,7 +761,7 @@ Todo esto es reutilizable para la foto de perfil.
 1. **En la activación de cuenta** (`/activate`): tras introducir la contraseña, el
    usuario puede subir una foto de perfil o elegir una de 6 imágenes stock incluidas
    en el frontend. Este paso es opcional — si se omite se usa un avatar genérico.
-2. **Desde el sidebar** (issue #7): en cualquier momento, el usuario puede actualizar
+2. **Desde el sidebar** (issue #6): en cualquier momento, el usuario puede actualizar
    su foto de perfil clickando sobre su avatar en el pie del sidebar.
 3. **En el calendario**: los eventos de ausencia muestran la foto de perfil del usuario
    (thumbnail pequeño) dentro del bloque de evento.
@@ -890,7 +857,7 @@ Encapsular la UI en un componente
 `apps/web/src/components/profile/AvatarPicker.tsx` reutilizable (también se usará
 en el sidebar).
 
-**6. `AppSidebar.tsx` — actualización de avatar (depende de issue #7)**
+**6. `AppSidebar.tsx` — actualización de avatar (depende de issue #6)**
 
 En el pie del sidebar, el avatar del usuario es clickable y abre el componente
 `AvatarPicker` en un `<Dialog>`. Al confirmar, invalida la query del usuario actual
@@ -956,7 +923,7 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 
 ### Dependencias entre issues
 
-- La parte del sidebar (punto 6 arriba) **depende de la issue #7** (sidebar). Puede
+- La parte del sidebar (punto 6 arriba) **depende de la issue #6** (sidebar). Puede
   implementarse en la misma rama `feat/sidebar-nav` o en una rama posterior
   `feat/avatar` que se ramifique desde `feat/sidebar-nav`.
 - El backend (puntos 1–4) y el paso de activación (punto 5) no tienen dependencias
@@ -978,7 +945,7 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 - `apps/web/src/components/profile/AvatarPicker.tsx` (nuevo)
 - `apps/web/src/components/profile/AvatarPicker.test.tsx` (nuevo)
 - `apps/web/src/pages/activate/ActivatePage.tsx`
-- `apps/web/src/components/layout/AppSidebar.tsx` (depende de issue #7)
+- `apps/web/src/components/layout/AppSidebar.tsx` (depende de issue #6)
 - `apps/web/src/components/calendar/CalendarView.tsx`
 - `apps/web/src/lib/api-client.ts`
 
@@ -990,22 +957,25 @@ Añadir `avatar_url?: string | null` a la interfaz `User` y al schema Zod corres
 
 ## Orden de implementación sugerido
 
-| #   | Issue                        | Complejidad | Rama sugerida             |
-| --- | ---------------------------- | ----------- | ------------------------- |
-| 1   | Logout                       | S           | `feat/logout`             |
-| 2   | Borrar usuarios              | M           | `feat/delete-user`        |
-| 3   | Reenviar invitación          | S           | `feat/admin-improvements` |
-| 4   | Iconos en botones            | M           | `feat/admin-improvements` |
-| 5   | Tipo de ausencia en dropdown | XS          | `fix/absence-type-roles`  |
-| 6   | Calendario i18n              | XS          | `fix/calendar-i18n`       |
-| 7   | Sidebar de navegación        | M           | `feat/sidebar-nav`        |
-| 8   | Foto de perfil               | L           | `feat/avatar`             |
+| #   | Issue                 | Complejidad | Rama sugerida             | Estado    |
+| --- | --------------------- | ----------- | ------------------------- | --------- |
+| 1   | Logout                | S           | `feat/logout`             | Pendiente |
+| 2   | Borrar usuarios       | M           | `feat/delete-user`        | Pendiente |
+| 3   | Reenviar invitación   | S           | `feat/admin-improvements` | Pendiente |
+| 4   | Iconos en botones     | M           | `feat/admin-improvements` | Pendiente |
+| 5   | Calendario i18n       | XS          | `fix/calendar-i18n`       | Pendiente |
+| 6   | Sidebar de navegación | M           | `feat/sidebar-nav`        | Pendiente |
+| 7   | Foto de perfil        | L           | `feat/avatar`             | Pendiente |
 
 **Notas sobre implementación:**
 
 - **Issues #3 y #4** deben implementarse juntas en la misma rama (`feat/admin-improvements`) porque ambas modifican la columna de Acciones de la tabla de usuarios. Issue #4 reemplaza botones de texto por iconos en las tres pestañas del admin, e issue #3 añade el botón de reenviar invitación (con icono `RotateCw`) a usuarios inactivos.
-- **Issues #5 y #6** son cambios de una sola línea cada uno y no tienen dependencias. Pueden implementarse en cualquier orden.
+- **Issue #5** (calendario i18n) es un cambio de una sola línea y no tiene dependencias. Puede implementarse en cualquier momento.
 - **Issue #1** (logout) requiere un endpoint nuevo en backend + UI en frontend.
 - **Issue #2** (borrar usuarios) es extenso por implicar un nuevo comando CQRS, handler, endpoint, hook y UI.
-- **Issue #7** (sidebar) requiere un componente nuevo y cambios en el layout principal; no tiene dependencias de backend.
-- **Issue #8** (foto de perfil) es la tarea más amplia: implica migración de BD, nuevos endpoints, infraestructura de subida reutilizada del módulo de observations, un componente `AvatarPicker` reutilizable, cambios en activación, sidebar y calendario. La parte del sidebar del avatar depende de la issue #7.
+- **Issue #6** (sidebar) requiere un componente nuevo y cambios en el layout principal; no tiene dependencias de backend.
+- **Issue #7** (foto de perfil) es la tarea más amplia: implica migración de BD, nuevos endpoints, infraestructura de subida reutilizada del módulo de observations, un componente `AvatarPicker` reutilizable, cambios en activación, sidebar y calendario. La parte del sidebar del avatar depende de la issue #6.
+
+**Issues completadas:**
+
+- ✅ **Tipo de ausencia en dropdown** — Completada en PR #267 (fix/absence-type-roles)
