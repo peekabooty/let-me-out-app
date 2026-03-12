@@ -22,3 +22,10 @@ export enum AbsenceUnit {
   HOURS = 'hours',
   DAYS = 'days',
 }
+
+export enum Theme {
+  LIGHT = 'light',
+  DARK = 'dark',
+  CARAMEL = 'caramel',
+  CHOCOLATE = 'chocolate',
+}

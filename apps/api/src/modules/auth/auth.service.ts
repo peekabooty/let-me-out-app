@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { Theme } from '@repo/types';
 
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -87,9 +88,14 @@ export class AuthService {
     }
   }
 
-  async getProfile(
-    userId: string
-  ): Promise<{ id: string; email: string; name: string; role: string; is_active: boolean }> {
+  async getProfile(userId: string): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    isActive: boolean;
+    themePreference: Theme | null;
+  }> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: {
@@ -98,6 +104,7 @@ export class AuthService {
         name: true,
         role: true,
         is_active: true,
+        theme_preference: true,
       },
     });
 
@@ -105,6 +112,13 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      isActive: user.is_active,
+      themePreference: (user.theme_preference as Theme | null) ?? Theme.LIGHT,
+    };
   }
 }

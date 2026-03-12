@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { Theme } from '@repo/types';
 import { JwtService } from '@nestjs/jwt';
 
 import { AuthService } from './auth.service';
@@ -22,7 +23,7 @@ describe('AuthService', () => {
   const authService = new AuthService(
     prismaService as never,
     jwtService as never,
-    configService as never,
+    configService as never
   );
 
   beforeEach(() => {
@@ -75,8 +76,47 @@ describe('AuthService', () => {
       jwtService.verifyAsync = jest.fn().mockRejectedValue(new Error('invalid'));
 
       await expect(authService.refreshAccessToken('bad-token')).rejects.toBeInstanceOf(
-        UnauthorizedException,
+        UnauthorizedException
       );
+    });
+  });
+
+  describe('getProfile', () => {
+    it('returns profile with themePreference and camelCase fields', async () => {
+      prismaService.user.findUnique = jest.fn().mockResolvedValue({
+        id: 'user-id',
+        email: 'user@example.com',
+        name: 'User Name',
+        role: 'standard',
+        is_active: true,
+        theme_preference: 'dark',
+      });
+
+      const profile = await authService.getProfile('user-id');
+
+      expect(profile).toEqual({
+        id: 'user-id',
+        email: 'user@example.com',
+        name: 'User Name',
+        role: 'standard',
+        isActive: true,
+        themePreference: Theme.DARK,
+      });
+    });
+
+    it('defaults themePreference to light when null', async () => {
+      prismaService.user.findUnique = jest.fn().mockResolvedValue({
+        id: 'user-id',
+        email: 'user@example.com',
+        name: 'User Name',
+        role: 'standard',
+        is_active: true,
+        theme_preference: null,
+      });
+
+      const profile = await authService.getProfile('user-id');
+
+      expect(profile.themePreference).toBe(Theme.LIGHT);
     });
   });
 });

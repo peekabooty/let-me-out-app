@@ -1,4 +1,4 @@
-import { UserRole } from '@repo/types';
+import { Theme, UserRole } from '@repo/types';
 
 export interface UserProps {
   id: string;
@@ -7,6 +7,7 @@ export interface UserProps {
   passwordHash: string | null;
   role: UserRole;
   isActive: boolean;
+  themePreference?: Theme | null;
   activationTokenHash?: string | null;
   activationTokenExpiresAt?: Date | null;
   createdAt: Date;
@@ -20,6 +21,7 @@ export class User {
   readonly passwordHash: string | null;
   readonly role: UserRole;
   readonly isActive: boolean;
+  readonly themePreference: Theme | null;
   readonly activationTokenHash: string | null;
   readonly activationTokenExpiresAt: Date | null;
   readonly createdAt: Date;
@@ -32,6 +34,7 @@ export class User {
     this.passwordHash = props.passwordHash;
     this.role = props.role;
     this.isActive = props.isActive;
+    this.themePreference = props.themePreference ?? Theme.LIGHT;
     this.activationTokenHash = props.activationTokenHash ?? null;
     this.activationTokenExpiresAt = props.activationTokenExpiresAt ?? null;
     this.createdAt = props.createdAt;
@@ -78,6 +81,10 @@ export class User {
     return new User({ ...this.toProps(), role: newRole, updatedAt: now });
   }
 
+  changeThemePreference(theme: Theme, now: Date): User {
+    return new User({ ...this.toProps(), themePreference: theme, updatedAt: now });
+  }
+
   /**
    * Sets the activation token fields for the invitation flow.
    */
@@ -112,6 +119,7 @@ export class User {
       passwordHash: this.passwordHash,
       role: this.role,
       isActive: this.isActive,
+      themePreference: this.themePreference,
       activationTokenHash: this.activationTokenHash,
       activationTokenExpiresAt: this.activationTokenExpiresAt,
       createdAt: this.createdAt,

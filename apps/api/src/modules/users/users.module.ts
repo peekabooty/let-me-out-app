@@ -9,6 +9,7 @@ import { ActivateAccountHandler } from './application/commands/activate-account.
 import { CreateUserHandler } from './application/commands/create-user.handler';
 import { ResendActivationHandler } from './application/commands/resend-activation.handler';
 import { UpdateUserHandler } from './application/commands/update-user.handler';
+import { UpdateUserThemeHandler } from './application/commands/update-user-theme.handler';
 import { DeactivateUserHandler } from './application/commands/deactivate-user.handler';
 import { ListUsersHandler } from './application/queries/list-users.handler';
 import { GetUserHandler } from './application/queries/get-user.handler';
@@ -21,6 +22,7 @@ const commandHandlers = [
   CreateUserHandler,
   ResendActivationHandler,
   UpdateUserHandler,
+  UpdateUserThemeHandler,
   DeactivateUserHandler,
 ];
 const queryHandlers = [ListUsersHandler, GetUserHandler];

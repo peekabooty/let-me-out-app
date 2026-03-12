@@ -1,4 +1,4 @@
-import { UserRole } from '@repo/types';
+import { Theme, UserRole } from '@repo/types';
 
 /**
  * Minimal profile returned by GET /me.
@@ -10,4 +10,5 @@ export class UserProfileDto {
   name!: string;
   role!: UserRole;
   isActive!: boolean;
+  themePreference!: Theme | null;
 }

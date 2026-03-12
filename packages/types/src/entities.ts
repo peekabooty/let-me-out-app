@@ -1,4 +1,4 @@
-import type { AbsenceStatus, AbsenceUnit, UserRole, ValidationDecision } from './enums';
+import type { AbsenceStatus, AbsenceUnit, Theme, UserRole, ValidationDecision } from './enums';
 
 export interface User {
   id: string;
@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: UserRole;
   isActive: boolean;
+  themePreference?: Theme | null;
   createdAt: string;
   updatedAt: string;
 }

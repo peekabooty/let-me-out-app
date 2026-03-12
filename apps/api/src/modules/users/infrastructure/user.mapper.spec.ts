@@ -1,5 +1,5 @@
 import type { user as PrismaUser } from '@prisma/client';
-import { UserRole } from '@repo/types';
+import { Theme, UserRole } from '@repo/types';
 
 import { User } from '../domain/user.entity';
 import { UserMapper } from './user.mapper';
@@ -13,6 +13,7 @@ const PRISMA_USER: PrismaUser = {
   password_hash: '$2b$12$hashedpassword',
   role: 'standard',
   is_active: true,
+  theme_preference: 'light',
   activation_token_hash: null,
   activation_token_expires_at: null,
   created_at: BASE_DATE,
@@ -26,6 +27,7 @@ const DOMAIN_USER = new User({
   passwordHash: PRISMA_USER.password_hash,
   role: UserRole.STANDARD,
   isActive: PRISMA_USER.is_active,
+  themePreference: Theme.LIGHT,
   createdAt: BASE_DATE,
   updatedAt: BASE_DATE,
 });
@@ -43,6 +45,7 @@ describe('UserMapper', () => {
       expect(user.passwordHash).toBe(PRISMA_USER.password_hash);
       expect(user.role).toBe(UserRole.STANDARD);
       expect(user.isActive).toBe(PRISMA_USER.is_active);
+      expect(user.themePreference).toBe(Theme.LIGHT);
       expect(user.activationTokenHash).toBeNull();
       expect(user.activationTokenExpiresAt).toBeNull();
       expect(user.createdAt).toBe(BASE_DATE);
@@ -80,6 +83,7 @@ describe('UserMapper', () => {
       expect(dto.name).toBe(DOMAIN_USER.name);
       expect(dto.role).toBe(UserRole.STANDARD);
       expect(dto.isActive).toBe(true);
+      expect(dto.themePreference).toBe(Theme.LIGHT);
       expect(dto.createdAt).toBe(BASE_DATE.toISOString());
       expect(dto.updatedAt).toBe(BASE_DATE.toISOString());
     });
@@ -99,6 +103,7 @@ describe('UserMapper', () => {
       expect(dto.name).toBe(DOMAIN_USER.name);
       expect(dto.role).toBe(UserRole.STANDARD);
       expect(dto.isActive).toBe(true);
+      expect(dto.themePreference).toBe(Theme.LIGHT);
     });
 
     it('does not expose timestamps or passwordHash', () => {
