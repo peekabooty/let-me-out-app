@@ -1,6 +1,7 @@
 import { Outlet } from '@tanstack/react-router';
 
 import { AppNav } from '../components/layout/AppNav';
+import { LogoutButton } from '../components/layout/LogoutButton';
 import type { SessionUser } from '../store/auth.store';
 
 interface AuthLayoutProps {
@@ -21,9 +22,12 @@ export function AuthLayout({ user }: AuthLayoutProps) {
           Let Me Out
         </span>
         <AppNav user={user} />
-        <span className="text-sm text-muted-foreground" aria-label={`Usuario: ${user.name}`}>
-          {user.name}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground" aria-label={`Usuario: ${user.name}`}>
+            {user.name}
+          </span>
+          <LogoutButton />
+        </div>
       </header>
       <main id="main-content" className="auth-layout__content">
         <Outlet />

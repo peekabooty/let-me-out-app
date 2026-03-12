@@ -1,4 +1,14 @@
-import { Body, Controller, Post, Req, Res, UseGuards, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 
@@ -12,7 +22,7 @@ import { RefreshDto } from './dto/refresh.dto';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   @Public()
@@ -21,9 +31,15 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true }) response: Response
   ) {
-    const user = request.user as { id: string; email: string; role: string; name: string; isActive: boolean };
+    const user = request.user as {
+      id: string;
+      email: string;
+      role: string;
+      name: string;
+      isActive: boolean;
+    };
     void loginDto;
     const { accessToken, refreshToken } = await this.authService.issueTokens(user);
     const cookieOptions = buildAuthCookieOptions(this.configService);
@@ -39,7 +55,7 @@ export class AuthController {
   async refresh(
     @Body() _refreshDto: RefreshDto,
     @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true }) response: Response
   ) {
     const refreshToken = request.cookies?.refresh_token;
     if (!refreshToken) {
@@ -51,5 +67,26 @@ export class AuthController {
     response.cookie('access_token', accessToken, cookieOptions.accessToken);
 
     return { success: true };
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Res({ passthrough: true }) response: Response): Promise<void> {
+    const cookieOptions = buildAuthCookieOptions(this.configService);
+
+    response.clearCookie('access_token', {
+      httpOnly: cookieOptions.accessToken.httpOnly,
+      secure: cookieOptions.accessToken.secure,
+      sameSite: cookieOptions.accessToken.sameSite,
+      path: '/',
+    });
+
+    response.clearCookie('refresh_token', {
+      httpOnly: cookieOptions.refreshToken.httpOnly,
+      secure: cookieOptions.refreshToken.secure,
+      sameSite: cookieOptions.refreshToken.sameSite,
+      path: '/auth/refresh',
+    });
   }
 }
