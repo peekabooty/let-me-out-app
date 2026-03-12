@@ -5,6 +5,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,7 +46,13 @@ function renderSidebar(userRole: UserRole = UserRole.STANDARD) {
   };
 
   const router = buildTestRouter(user);
-  render(<RouterProvider router={router} />);
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
 }
 
 beforeEach(() => {
@@ -121,5 +128,15 @@ describe('AppSidebar', () => {
     });
 
     expect(screen.queryByRole('link', { name: 'Solicitar ausencia' })).not.toBeInTheDocument();
+  });
+
+  it('shows theme button and opens theme dialog', async () => {
+    const user = userEvent.setup();
+    renderSidebar(UserRole.STANDARD);
+
+    const themeButton = await screen.findByRole('button', { name: 'Tema' });
+    await user.click(themeButton);
+
+    expect(await screen.findByRole('heading', { name: 'Seleccionar tema' })).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { UserRole } from '@repo/types';
+import { Theme, UserRole } from '@repo/types';
 
 import { User } from './user.entity';
 
@@ -92,6 +92,17 @@ describe('User entity', () => {
       expect(promoted.role).toBe(UserRole.VALIDATOR);
       expect(promoted.updatedAt).toBe(LATER_DATE);
       expect(user.role).toBe(UserRole.STANDARD);
+    });
+  });
+
+  describe('changeThemePreference', () => {
+    it('returns a new User with updated theme preference and updatedAt', () => {
+      const user = makeUser({ themePreference: Theme.LIGHT });
+      const themed = user.changeThemePreference(Theme.CHOCOLATE, LATER_DATE);
+
+      expect(themed.themePreference).toBe(Theme.CHOCOLATE);
+      expect(themed.updatedAt).toBe(LATER_DATE);
+      expect(user.themePreference).toBe(Theme.LIGHT);
     });
   });
 });

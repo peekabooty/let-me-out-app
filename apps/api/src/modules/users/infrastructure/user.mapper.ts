@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { user as PrismaUser } from '@prisma/client';
-import { UserRole } from '@repo/types';
+import { Theme, UserRole } from '@repo/types';
 
 import { User } from '../domain/user.entity';
 import type { UserResponseDto } from '../application/dtos/user-response.dto';
@@ -16,6 +16,7 @@ export class UserMapper {
       passwordHash: prismaUser.password_hash,
       role: prismaUser.role as UserRole,
       isActive: prismaUser.is_active,
+      themePreference: (prismaUser.theme_preference as Theme | null) ?? null,
       activationTokenHash: prismaUser.activation_token_hash,
       activationTokenExpiresAt: prismaUser.activation_token_expires_at,
       createdAt: prismaUser.created_at,
@@ -30,6 +31,7 @@ export class UserMapper {
       name: user.name,
       role: user.role,
       isActive: user.isActive,
+      themePreference: user.themePreference,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -42,6 +44,7 @@ export class UserMapper {
       name: user.name,
       role: user.role,
       isActive: user.isActive,
+      themePreference: user.themePreference,
     };
   }
 }

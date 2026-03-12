@@ -4,38 +4,115 @@
 @theme {
   --font-sans: 'Manrope', 'Sora', 'Avenir Next', sans-serif;
 
-  /* LetMeOut Pastel — Base & interface */
-  --color-background: #fffdf9; /* Cream White — app & card background */
-  --color-foreground: #4a4a4a; /* Soft Slate — main text */
-  --color-muted: #f0f2f5; /* Cloud Gray — sidebar, table backgrounds */
-  --color-muted-foreground: #7a7a7a; /* secondary text on muted surfaces */
-  --color-border: #e0e0e0; /* subtle borders */
-  --color-input: #e0e0e0; /* input borders */
-  --color-ring: #ffdab9; /* focus ring — Soft Peach */
-  --color-card: #fffdf9; /* Cream White */
-  --color-card-foreground: #4a4a4a; /* Soft Slate */
-
-  /* LetMeOut Pastel — Accent & state */
-  --color-primary: #ffdab9; /* Soft Peach — primary interactive */
-  --color-primary-foreground: #4a4a4a;
-  --color-secondary: #e6e6fa; /* Pale Lavender — secondary / nav */
-  --color-secondary-foreground: #4a4a4a;
-  --color-accent: #f4c2c2; /* Dusty Rose — medical leave / alerts */
-  --color-accent-foreground: #4a4a4a;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
-
-  /* Semantic absence-type aliases (used in calendar labels) */
-  --color-vacation: #ffdab9; /* Soft Peach */
-  --color-personal: #e6e6fa; /* Pale Lavender */
-  --color-medical: #f4c2c2; /* Dusty Rose */
-
   --radius: 0.5rem;
 }
 
 :root {
-  color-scheme: light;
   font-family: var(--font-sans);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --color-background: #fffdf9;
+  --color-foreground: #4a4a4a;
+  --color-muted: #f0f2f5;
+  --color-muted-foreground: #7a7a7a;
+  --color-border: #e0e0e0;
+  --color-input: #e0e0e0;
+  --color-ring: #ffdab9;
+  --color-card: #fffdf9;
+  --color-card-foreground: #4a4a4a;
+  --color-primary: #ffdab9;
+  --color-primary-foreground: #4a4a4a;
+  --color-secondary: #e6e6fa;
+  --color-secondary-foreground: #4a4a4a;
+  --color-accent: #f4c2c2;
+  --color-accent-foreground: #4a4a4a;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #f5f3f0;
+  --color-popover-foreground: #4a4a4a;
+  --color-vacation: #ffdab9;
+  --color-personal: #e6e6fa;
+  --color-medical: #f4c2c2;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-background: #1a1a1a;
+  --color-foreground: #e5e5e5;
+  --color-muted: #2a2a2a;
+  --color-muted-foreground: #bdbdbd;
+  --color-border: #3a3a3a;
+  --color-input: #3a3a3a;
+  --color-ring: #ff9966;
+  --color-card: #1f1f1f;
+  --color-card-foreground: #e5e5e5;
+  --color-primary: #ff9966;
+  --color-primary-foreground: #1a1a1a;
+  --color-secondary: #9b87f5;
+  --color-secondary-foreground: #1a1a1a;
+  --color-accent: #ff6b9d;
+  --color-accent-foreground: #1a1a1a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #262626;
+  --color-popover-foreground: #e5e5e5;
+  --color-vacation: #ff9966;
+  --color-personal: #9b87f5;
+  --color-medical: #ff6b9d;
+}
+
+[data-theme='caramel'] {
+  color-scheme: light;
+  --color-background: #fff8f0;
+  --color-foreground: #4a3f35;
+  --color-muted: #fff0e6;
+  --color-muted-foreground: #8b7765;
+  --color-border: #f0d9c4;
+  --color-input: #f0d9c4;
+  --color-ring: #ffcc99;
+  --color-card: #fff8f0;
+  --color-card-foreground: #4a3f35;
+  --color-primary: #ffcc99;
+  --color-primary-foreground: #4a3f35;
+  --color-secondary: #ffd9b3;
+  --color-secondary-foreground: #4a3f35;
+  --color-accent: #ffb380;
+  --color-accent-foreground: #4a3f35;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #ffe6cc;
+  --color-popover-foreground: #4a3f35;
+  --color-vacation: #ffcc99;
+  --color-personal: #ffd9b3;
+  --color-medical: #ffb380;
+}
+
+[data-theme='chocolate'] {
+  color-scheme: dark;
+  --color-background: #2d1f1a;
+  --color-foreground: #f5e6d3;
+  --color-muted: #3d2b20;
+  --color-muted-foreground: #d4bea3;
+  --color-border: #5c4033;
+  --color-input: #5c4033;
+  --color-ring: #8b4513;
+  --color-card: #35261f;
+  --color-card-foreground: #f5e6d3;
+  --color-primary: #8b4513;
+  --color-primary-foreground: #f5e6d3;
+  --color-secondary: #a0522d;
+  --color-secondary-foreground: #f5e6d3;
+  --color-accent: #cd853f;
+  --color-accent-foreground: #2d1f1a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #4a3426;
+  --color-popover-foreground: #f5e6d3;
+  --color-vacation: #8b4513;
+  --color-personal: #a0522d;
+  --color-medical: #cd853f;
 }
 
 * {
