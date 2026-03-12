@@ -9,7 +9,7 @@ import type {
   AbsenceStatus,
   Team,
 } from '@repo/types';
-import { ValidationDecision } from '@repo/types';
+import { Theme, ValidationDecision } from '@repo/types';
 
 import { useAuthStore } from '../store/auth.store';
 import type { SessionUser } from '../store/auth.store';
@@ -17,10 +17,15 @@ import type { SessionUser } from '../store/auth.store';
 export function resolveApiBaseUrl(): string {
   const configured = import.meta.env.VITE_API_URL;
   if (typeof configured === 'string' && configured.trim().length > 0) {
-    const normalized = configured
-      .trim()
-      .replace(/^['"]|['"]$/g, '')
-      .replace(/\/+$/g, '');
+    const trimmed = configured.trim();
+    const hasSingleQuotes = trimmed.startsWith("'") && trimmed.endsWith("'");
+    const hasDoubleQuotes = trimmed.startsWith('"') && trimmed.endsWith('"');
+    const withoutQuotes = hasSingleQuotes || hasDoubleQuotes ? trimmed.slice(1, -1) : trimmed;
+
+    let normalized = withoutQuotes;
+    while (normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
 
     try {
       return new URL(normalized).toString().replace(/\/$/, '');
@@ -108,8 +113,16 @@ export interface UpdateUserPayload {
   role?: User['role'];
 }
 
+export interface UpdateMyThemePayload {
+  theme: Theme;
+}
+
 export async function updateUser(id: string, payload: UpdateUserPayload): Promise<void> {
   await apiClient.patch(`/users/${id}`, payload);
+}
+
+export async function updateMyTheme(payload: UpdateMyThemePayload): Promise<void> {
+  await apiClient.patch('/users/me/theme', payload);
 }
 
 export async function deactivateUser(id: string): Promise<void> {

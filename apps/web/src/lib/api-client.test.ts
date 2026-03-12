@@ -2,8 +2,10 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Theme } from '@repo/types';
+
 import { UserRole, useAuthStore } from '../store/auth.store';
-import { apiClient } from './api-client';
+import { apiClient, updateMyTheme } from './api-client';
 
 const server = setupServer();
 
@@ -97,5 +99,23 @@ describe('apiClient: interceptor de 401', () => {
     await apiClient.get('/absences').catch(() => null);
 
     expect(replaceSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('apiClient: updateMyTheme', () => {
+  it('envia PATCH /users/me/theme con el tema seleccionado', async () => {
+    const baseURL = apiClient.defaults.baseURL ?? 'http://localhost:3010';
+    let payload: unknown;
+
+    server.use(
+      http.patch(`${baseURL}/users/me/theme`, async ({ request }) => {
+        payload = await request.json();
+        return HttpResponse.json(null, { status: 204 });
+      })
+    );
+
+    await updateMyTheme({ theme: Theme.CARAMEL });
+
+    expect(payload).toEqual({ theme: Theme.CARAMEL });
   });
 });

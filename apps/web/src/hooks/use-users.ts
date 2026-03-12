@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { User } from '@repo/types';
+import type { Theme, User } from '@repo/types';
 
 import {
   createUser,
   listUsers,
+  updateMyTheme,
   updateUser,
   type CreateUserPayload,
   type UpdateUserPayload,
@@ -41,5 +42,11 @@ export function useUpdateUser() {
       queryClient.invalidateQueries({ queryKey: usersKeys.list() });
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(id) });
     },
+  });
+}
+
+export function useUpdateTheme() {
+  return useMutation({
+    mutationFn: (theme: Theme) => updateMyTheme({ theme }),
   });
 }

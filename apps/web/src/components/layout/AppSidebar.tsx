@@ -1,10 +1,19 @@
 import { Link } from '@tanstack/react-router';
-import { Menu, User } from 'lucide-react';
+import { Menu, Palette, User } from 'lucide-react';
 import { useState } from 'react';
 
 import { LogoutButton } from './LogoutButton';
 import { getNavLinks } from './AppNav';
+import { ThemeSelector } from '../theme/ThemeSelector';
 import type { SessionUser } from '../../store/auth.store';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
 
@@ -78,6 +87,29 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </nav>
 
       <div className="mt-auto border-t px-3 py-3">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              title={collapsed ? 'Tema' : undefined}
+              aria-label="Tema"
+              className={`mb-2 inline-flex w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${collapsed ? 'justify-center px-2' : 'justify-start gap-2'}`}
+            >
+              <Palette className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {!collapsed && <span>Tema</span>}
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Seleccionar tema</DialogTitle>
+              <DialogDescription>
+                Elige el tema visual para personalizar la interfaz de la aplicación.
+              </DialogDescription>
+            </DialogHeader>
+            <ThemeSelector />
+          </DialogContent>
+        </Dialog>
+
         <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
           <User className="h-4 w-4 shrink-0" aria-hidden="true" />
           {!collapsed && <span aria-label={`Usuario: ${user.name}`}>{user.name}</span>}

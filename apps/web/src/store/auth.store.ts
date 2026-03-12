@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { UserRole } from '@repo/types';
+import type { Theme, UserRole } from '@repo/types';
 
 export { UserRole } from '@repo/types';
 
@@ -9,6 +9,7 @@ export interface SessionUser {
   email: string;
   role: UserRole;
   isActive: boolean;
+  themePreference?: Theme | null;
 }
 
 interface AuthState {
