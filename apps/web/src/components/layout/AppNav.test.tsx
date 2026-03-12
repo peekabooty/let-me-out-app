@@ -58,11 +58,12 @@ describe('AppNav', () => {
       });
     });
 
-    it('muestra el enlace de solicitar ausencia', async () => {
+    it('no muestra el enlace de solicitar ausencia', async () => {
       renderNav(UserRole.STANDARD);
       await waitFor(() => {
-        expect(screen.getByRole('link', { name: 'Solicitar ausencia' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
       });
+      expect(screen.queryByRole('link', { name: 'Solicitar ausencia' })).not.toBeInTheDocument();
     });
 
     it('no muestra enlace de auditoría', async () => {
@@ -97,11 +98,12 @@ describe('AppNav', () => {
       });
     });
 
-    it('muestra el enlace de solicitar ausencia', async () => {
+    it('no muestra el enlace de solicitar ausencia', async () => {
       renderNav(UserRole.VALIDATOR);
       await waitFor(() => {
-        expect(screen.getByRole('link', { name: 'Solicitar ausencia' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
       });
+      expect(screen.queryByRole('link', { name: 'Solicitar ausencia' })).not.toBeInTheDocument();
     });
 
     it('no muestra enlace de auditoría', async () => {
