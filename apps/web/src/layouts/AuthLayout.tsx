@@ -17,8 +17,13 @@ export function AuthLayout({ user }: AuthLayoutProps) {
         Saltar al contenido principal
       </a>
       <AppSidebar user={user} />
-      <main id="main-content" className="auth-layout__content flex-1 overflow-auto">
-        <Outlet />
+      <main
+        id="main-content"
+        className="auth-layout__content flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8"
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

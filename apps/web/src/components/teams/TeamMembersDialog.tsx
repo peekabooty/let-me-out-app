@@ -4,7 +4,20 @@ import { useState } from 'react';
 import type { User } from '@repo/types';
 import { UserRole } from '@repo/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useUsers } from '../../hooks/use-users';
 import { useTeamMembers, useAddTeamMember, useRemoveTeamMember } from '../../hooks/use-teams';
 import type { TeamMemberDto } from '../../hooks/use-teams';
@@ -71,6 +84,7 @@ export function TeamMembersDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Miembros de {teamName}</DialogTitle>
+          <DialogDescription>Añade o elimina usuarios asignados al equipo.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -156,19 +170,20 @@ export function TeamMembersDialog({
             <div className="space-y-2 border-t border-border pt-4">
               <p className="text-sm font-medium">Añadir miembro</p>
               <div className="flex gap-2">
-                <select
-                  aria-label="Seleccionar usuario"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                >
-                  <option value="">Seleccionar usuario…</option>
-                  {candidates.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.email})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex-1">
+                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                    <SelectTrigger aria-label="Seleccionar usuario">
+                      <SelectValue placeholder="Seleccionar usuario…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {candidates.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name} ({u.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button
                   type="button"
                   disabled={!selectedUserId || addMember.isPending}

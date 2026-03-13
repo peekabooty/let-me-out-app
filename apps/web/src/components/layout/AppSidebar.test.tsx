@@ -43,6 +43,7 @@ function renderSidebar(userRole: UserRole = UserRole.STANDARD) {
     email: 'test@example.com',
     role: userRole,
     isActive: true,
+    avatarUrl: null,
   };
 
   const router = buildTestRouter(user);
@@ -138,5 +139,15 @@ describe('AppSidebar', () => {
     await user.click(themeButton);
 
     expect(await screen.findByRole('heading', { name: 'Seleccionar tema' })).toBeInTheDocument();
+  });
+
+  it('opens avatar dialog from user footer control', async () => {
+    const user = userEvent.setup();
+    renderSidebar(UserRole.STANDARD);
+
+    const avatarButton = await screen.findByRole('button', { name: 'Editar avatar' });
+    await user.click(avatarButton);
+
+    expect(await screen.findByRole('heading', { name: 'Actualizar avatar' })).toBeInTheDocument();
   });
 });

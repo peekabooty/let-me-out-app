@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { Theme } from '@repo/types';
 
 import { UserRole, useAuthStore } from '../store/auth.store';
-import { apiClient, updateMyTheme } from './api-client';
+import { apiClient, updateMyAvatar, updateMyTheme } from './api-client';
 
 const server = setupServer();
 
@@ -117,5 +117,18 @@ describe('apiClient: updateMyTheme', () => {
     await updateMyTheme({ theme: Theme.CARAMEL });
 
     expect(payload).toEqual({ theme: Theme.CARAMEL });
+  });
+});
+
+describe('apiClient: updateMyAvatar', () => {
+  it('envia PATCH /users/me/avatar con FormData', async () => {
+    const patchSpy = vi.spyOn(apiClient, 'patch').mockResolvedValue({
+      data: { avatarUrl: '/users/1/avatar' },
+    });
+
+    const file = new File(['abc'], 'avatar.png', { type: 'image/png' });
+    await updateMyAvatar(file);
+
+    expect(patchSpy).toHaveBeenCalledWith('/users/me/avatar', expect.any(FormData));
   });
 });

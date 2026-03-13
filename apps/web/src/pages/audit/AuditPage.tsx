@@ -15,10 +15,10 @@ export function AuditPage() {
   const [endDate, setEndDate] = useState<string | undefined>();
 
   const filters = {
-    teamId: selectedTeamId,
-    status: selectedStatus,
-    startDate,
-    endDate,
+    ...(selectedTeamId ? { teamId: selectedTeamId } : {}),
+    ...(selectedStatus ? { status: selectedStatus } : {}),
+    ...(startDate ? { startDate } : {}),
+    ...(endDate ? { endDate } : {}),
   };
 
   const { absences, isLoading, isError } = useAuditAbsences(filters);
@@ -30,7 +30,7 @@ export function AuditPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Auditoría de Ausencias</h1>

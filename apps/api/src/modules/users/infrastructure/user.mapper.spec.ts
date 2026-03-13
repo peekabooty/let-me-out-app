@@ -14,6 +14,7 @@ const PRISMA_USER: PrismaUser = {
   role: 'standard',
   is_active: true,
   theme_preference: 'light',
+  avatar_url: null,
   activation_token_hash: null,
   activation_token_expires_at: null,
   created_at: BASE_DATE,
@@ -46,6 +47,7 @@ describe('UserMapper', () => {
       expect(user.role).toBe(UserRole.STANDARD);
       expect(user.isActive).toBe(PRISMA_USER.is_active);
       expect(user.themePreference).toBe(Theme.LIGHT);
+      expect(user.avatarUrl).toBeNull();
       expect(user.activationTokenHash).toBeNull();
       expect(user.activationTokenExpiresAt).toBeNull();
       expect(user.createdAt).toBe(BASE_DATE);
@@ -84,6 +86,7 @@ describe('UserMapper', () => {
       expect(dto.role).toBe(UserRole.STANDARD);
       expect(dto.isActive).toBe(true);
       expect(dto.themePreference).toBe(Theme.LIGHT);
+      expect(dto.avatarUrl).toBeNull();
       expect(dto.createdAt).toBe(BASE_DATE.toISOString());
       expect(dto.updatedAt).toBe(BASE_DATE.toISOString());
     });
@@ -104,6 +107,26 @@ describe('UserMapper', () => {
       expect(dto.role).toBe(UserRole.STANDARD);
       expect(dto.isActive).toBe(true);
       expect(dto.themePreference).toBe(Theme.LIGHT);
+      expect(dto.avatarUrl).toBeNull();
+    });
+
+    it('maps avatar URL to public endpoint when avatar exists', () => {
+      const dto = mapper.toProfileDto(
+        new User({
+          id: DOMAIN_USER.id,
+          email: DOMAIN_USER.email,
+          name: DOMAIN_USER.name,
+          passwordHash: DOMAIN_USER.passwordHash,
+          role: DOMAIN_USER.role,
+          isActive: DOMAIN_USER.isActive,
+          themePreference: DOMAIN_USER.themePreference,
+          avatarUrl: 'avatar.jpg',
+          createdAt: DOMAIN_USER.createdAt,
+          updatedAt: DOMAIN_USER.updatedAt,
+        })
+      );
+
+      expect(dto.avatarUrl).toBe(`/users/${DOMAIN_USER.id}/avatar`);
     });
 
     it('does not expose timestamps or passwordHash', () => {

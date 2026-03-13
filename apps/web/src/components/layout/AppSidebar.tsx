@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { LogoutButton } from './LogoutButton';
 import { getNavLinks } from './AppNav';
 import { ThemeSelector } from '../theme/ThemeSelector';
+import { AvatarPicker } from '../profile/AvatarPicker';
 import type { SessionUser } from '../../store/auth.store';
 import {
   Dialog,
@@ -14,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
 
@@ -27,6 +29,15 @@ function getInitialCollapsedState(): boolean {
   }
 
   return globalThis.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+}
+
+function getUserInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 }
 
 export function AppSidebar({ user }: AppSidebarProps) {
@@ -52,16 +63,18 @@ export function AppSidebar({ user }: AppSidebarProps) {
             Let Me Out
           </span>
         )}
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={handleToggle}
           aria-controls="sidebar-nav"
           aria-expanded={!collapsed}
           aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+          className="h-9 w-9"
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
-        </button>
+        </Button>
       </div>
 
       <nav id="sidebar-nav" className="px-2 py-3" aria-label="Navegación principal">
@@ -89,15 +102,16 @@ export function AppSidebar({ user }: AppSidebarProps) {
       <div className="mt-auto border-t px-3 py-3">
         <Dialog>
           <DialogTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="outline"
               title={collapsed ? 'Tema' : undefined}
               aria-label="Tema"
-              className={`mb-2 inline-flex w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${collapsed ? 'justify-center px-2' : 'justify-start gap-2'}`}
+              className={`mb-2 h-auto w-full py-2 text-sm ${collapsed ? 'justify-center px-2' : 'justify-start gap-2 px-3'}`}
             >
               <Palette className="h-4 w-4 shrink-0" aria-hidden="true" />
               {!collapsed && <span>Tema</span>}
-            </button>
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -110,10 +124,35 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </DialogContent>
         </Dialog>
 
-        <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <User className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {!collapsed && <span aria-label={`Usuario: ${user.name}`}>{user.name}</span>}
-        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className={`mb-2 h-auto w-full text-sm text-muted-foreground ${collapsed ? 'justify-center px-2 py-2' : 'justify-start gap-2 px-2 py-2'}`}
+              aria-label="Editar avatar"
+            >
+              <span className="relative flex h-6 w-6 shrink-0 overflow-hidden rounded-full bg-muted">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-xs font-medium">
+                    {getUserInitials(user.name)}
+                  </span>
+                )}
+              </span>
+              {!collapsed && <span aria-label={`Usuario: ${user.name}`}>{user.name}</span>}
+              {collapsed && <User className="sr-only" aria-hidden="true" />}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Actualizar avatar</DialogTitle>
+              <DialogDescription>Selecciona una imagen para tu perfil.</DialogDescription>
+            </DialogHeader>
+            <AvatarPicker />
+          </DialogContent>
+        </Dialog>
         <LogoutButton collapsed={collapsed} />
       </div>
     </aside>

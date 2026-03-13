@@ -219,6 +219,7 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
       duration: number;
       status: AbsenceStatus | null;
       teamColor: string | null;
+      avatarUrl: string | null;
       createdAt: Date;
       updatedAt: Date;
     }>
@@ -227,7 +228,7 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
     const ownAbsences = await this.prisma.absence.findMany({
       where: { user_id: userId },
       include: {
-        user: { select: { name: true } },
+        user: { select: { name: true, avatar_url: true } },
         absence_type: { select: { name: true } },
       },
       orderBy: { start_at: 'asc' },
@@ -257,6 +258,7 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
         user: {
           select: {
             name: true,
+            avatar_url: true,
             team_memberships: {
               where: { team_id: { in: teamIds } },
               include: { team: { select: { color: true } } },
@@ -280,6 +282,7 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
       duration: Number(absence.duration),
       status: absence.status as AbsenceStatus | null,
       teamColor: null,
+      avatarUrl: absence.user.avatar_url,
       createdAt: absence.created_at,
       updatedAt: absence.updated_at,
     }));
@@ -300,6 +303,7 @@ export class AbsencePrismaRepository implements AbsenceRepositoryPort {
         duration: Number(absence.duration),
         status: absence.status as AbsenceStatus | null,
         teamColor,
+        avatarUrl: absence.user.avatar_url,
         createdAt: absence.created_at,
         updatedAt: absence.updated_at,
       };

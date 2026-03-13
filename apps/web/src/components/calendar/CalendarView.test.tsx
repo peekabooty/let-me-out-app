@@ -27,6 +27,7 @@ const mockCalendarAbsences: CalendarAbsence[] = [
     id: '01900000-0000-7000-8000-000000000001',
     userId: '01900000-0000-7000-8000-000000000010',
     userName: 'John Doe',
+    avatarUrl: null,
     absenceTypeId: '01900000-0000-7000-8000-000000000030',
     absenceTypeName: 'Vacation',
     startAt: '2026-03-10T00:00:00.000Z',
@@ -42,6 +43,7 @@ const mockCalendarAbsences: CalendarAbsence[] = [
     id: '01900000-0000-7000-8000-000000000002',
     userId: '01900000-0000-7000-8000-000000000011',
     userName: 'Jane Smith',
+    avatarUrl: '/users/01900000-0000-7000-8000-000000000011/avatar',
     absenceTypeId: '01900000-0000-7000-8000-000000000031',
     absenceTypeName: 'Medical Leave',
     startAt: '2026-03-20T00:00:00.000Z',
@@ -57,6 +59,7 @@ const mockCalendarAbsences: CalendarAbsence[] = [
     id: '01900000-0000-7000-8000-000000000003',
     userId: '01900000-0000-7000-8000-000000000012',
     userName: 'Bob Johnson',
+    avatarUrl: '/users/01900000-0000-7000-8000-000000000012/avatar',
     absenceTypeId: '01900000-0000-7000-8000-000000000030',
     absenceTypeName: 'Vacation',
     startAt: '2026-03-25T00:00:00.000Z',
@@ -121,7 +124,7 @@ describe('CalendarView', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('Loading calendar...')).toBeInTheDocument();
+      expect(screen.getByText('Cargando calendario...')).toBeInTheDocument();
     });
 
     expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
@@ -141,7 +144,7 @@ describe('CalendarView', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
-      expect(screen.getByText(/Error loading calendar/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error al cargar el calendario/i)).toBeInTheDocument();
     });
   });
 
@@ -209,10 +212,21 @@ describe('CalendarView', () => {
     renderComponent();
 
     await waitFor(() => {
-      // FullCalendar uses specific button classes instead of text labels for prev/next
-      expect(screen.getByRole('button', { name: /previous month/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /next month/i })).toBeInTheDocument();
-      expect(screen.getByText('today')).toBeInTheDocument();
+      expect(document.querySelector('.fc-prev-button')).not.toBeNull();
+      expect(document.querySelector('.fc-next-button')).not.toBeNull();
+      expect(screen.getByText(/hoy/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows avatar image for events with avatarUrl', async () => {
+    server.use(http.get('*/absences/calendar', () => HttpResponse.json(mockCalendarAbsences)));
+
+    const { container } = renderComponent();
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('img[src="/users/01900000-0000-7000-8000-000000000011/avatar"]')
+      ).not.toBeNull();
     });
   });
 });

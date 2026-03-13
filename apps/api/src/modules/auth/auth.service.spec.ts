@@ -90,6 +90,7 @@ describe('AuthService', () => {
         role: 'standard',
         is_active: true,
         theme_preference: 'dark',
+        avatar_url: 'avatar.jpg',
       });
 
       const profile = await authService.getProfile('user-id');
@@ -101,6 +102,7 @@ describe('AuthService', () => {
         role: 'standard',
         isActive: true,
         themePreference: Theme.DARK,
+        avatarUrl: '/users/user-id/avatar',
       });
     });
 
@@ -112,11 +114,13 @@ describe('AuthService', () => {
         role: 'standard',
         is_active: true,
         theme_preference: null,
+        avatar_url: null,
       });
 
       const profile = await authService.getProfile('user-id');
 
       expect(profile.themePreference).toBe(Theme.LIGHT);
+      expect(profile.avatarUrl).toBeNull();
     });
   });
 });

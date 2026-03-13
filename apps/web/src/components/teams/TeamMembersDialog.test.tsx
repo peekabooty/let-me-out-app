@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { UserRole } from '@repo/types';
 
 import { TeamMembersDialog } from './TeamMembersDialog';
 
@@ -23,21 +24,21 @@ const users = [
     id: '01930000-0000-7000-8000-000000000001',
     name: 'Alice',
     email: 'alice@example.com',
-    role: 'STANDARD',
+    role: UserRole.STANDARD,
     isActive: true,
   },
   {
     id: '01930000-0000-7000-8000-000000000002',
     name: 'Bob',
     email: 'bob@example.com',
-    role: 'VALIDATOR',
+    role: UserRole.VALIDATOR,
     isActive: true,
   },
   {
     id: '01930000-0000-7000-8000-000000000003',
     name: 'Carol',
     email: 'carol@example.com',
-    role: 'AUDITOR',
+    role: UserRole.AUDITOR,
     isActive: true,
   },
 ];
@@ -112,18 +113,21 @@ describe('TeamMembersDialog', () => {
   });
 
   it('filters out auditors from the candidate list', async () => {
+    const user = userEvent.setup();
     renderDialog();
     await screen.findByText('Añadir miembro');
-    const select = screen.getByRole('combobox', { name: 'Seleccionar usuario' });
-    expect(select).not.toHaveTextContent('Carol');
+    await user.click(screen.getByRole('combobox', { name: 'Seleccionar usuario' }));
+    expect(screen.queryByRole('option', { name: /Carol/ })).not.toBeInTheDocument();
   });
 
   it('filters out already-members from the candidate list', async () => {
+    const user = userEvent.setup();
     renderDialog();
     await screen.findByText('Añadir miembro');
-    const options = screen.getAllByRole('option');
-    const optionTexts = options.map((o) => o.textContent);
-    expect(optionTexts).not.toContain('Alice (alice@example.com)');
+    await user.click(screen.getByRole('combobox', { name: 'Seleccionar usuario' }));
+    expect(
+      screen.queryByRole('option', { name: /Alice \(alice@example.com\)/ })
+    ).not.toBeInTheDocument();
   });
 
   it('calls POST /teams/:id/members when adding a member', async () => {
@@ -139,13 +143,14 @@ describe('TeamMembersDialog', () => {
 
     renderDialog();
 
-    // Wait for the user option to appear in the dropdown
     const select = await screen.findByRole('combobox', { name: 'Seleccionar usuario' });
+    await user.click(select);
+    await user.click(screen.getByRole('option', { name: 'Bob (bob@example.com)' }));
+
     await waitFor(() => {
-      expect(select.querySelectorAll('option').length).toBeGreaterThan(1);
+      expect(screen.getByRole('button', { name: 'Añadir' })).toBeEnabled();
     });
 
-    await user.selectOptions(select, '01930000-0000-7000-8000-000000000002');
     await user.click(screen.getByRole('button', { name: 'Añadir' }));
 
     await waitFor(() => {

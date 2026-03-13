@@ -43,6 +43,7 @@ describe('GetCalendarAbsencesHandler', () => {
         duration: 5,
         status: AbsenceStatus.ACCEPTED,
         teamColor: null,
+        avatarUrl: null,
         createdAt: NOW,
         updatedAt: NOW,
       },
@@ -57,6 +58,7 @@ describe('GetCalendarAbsencesHandler', () => {
         duration: 3,
         status: AbsenceStatus.ACCEPTED,
         teamColor: '#FF0000',
+        avatarUrl: '/users/user-2/avatar',
         createdAt: NOW,
         updatedAt: NOW,
       },
@@ -78,6 +80,7 @@ describe('GetCalendarAbsencesHandler', () => {
     expect(result[0].absenceTypeName).toBe('Vacation');
     expect(result[0].isOwn).toBe(true);
     expect(result[0].teamColor).toBeNull();
+    expect(result[0].avatarUrl).toBeNull();
     expect(result[0].startAt).toBe('2025-02-01T00:00:00.000Z');
     expect(result[0].endAt).toBe('2025-02-05T23:59:59.999Z');
 
@@ -86,6 +89,7 @@ describe('GetCalendarAbsencesHandler', () => {
     expect(result[1].userName).toBe('Jane Smith');
     expect(result[1].isOwn).toBe(false);
     expect(result[1].teamColor).toBe('#FF0000');
+    expect(result[1].avatarUrl).toBe('/users/user-2/avatar');
 
     expect(absenceRepo.findCalendarAbsences).toHaveBeenCalledWith('user-1');
   });
@@ -117,6 +121,7 @@ describe('GetCalendarAbsencesHandler', () => {
         duration: 5,
         status: AbsenceStatus.WAITING_VALIDATION,
         teamColor: null,
+        avatarUrl: null,
         createdAt: NOW,
         updatedAt: NOW,
       },
@@ -150,6 +155,7 @@ describe('GetCalendarAbsencesHandler', () => {
         duration: 3,
         status: AbsenceStatus.ACCEPTED,
         teamColor: '#00FF00',
+        avatarUrl: '/users/user-2/avatar',
         createdAt: NOW,
         updatedAt: NOW,
       },
@@ -167,6 +173,7 @@ describe('GetCalendarAbsencesHandler', () => {
     expect(result).toHaveLength(1);
     expect(result[0].isOwn).toBe(false);
     expect(result[0].teamColor).toBe('#00FF00');
+    expect(result[0].avatarUrl).toBe('/users/user-2/avatar');
     expect(result[0].userId).toBe('user-2');
     expect(result[0].userName).toBe('Jane Smith');
   });
@@ -184,6 +191,7 @@ describe('GetCalendarAbsencesHandler', () => {
         duration: 5,
         status: null,
         teamColor: null,
+        avatarUrl: null,
         createdAt: new Date('2025-01-15T10:00:00.000Z'),
         updatedAt: new Date('2025-01-15T10:00:00.000Z'),
       },

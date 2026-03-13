@@ -17,6 +17,7 @@ export class UserMapper {
       role: prismaUser.role as UserRole,
       isActive: prismaUser.is_active,
       themePreference: (prismaUser.theme_preference as Theme | null) ?? null,
+      avatarUrl: prismaUser.avatar_url,
       activationTokenHash: prismaUser.activation_token_hash,
       activationTokenExpiresAt: prismaUser.activation_token_expires_at,
       createdAt: prismaUser.created_at,
@@ -32,6 +33,7 @@ export class UserMapper {
       role: user.role,
       isActive: user.isActive,
       themePreference: user.themePreference,
+      avatarUrl: user.avatarUrl ? `/users/${user.id}/avatar` : null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -45,6 +47,7 @@ export class UserMapper {
       role: user.role,
       isActive: user.isActive,
       themePreference: user.themePreference,
+      avatarUrl: user.avatarUrl ? `/users/${user.id}/avatar` : null,
     };
   }
 }

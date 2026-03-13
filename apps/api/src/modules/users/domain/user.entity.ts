@@ -8,6 +8,7 @@ export interface UserProps {
   role: UserRole;
   isActive: boolean;
   themePreference?: Theme | null;
+  avatarUrl?: string | null;
   activationTokenHash?: string | null;
   activationTokenExpiresAt?: Date | null;
   createdAt: Date;
@@ -22,6 +23,7 @@ export class User {
   readonly role: UserRole;
   readonly isActive: boolean;
   readonly themePreference: Theme | null;
+  readonly avatarUrl: string | null;
   readonly activationTokenHash: string | null;
   readonly activationTokenExpiresAt: Date | null;
   readonly createdAt: Date;
@@ -35,6 +37,7 @@ export class User {
     this.role = props.role;
     this.isActive = props.isActive;
     this.themePreference = props.themePreference ?? Theme.LIGHT;
+    this.avatarUrl = props.avatarUrl ?? null;
     this.activationTokenHash = props.activationTokenHash ?? null;
     this.activationTokenExpiresAt = props.activationTokenExpiresAt ?? null;
     this.createdAt = props.createdAt;
@@ -85,6 +88,10 @@ export class User {
     return new User({ ...this.toProps(), themePreference: theme, updatedAt: now });
   }
 
+  changeAvatarUrl(avatarUrl: string | null, now: Date): User {
+    return new User({ ...this.toProps(), avatarUrl, updatedAt: now });
+  }
+
   /**
    * Sets the activation token fields for the invitation flow.
    */
@@ -120,6 +127,7 @@ export class User {
       role: this.role,
       isActive: this.isActive,
       themePreference: this.themePreference,
+      avatarUrl: this.avatarUrl,
       activationTokenHash: this.activationTokenHash,
       activationTokenExpiresAt: this.activationTokenExpiresAt,
       createdAt: this.createdAt,
