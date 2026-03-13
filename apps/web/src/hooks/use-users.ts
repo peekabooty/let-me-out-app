@@ -3,7 +3,10 @@ import type { Theme, User } from '@repo/types';
 
 import {
   createUser,
+  deactivateUser,
+  deleteUser,
   listUsers,
+  resendActivation,
   updateMyTheme,
   updateUser,
   type CreateUserPayload,
@@ -48,5 +51,38 @@ export function useUpdateUser() {
 export function useUpdateTheme() {
   return useMutation({
     mutationFn: (theme: Theme) => updateMyTheme({ theme }),
+  });
+}
+
+export function useDeactivateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deactivateUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.list() });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.list() });
+    },
+  });
+}
+
+export function useResendActivation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => resendActivation(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.list() });
+    },
   });
 }

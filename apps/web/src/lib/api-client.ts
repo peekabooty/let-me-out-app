@@ -129,6 +129,14 @@ export async function deactivateUser(id: string): Promise<void> {
   await apiClient.delete(`/users/${id}`);
 }
 
+export async function deleteUser(id: string): Promise<void> {
+  await apiClient.delete(`/users/${id}/permanent`);
+}
+
+export async function resendActivation(userId: string): Promise<void> {
+  await apiClient.post(`/users/${userId}/resend-activation`);
+}
+
 export async function listAbsenceTypes(onlyActive = false): Promise<AbsenceType[]> {
   const response = await apiClient.get<AbsenceType[]>('/absence-types', {
     params: onlyActive ? { onlyActive: 'true' } : undefined,

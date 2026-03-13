@@ -31,14 +31,16 @@ const makeRepo = (user: User | null): UserRepositoryPort => ({
   findByEmail: jest.fn(),
   findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
+  hasActiveAbsences: jest.fn().mockResolvedValue(false),
   save: jest.fn(),
-  update: jest.fn().mockResolvedValue(),
+  update: jest.fn().mockResolvedValue(undefined),
+  delete: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeStorage = (): FileStoragePort => ({
   saveFile: jest.fn().mockResolvedValue('/tmp/avatar.jpg'),
   getFile: jest.fn(),
-  deleteFile: jest.fn().mockResolvedValue(),
+  deleteFile: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeValidation = (): FileValidationService =>

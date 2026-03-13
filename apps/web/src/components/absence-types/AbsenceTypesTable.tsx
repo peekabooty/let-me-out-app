@@ -1,5 +1,6 @@
 import type { AbsenceType } from '@repo/types';
 import { AbsenceUnit } from '@repo/types';
+import { Ban, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -79,23 +80,27 @@ export function AbsenceTypesTable({
                 <div className="flex justify-end gap-2">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => onEdit(absenceType)}
                     aria-label={`Editar tipo de ausencia ${absenceType.name}`}
                   >
-                    Editar
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   {absenceType.isActive && (
                     <Button
                       type="button"
-                      variant="destructive"
+                      variant="ghost"
                       size="sm"
                       onClick={() => onDeactivate(absenceType)}
                       disabled={deactivatingId === absenceType.id}
                       aria-label={`Desactivar tipo de ausencia ${absenceType.name}`}
+                      aria-busy={deactivatingId === absenceType.id}
                     >
-                      {deactivatingId === absenceType.id ? 'Desactivando…' : 'Desactivar'}
+                      <Ban
+                        className={`h-4 w-4 ${deactivatingId === absenceType.id ? 'animate-pulse' : ''}`}
+                        aria-hidden="true"
+                      />
                     </Button>
                   )}
                 </div>

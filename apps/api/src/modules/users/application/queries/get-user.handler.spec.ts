@@ -26,8 +26,10 @@ const makeRepo = (user: User | null): UserRepositoryPort => ({
   findByEmail: jest.fn(),
   findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
+  hasActiveAbsences: jest.fn().mockResolvedValue(false),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn().mockResolvedValue(undefined),
 });
 
 describe('GetUserHandler', () => {

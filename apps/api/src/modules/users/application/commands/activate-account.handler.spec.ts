@@ -33,8 +33,10 @@ const makeRepo = (overrides: Partial<UserRepositoryPort> = {}): UserRepositoryPo
   findByEmail: jest.fn(),
   findByActivationTokenHash: jest.fn(),
   findAll: jest.fn(),
+  hasActiveAbsences: jest.fn().mockResolvedValue(false),
   save: jest.fn(),
   update: jest.fn().mockResolvedValue(undefined),
+  delete: jest.fn().mockResolvedValue(undefined),
   ...overrides,
 });
 

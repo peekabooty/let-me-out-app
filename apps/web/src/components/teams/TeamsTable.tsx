@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Team } from '@repo/types';
+import { Trash2, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -83,17 +84,23 @@ export function TeamsTable({ teams, onManageMembers, onDelete }: TeamsTableProps
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center justify-end gap-2">
                       {onManageMembers && (
-                        <Button variant="outline" size="sm" onClick={() => onManageMembers(team)}>
-                          Gestionar miembros
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onManageMembers(team)}
+                          aria-label={`Gestionar miembros del equipo ${team.name}`}
+                        >
+                          <Users className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                       {onDelete && (
                         <Button
-                          variant="destructive"
+                          variant="ghost"
                           size="sm"
                           onClick={() => setTeamToDelete(team)}
+                          aria-label={`Eliminar equipo ${team.name}`}
                         >
-                          Eliminar
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                     </div>

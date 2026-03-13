@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AbsenceStatus } from '@repo/types';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { User } from '../domain/user.entity';
@@ -36,6 +37,19 @@ export class UserPrismaRepository implements UserRepositoryPort {
     return records.map((r) => this.mapper.toDomain(r));
   }
 
+  async hasActiveAbsences(userId: string): Promise<boolean> {
+    const count = await this.prisma.absence.count({
+      where: {
+        user_id: userId,
+        status: {
+          in: [AbsenceStatus.WAITING_VALIDATION, AbsenceStatus.RECONSIDER, AbsenceStatus.ACCEPTED],
+        },
+      },
+    });
+
+    return count > 0;
+  }
+
   async save(user: User): Promise<void> {
     await this.prisma.user.create({
       data: {
@@ -70,6 +84,12 @@ export class UserPrismaRepository implements UserRepositoryPort {
         activation_token_expires_at: user.activationTokenExpiresAt,
         updated_at: user.updatedAt,
       },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 }
