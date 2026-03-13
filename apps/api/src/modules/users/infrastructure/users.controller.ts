@@ -31,6 +31,7 @@ import { DeactivateUserCommand } from '../application/commands/deactivate-user.c
 import { UpdateUserThemeCommand } from '../application/commands/update-user-theme.command';
 import { UpdateUserAvatarCommand } from '../application/commands/update-user-avatar.command';
 import { ResendActivationCommand } from '../application/commands/resend-activation.command';
+import { DeleteUserCommand } from '../application/commands/delete-user.command';
 import { ListUsersQuery } from '../application/queries/list-users.query';
 import { GetUserQuery } from '../application/queries/get-user.query';
 import { UserAvatarResult } from '../application/queries/get-user-avatar.handler';
@@ -78,6 +79,13 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deactivate(@Param('id') id: string): Promise<void> {
     await this.commandBus.execute<DeactivateUserCommand, void>(new DeactivateUserCommand(id));
+  }
+
+  @Delete(':id/permanent')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePermanent(@Param('id') id: string): Promise<void> {
+    await this.commandBus.execute<DeleteUserCommand, void>(new DeleteUserCommand(id));
   }
 
   @Post(':id/resend-activation')

@@ -7,6 +7,8 @@ export interface UserRepositoryPort {
   findByEmail(email: string): Promise<User | null>;
   findByActivationTokenHash(hash: string): Promise<User | null>;
   findAll(): Promise<User[]>;
+  hasActiveAbsences(userId: string): Promise<boolean>;
   save(user: User): Promise<void>;
   update(user: User): Promise<void>;
+  delete(id: string): Promise<void>;
 }

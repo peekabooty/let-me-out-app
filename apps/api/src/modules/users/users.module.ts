@@ -12,6 +12,7 @@ import { UpdateUserHandler } from './application/commands/update-user.handler';
 import { UpdateUserThemeHandler } from './application/commands/update-user-theme.handler';
 import { UpdateUserAvatarHandler } from './application/commands/update-user-avatar.handler';
 import { DeactivateUserHandler } from './application/commands/deactivate-user.handler';
+import { DeleteUserHandler } from './application/commands/delete-user.handler';
 import { ListUsersHandler } from './application/queries/list-users.handler';
 import { GetUserHandler } from './application/queries/get-user.handler';
 import { GetUserAvatarHandler } from './application/queries/get-user-avatar.handler';
@@ -30,6 +31,7 @@ const commandHandlers = [
   UpdateUserThemeHandler,
   UpdateUserAvatarHandler,
   DeactivateUserHandler,
+  DeleteUserHandler,
 ];
 const queryHandlers = [ListUsersHandler, GetUserHandler, GetUserAvatarHandler];
 
