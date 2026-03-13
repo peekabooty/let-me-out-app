@@ -96,6 +96,55 @@ function renderDialog(props: Partial<Parameters<typeof AbsenceFormDialog>[0]> = 
 }
 
 describe('AbsenceFormDialog', () => {
+  it('envía startAt y endAt en formato ISO 8601 UTC al crear una ausencia', async () => {
+    const user = userEvent.setup();
+    let capturedPayload: Record<string, unknown> | null = null;
+
+    server.use(
+      http.post('*/absences', async ({ request }) => {
+        capturedPayload = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          {
+            id: '01900000-0000-7000-8000-000000000999',
+            absenceTypeId: '01900000-0000-7000-8000-000000000001',
+            userId: '01900000-0000-7000-8000-000000000500',
+            startAt: '2026-03-09T13:30:00.000Z',
+            endAt: '2026-03-09T15:30:00.000Z',
+            status: 'PENDING',
+            createdAt: '2026-03-01T12:00:00.000Z',
+            updatedAt: '2026-03-01T12:00:00.000Z',
+          },
+          { status: 201 }
+        );
+      })
+    );
+
+    const { onSuccess, onOpenChange } = renderDialog();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Tipo de ausencia')).toBeInTheDocument();
+    });
+
+    const absenceTypeCombobox = screen.getByRole('combobox', { name: 'Tipo de ausencia' });
+    await user.click(absenceTypeCombobox);
+    const typeOption = await screen.findByRole('option', { name: mockAbsenceTypes[0].name });
+    await user.click(typeOption);
+
+    await user.type(screen.getByLabelText('Fecha y hora de inicio'), '2026-03-09T14:30');
+    await user.type(screen.getByLabelText('Fecha y hora de fin'), '2026-03-09T16:30');
+    await user.click(screen.getByRole('button', { name: 'Crear ausencia' }));
+
+    await waitFor(() => {
+      expect(capturedPayload).not.toBeNull();
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    expect(capturedPayload).not.toBeNull();
+    expect(capturedPayload?.['startAt']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(capturedPayload?.['endAt']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
+
   it('muestra el formulario de creación de ausencia con todos los campos requeridos', async () => {
     renderDialog();
 
