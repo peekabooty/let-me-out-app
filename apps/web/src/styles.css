@@ -5,6 +5,29 @@
   --font-sans: 'Manrope', 'Sora', 'Avenir Next', sans-serif;
 
   --radius: 0.5rem;
+
+  --color-background: #fffdf9;
+  --color-foreground: #4a4a4a;
+  --color-muted: #f0f2f5;
+  --color-muted-foreground: #7a7a7a;
+  --color-border: #e0e0e0;
+  --color-input: #e0e0e0;
+  --color-ring: #ffdab9;
+  --color-card: #fffdf9;
+  --color-card-foreground: #4a4a4a;
+  --color-primary: #ffdab9;
+  --color-primary-foreground: #4a4a4a;
+  --color-secondary: #e6e6fa;
+  --color-secondary-foreground: #4a4a4a;
+  --color-accent: #f4c2c2;
+  --color-accent-foreground: #4a4a4a;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #f5f3f0;
+  --color-popover-foreground: #4a4a4a;
+  --color-vacation: #ffdab9;
+  --color-personal: #e6e6fa;
+  --color-medical: #f4c2c2;
 }
 
 :root {
