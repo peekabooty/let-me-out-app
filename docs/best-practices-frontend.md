@@ -202,6 +202,11 @@ El contenido de las observaciones (que puede incluir texto libre) nunca se rende
 
 ## 5. Formularios con React Hook Form + Zod
 
+En este repositorio se aceptan dos excepciones para controles nativos:
+
+- `input[type="hidden"]` para transportar datos no editables del formulario.
+- `input[type="color"]` en los flujos de administración de equipos, donde el selector nativo ofrece el comportamiento más consistente.
+
 ### Schemas siempre desde `@repo/types`
 
 Los schemas Zod nunca se redefinen en el frontend. Se importan directamente desde el paquete compartido:

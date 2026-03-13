@@ -4,6 +4,7 @@ import { Theme } from '@repo/types';
 import { useUpdateTheme } from '../../hooks/use-users';
 import { useThemeStore } from '../../store/theme.store';
 import { THEME_DEFINITIONS } from '../../themes/theme-definitions';
+import { Button } from '@/components/ui/button';
 
 export function ThemeSelector() {
   const currentTheme = useThemeStore((state) => state.currentTheme);
@@ -29,9 +30,10 @@ export function ThemeSelector() {
           const isActive = currentTheme === themeDefinition.value;
 
           return (
-            <button
+            <Button
               key={themeDefinition.value}
               type="button"
+              variant="outline"
               role="radio"
               aria-checked={isActive}
               aria-label={themeDefinition.label}
@@ -59,7 +61,7 @@ export function ThemeSelector() {
                   />
                 ))}
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>

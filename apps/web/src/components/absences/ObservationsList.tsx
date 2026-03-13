@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { useObservations, useCreateObservation } from '../../hooks/use-observations';
 import { useAuthStore } from '../../store/auth.store';
 
@@ -102,13 +103,12 @@ export function ObservationsList({ absenceId }: ObservationsListProps) {
           <label htmlFor="observation-content" className="sr-only">
             Nueva observación
           </label>
-          <textarea
+          <Textarea
             id="observation-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Escribe una observación…"
             rows={3}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={createObservation.isPending}
           />
         </div>
