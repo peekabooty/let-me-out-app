@@ -3,7 +3,7 @@ import { isAxiosError } from 'axios';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 
-import { CreateAbsenceSchema, UserRole } from '@repo/types';
+import { UserRole } from '@repo/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,7 +25,26 @@ import { useAbsenceTypes } from '../../hooks/use-absence-types';
 import { useUsers } from '../../hooks/use-users';
 import { useCreateAbsence } from '../../hooks/use-absences';
 
-type FormValues = z.infer<typeof CreateAbsenceSchema>;
+const LocalDateTimeSchema = z
+  .string()
+  .min(1, 'La fecha y hora es obligatoria.')
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: 'La fecha y hora no es válida.',
+  });
+
+const AbsenceFormSchema = z
+  .object({
+    absenceTypeId: z.string().uuid('El tipo de ausencia no es válido.'),
+    startAt: LocalDateTimeSchema,
+    endAt: LocalDateTimeSchema,
+    validatorIds: z.array(z.string().uuid()).optional(),
+  })
+  .refine((data) => Date.parse(data.endAt) > Date.parse(data.startAt), {
+    message: 'La fecha de fin debe ser posterior a la de inicio.',
+    path: ['endAt'],
+  });
+
+type FormValues = z.infer<typeof AbsenceFormSchema>;
 
 interface AbsenceFormDialogProps {
   open: boolean;
@@ -47,7 +66,7 @@ export function AbsenceFormDialog({ open, onOpenChange, onSuccess }: AbsenceForm
     formState: { errors, isSubmitting },
     setError,
   } = useForm<FormValues>({
-    resolver: zodResolver(CreateAbsenceSchema),
+    resolver: zodResolver(AbsenceFormSchema),
     defaultValues: {
       validatorIds: [],
     },
@@ -61,11 +80,19 @@ export function AbsenceFormDialog({ open, onOpenChange, onSuccess }: AbsenceForm
   );
 
   const onSubmit = async (data: FormValues) => {
+    const startAtDate = new Date(data.startAt);
+    const endAtDate = new Date(data.endAt);
+
+    if (Number.isNaN(startAtDate.getTime()) || Number.isNaN(endAtDate.getTime())) {
+      setError('root', { message: 'La fecha y hora introducida no es válida.' });
+      return;
+    }
+
     try {
       await createAbsence.mutateAsync({
         absenceTypeId: data.absenceTypeId,
-        startAt: data.startAt,
-        endAt: data.endAt,
+        startAt: startAtDate.toISOString(),
+        endAt: endAtDate.toISOString(),
         ...(data.validatorIds &&
           data.validatorIds.length > 0 && { validatorIds: data.validatorIds }),
       });

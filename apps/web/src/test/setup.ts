@@ -14,3 +14,4 @@ Element.prototype.hasPointerCapture = function () {
 
 Element.prototype.releasePointerCapture = function () {};
 Element.prototype.setPointerCapture = function () {};
+Element.prototype.scrollIntoView = function () {};
