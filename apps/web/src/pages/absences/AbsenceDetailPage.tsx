@@ -42,7 +42,7 @@ export function AbsenceDetailPage() {
 
   if (!absenceId) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <p className="text-sm text-destructive">ID de ausencia no disponible.</p>
       </div>
     );
@@ -50,7 +50,7 @@ export function AbsenceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
           Cargando ausencia…
         </p>
@@ -60,7 +60,7 @@ export function AbsenceDetailPage() {
 
   if (error || !absence) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <div
           role="alert"
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -75,7 +75,7 @@ export function AbsenceDetailPage() {
   const isAuditor = user?.role === UserRole.AUDITOR;
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold">Detalle de ausencia</h1>
 
       {/* Absence summary */}

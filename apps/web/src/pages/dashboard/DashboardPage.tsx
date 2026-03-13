@@ -27,7 +27,7 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-8">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
         <p role="status" aria-live="polite" className="text-muted-foreground">
           Cargando datos...
@@ -38,7 +38,7 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="space-y-8">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
         <p role="alert" className="text-destructive">
           Error al cargar los datos del dashboard. Por favor, intenta de nuevo.
@@ -52,7 +52,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
