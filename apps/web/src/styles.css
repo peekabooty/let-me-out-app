@@ -126,6 +126,24 @@ body {
   min-height: 100vh;
 }
 
+[data-radix-popper-content-wrapper] {
+  z-index: 60 !important;
+}
+
+[data-slot='select-content'] {
+  background-color: var(--color-popover);
+  backdrop-filter: none;
+}
+
+[data-slot='dialog-content'] {
+  background-color: var(--color-background);
+  backdrop-filter: none;
+}
+
+[data-slot='dialog-overlay'] {
+  opacity: 1;
+}
+
 /* FullCalendar custom styles */
 .calendar-container {
   padding: 1rem;
