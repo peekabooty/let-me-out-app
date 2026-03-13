@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { isAxiosError } from 'axios';
 import { CheckIcon, XIcon } from 'lucide-react';
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { ActivateAccountSchema, PASSWORD_POLICY } from '@repo/types';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AvatarPicker } from '../../components/profile/AvatarPicker';
 import { activateAccount } from '../../lib/api-client';
 
 type ActivateFormValues = z.infer<typeof ActivateAccountSchema>;
@@ -76,6 +78,7 @@ export function ActivatePage() {
   const navigate = useNavigate();
   const search = useSearch({ strict: false }) as { token?: string };
   const token = search.token ?? '';
+  const [isActivationDone, setIsActivationDone] = useState(false);
 
   const {
     register,
@@ -93,15 +96,19 @@ export function ActivatePage() {
   const onSubmit = async (data: ActivateFormValues) => {
     try {
       await activateAccount({ token: data.token, password: data.password });
-      await navigate({ to: '/login' });
+      setIsActivationDone(true);
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      if (status === 404) {
+        setError('root', { message: 'El enlace de activación no es válido.' });
+        return;
+      }
+
       const message =
         status === 400
           ? 'El enlace de activación ha expirado. Solicita uno nuevo al administrador.'
-          : status === 404
-            ? 'El enlace de activación no es válido.'
-            : 'Error inesperado. Inténtalo de nuevo.';
+          : 'Error inesperado. Inténtalo de nuevo.';
       setError('root', { message });
     }
   };
@@ -111,50 +118,67 @@ export function ActivatePage() {
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="space-y-1 pb-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Let Me Out</p>
-          <h1 className="text-2xl font-semibold leading-none tracking-tight">Activa tu cuenta</h1>
-          <CardDescription>Elige una contraseña para activar tu acceso.</CardDescription>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">
+            {isActivationDone ? 'Elige tu avatar' : 'Activa tu cuenta'}
+          </h1>
+          <CardDescription>
+            {isActivationDone
+              ? 'Este paso es opcional. Puedes hacerlo ahora o más tarde.'
+              : 'Elige una contraseña para activar tu acceso.'}
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-            <input type="hidden" {...register('token')} />
+          {isActivationDone ? (
+            <AvatarPicker
+              onCompleted={() => {
+                void navigate({ to: '/login' });
+              }}
+              onSkip={() => {
+                void navigate({ to: '/login' });
+              }}
+            />
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+              <input type="hidden" {...register('token')} />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={errors.password ? 'true' : undefined}
-                aria-describedby="password-requirements password-error"
-                {...register('password')}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={errors.password ? 'true' : undefined}
+                  aria-describedby="password-requirements password-error"
+                  {...register('password')}
+                />
 
-              <div id="password-requirements">
-                <PasswordPolicyChecks password={passwordValue ?? ''} />
+                <div id="password-requirements">
+                  <PasswordPolicyChecks password={passwordValue ?? ''} />
+                </div>
+
+                {errors.password && (
+                  <p id="password-error" role="alert" className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
-              {errors.password && (
-                <p id="password-error" role="alert" className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
+              {errors.root && (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                >
+                  {errors.root.message}
+                </div>
               )}
-            </div>
 
-            {errors.root && (
-              <div
-                role="alert"
-                aria-live="assertive"
-                className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              >
-                {errors.root.message}
-              </div>
-            )}
-
-            <Button type="submit" disabled={isSubmitting || !token} className="w-full">
-              {isSubmitting ? 'Activando…' : 'Activar cuenta'}
-            </Button>
-          </form>
+              <Button type="submit" disabled={isSubmitting || !token} className="w-full">
+                {isSubmitting ? 'Activando…' : 'Activar cuenta'}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

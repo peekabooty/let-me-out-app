@@ -277,6 +277,7 @@ export interface CalendarAbsence {
   id: string;
   userId: string;
   userName: string;
+  avatarUrl: string | null;
   absenceTypeId: string;
   absenceTypeName: string;
   startAt: string;
@@ -292,6 +293,19 @@ export interface CalendarAbsence {
 export async function listCalendarAbsences(): Promise<CalendarAbsence[]> {
   const response = await apiClient.get<CalendarAbsence[]>('/absences/calendar');
   return response.data;
+}
+
+export async function updateMyAvatar(file: File): Promise<{ avatarUrl: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.patch<{ avatarUrl: string }>('/users/me/avatar', formData);
+
+  return response.data;
+}
+
+export function getUserAvatarUrl(userId: string): string {
+  return `${apiClient.defaults.baseURL}/users/${userId}/avatar`;
 }
 
 export interface AbsenceTypeBalance {

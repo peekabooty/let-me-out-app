@@ -21,6 +21,7 @@ export class CalendarAbsenceResponseDto {
   status!: AbsenceStatus | null;
   isOwn!: boolean;
   teamColor!: string | null;
+  avatarUrl!: string | null;
   createdAt!: string;
   updatedAt!: string;
 }

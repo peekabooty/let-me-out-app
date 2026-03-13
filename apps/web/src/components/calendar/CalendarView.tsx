@@ -2,7 +2,8 @@ import { useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import type { EventClickArg, EventInput } from '@fullcalendar/core';
+import type { EventClickArg, EventContentArg, EventInput } from '@fullcalendar/core';
+import esLocale from '@fullcalendar/core/locales/es';
 import { useNavigate } from '@tanstack/react-router';
 
 import { useCalendarAbsences } from '../../hooks/use-calendar';
@@ -37,8 +38,27 @@ function mapAbsenceToEvent(absence: CalendarAbsence): EventInput {
       status: absence.status,
       userName: absence.userName,
       absenceTypeName: absence.absenceTypeName,
+      avatarUrl: absence.avatarUrl,
     },
   };
+}
+
+function renderEventContent(eventInfo: EventContentArg) {
+  const avatarUrl = eventInfo.event.extendedProps.avatarUrl as string | null;
+
+  return (
+    <div className="flex items-center gap-1 overflow-hidden">
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          className="h-4 w-4 shrink-0 rounded-full object-cover"
+          aria-hidden="true"
+        />
+      ) : null}
+      <span className="truncate">{eventInfo.event.title}</span>
+    </div>
+  );
 }
 
 /**
@@ -69,9 +89,9 @@ export function CalendarView() {
         className="flex items-center justify-center p-8"
         role="status"
         aria-live="polite"
-        aria-label="Loading calendar"
+        aria-label="Cargando calendario"
       >
-        <p className="text-muted-foreground">Loading calendar...</p>
+        <p className="text-muted-foreground">Cargando calendario...</p>
       </div>
     );
   }
@@ -80,7 +100,8 @@ export function CalendarView() {
     return (
       <div className="flex items-center justify-center p-8" role="alert" aria-live="assertive">
         <p className="text-destructive">
-          Error loading calendar: {error instanceof Error ? error.message : 'Unknown error'}
+          Error al cargar el calendario:{' '}
+          {error instanceof Error ? error.message : 'Error desconocido'}
         </p>
       </div>
     );
@@ -100,8 +121,9 @@ export function CalendarView() {
         }}
         events={events}
         eventClick={handleEventClick}
+        eventContent={renderEventContent}
         height="auto"
-        locale="en"
+        locale={esLocale}
         firstDay={1}
         weekends={true}
         editable={false}

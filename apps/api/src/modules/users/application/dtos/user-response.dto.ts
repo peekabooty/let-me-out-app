@@ -7,6 +7,7 @@ export class UserResponseDto {
   role!: UserRole;
   isActive!: boolean;
   themePreference!: Theme | null;
+  avatarUrl!: string | null;
   createdAt!: string;
   updatedAt!: string;
 }

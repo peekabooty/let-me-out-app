@@ -10,6 +10,7 @@ export interface SessionUser {
   role: UserRole;
   isActive: boolean;
   themePreference?: Theme | null;
+  avatarUrl?: string | null;
 }
 
 interface AuthState {

@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { activateRoute } from '../../routes/activate';
 import { rootRoute } from '../../routes/__root';
@@ -145,7 +145,7 @@ describe('ActivatePage', () => {
   });
 
   it('submit button is disabled when no token is present in the URL', async () => {
-    renderActivate(undefined);
+    renderActivate();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Activar cuenta' })).toBeInTheDocument();
@@ -224,6 +224,9 @@ describe('ActivatePage', () => {
 
   it('redirects to /login after successful activation', async () => {
     server.use(http.post('*/auth/activate', () => new HttpResponse(null, { status: 204 })));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(new Blob([new Uint8Array([1, 2, 3])]))
+    );
 
     const user = userEvent.setup();
     const { router } = renderActivate('valid-token');
@@ -234,6 +237,12 @@ describe('ActivatePage', () => {
 
     await user.type(screen.getByLabelText('Contraseña'), VALID_PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Activar cuenta' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Elige tu avatar' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Omitir' }));
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/login');

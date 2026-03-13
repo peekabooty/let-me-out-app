@@ -42,6 +42,7 @@ export class GetCalendarAbsencesHandler implements IQueryHandler<
       status: absence.status,
       isOwn: absence.userId === query.userId,
       teamColor: absence.teamColor,
+      avatarUrl: absence.avatarUrl ? `/users/${absence.userId}/avatar` : null,
       createdAt: absence.createdAt.toISOString(),
       updatedAt: absence.updatedAt.toISOString(),
     }));

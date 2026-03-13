@@ -105,4 +105,15 @@ describe('User entity', () => {
       expect(user.themePreference).toBe(Theme.LIGHT);
     });
   });
+
+  describe('changeAvatarUrl', () => {
+    it('returns a new User with updated avatar URL and updatedAt', () => {
+      const user = makeUser({ avatarUrl: null });
+      const withAvatar = user.changeAvatarUrl('avatar.jpg', LATER_DATE);
+
+      expect(withAvatar.avatarUrl).toBe('avatar.jpg');
+      expect(withAvatar.updatedAt).toBe(LATER_DATE);
+      expect(user.avatarUrl).toBeNull();
+    });
+  });
 });

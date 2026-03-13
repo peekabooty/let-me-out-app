@@ -2,16 +2,23 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
   HttpCode,
   HttpStatus,
+  MaxFileSizeValidator,
   Param,
   Patch,
   Post,
+  ParseFilePipe,
   Req,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { Roles } from '../../../common';
 import { UserRole } from '@repo/types';
@@ -22,9 +29,12 @@ import { CreateUserCommand } from '../application/commands/create-user.command';
 import { UpdateUserCommand } from '../application/commands/update-user.command';
 import { DeactivateUserCommand } from '../application/commands/deactivate-user.command';
 import { UpdateUserThemeCommand } from '../application/commands/update-user-theme.command';
+import { UpdateUserAvatarCommand } from '../application/commands/update-user-avatar.command';
 import { ResendActivationCommand } from '../application/commands/resend-activation.command';
 import { ListUsersQuery } from '../application/queries/list-users.query';
 import { GetUserQuery } from '../application/queries/get-user.query';
+import { UserAvatarResult } from '../application/queries/get-user-avatar.handler';
+import { GetUserAvatarQuery } from '../application/queries/get-user-avatar.query';
 import { UpdateThemeDto } from '../dto/update-theme.dto';
 
 @Controller('users')
@@ -85,5 +95,38 @@ export class UsersController {
     await this.commandBus.execute<UpdateUserThemeCommand, void>(
       new UpdateUserThemeCommand(user.userId, dto.theme)
     );
+  }
+
+  @Patch('me/avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateMyAvatar(
+    @Req() request: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({
+            fileType: /(jpg|jpeg|png)$/,
+          }),
+        ],
+      })
+    )
+    file: Express.Multer.File
+  ): Promise<{ avatarUrl: string }> {
+    const user = request.user as { userId: string };
+
+    return this.commandBus.execute<UpdateUserAvatarCommand, { avatarUrl: string }>(
+      new UpdateUserAvatarCommand(user.userId, file.originalname, file.buffer)
+    );
+  }
+
+  @Get(':id/avatar')
+  async getAvatar(@Param('id') id: string, @Res() response: Response): Promise<void> {
+    const result = await this.queryBus.execute<GetUserAvatarQuery, UserAvatarResult>(
+      new GetUserAvatarQuery(id)
+    );
+
+    response.setHeader('Content-Type', result.mimeType);
+    response.send(result.buffer);
   }
 }

@@ -127,6 +127,7 @@ export interface AbsenceRepositoryPort {
       duration: number;
       status: AbsenceStatus | null;
       teamColor: string | null;
+      avatarUrl: string | null;
       createdAt: Date;
       updatedAt: Date;
     }>

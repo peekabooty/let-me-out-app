@@ -95,6 +95,7 @@ export class AuthService {
     role: string;
     isActive: boolean;
     themePreference: Theme | null;
+    avatarUrl: string | null;
   }> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
@@ -105,6 +106,7 @@ export class AuthService {
         role: true,
         is_active: true,
         theme_preference: true,
+        avatar_url: true,
       },
     });
 
@@ -119,6 +121,7 @@ export class AuthService {
       role: user.role,
       isActive: user.is_active,
       themePreference: (user.theme_preference as Theme | null) ?? Theme.LIGHT,
+      avatarUrl: user.avatar_url ? `/users/${user.id}/avatar` : null,
     };
   }
 }
