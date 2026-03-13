@@ -40,14 +40,16 @@ describe('TeamsTable', () => {
   it('does not render actions column when no action props are provided', () => {
     render(<TeamsTable teams={teams} />);
     expect(screen.queryByText('Acciones')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Gestionar miembros' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Gestionar miembros del equipo/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Eliminar equipo/i })).not.toBeInTheDocument();
   });
 
   it('renders actions column when onManageMembers is provided', () => {
     render(<TeamsTable teams={teams} onManageMembers={vi.fn()} />);
     expect(screen.getByText('Acciones')).toBeInTheDocument();
-    const buttons = screen.getAllByRole('button', { name: 'Gestionar miembros' });
+    const buttons = screen.getAllByRole('button', { name: /Gestionar miembros del equipo/i });
     expect(buttons).toHaveLength(2);
   });
 
@@ -56,7 +58,7 @@ describe('TeamsTable', () => {
     const onManageMembers = vi.fn();
     render(<TeamsTable teams={teams} onManageMembers={onManageMembers} />);
 
-    const buttons = screen.getAllByRole('button', { name: 'Gestionar miembros' });
+    const buttons = screen.getAllByRole('button', { name: /Gestionar miembros del equipo/i });
     await user.click(buttons[0]);
 
     expect(onManageMembers).toHaveBeenCalledTimes(1);
@@ -66,7 +68,7 @@ describe('TeamsTable', () => {
   it('renders delete buttons when onDelete is provided', () => {
     render(<TeamsTable teams={teams} onDelete={vi.fn()} />);
     expect(screen.getByText('Acciones')).toBeInTheDocument();
-    const buttons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const buttons = screen.getAllByRole('button', { name: /Eliminar equipo/i });
     expect(buttons).toHaveLength(2);
   });
 
@@ -74,7 +76,7 @@ describe('TeamsTable', () => {
     const user = userEvent.setup();
     render(<TeamsTable teams={teams} onDelete={vi.fn()} />);
 
-    const buttons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const buttons = screen.getAllByRole('button', { name: /Eliminar equipo/i });
     await user.click(buttons[0]);
 
     const dialog = screen.getByRole('dialog');
@@ -88,7 +90,7 @@ describe('TeamsTable', () => {
     const onDelete = vi.fn();
     render(<TeamsTable teams={teams} onDelete={onDelete} />);
 
-    const deleteButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const deleteButtons = screen.getAllByRole('button', { name: /Eliminar equipo/i });
     await user.click(deleteButtons[0]);
 
     const dialog = screen.getByRole('dialog');
@@ -104,7 +106,7 @@ describe('TeamsTable', () => {
     const onDelete = vi.fn();
     render(<TeamsTable teams={teams} onDelete={onDelete} />);
 
-    const deleteButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const deleteButtons = screen.getAllByRole('button', { name: /Eliminar equipo/i });
     await user.click(deleteButtons[0]);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
